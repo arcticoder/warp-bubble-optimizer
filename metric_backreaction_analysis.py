@@ -432,9 +432,8 @@ def main():
     
     print("\n3. Generating comprehensive report...")
     report = analyzer.generate_backreaction_report()
-    
-    # Save report
-    with open('metric_backreaction_report.txt', 'w') as f:
+      # Save report
+    with open('metric_backreaction_report.txt', 'w', encoding='utf-8') as f:
         f.write(report)
     print("Report saved to 'metric_backreaction_report.txt'")
     

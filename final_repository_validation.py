@@ -65,8 +65,8 @@ def check_imports():
         import warp_qft
         print("✓ warp_qft package imports successfully")
         
-        from warp_qft.field_algebra import PolymerFieldAlgebra
-        print("✓ PolymerFieldAlgebra imports successfully")
+        from warp_qft.field_algebra import PolymerField
+        print("✓ PolymerField imports successfully")
         
         from warp_qft.metrics.van_den_broeck_natario import van_den_broeck_shape
         print("✓ van_den_broeck_shape imports successfully")
@@ -74,8 +74,8 @@ def check_imports():
         from warp_qft.metric_ansatz_development import MetricAnsatzBuilder
         print("✓ MetricAnsatzBuilder imports successfully")
         
-        from warp_qft.variational_optimizer import VariationalOptimizer
-        print("✓ VariationalOptimizer imports successfully")
+        from warp_qft.variational_optimizer import MetricAnsatzOptimizer
+        print("✓ MetricAnsatzOptimizer imports successfully")
         
         from warp_qft.numerical_integration import WarpBubbleIntegrator
         print("✓ WarpBubbleIntegrator imports successfully")

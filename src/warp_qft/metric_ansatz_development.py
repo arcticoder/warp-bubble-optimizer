@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple, Callable, Optional, Any, Union
 from scipy.optimize import minimize
 from scipy.special import sph_harm
 import warnings
+import itertools
 
 class MetricAnsatzBuilder:
     """
@@ -136,8 +137,7 @@ class MetricAnsatzBuilder:
             m_values: List of m values to include (default: all)
             
         Returns:
-            Symbolic expression with spherical harmonics
-        """
+            Symbolic expression with spherical harmonics        """
         theta, phi = sp.symbols('theta phi', real=True)
         r = sp.Symbol('r', real=True)
         
@@ -150,16 +150,13 @@ class MetricAnsatzBuilder:
                 m_range = [m for m in m_values if abs(m) <= l]
             
             for m in m_range:
-                # Radial part coefficient
-                c_lm = sp.Symbol(f'c_{l}_{m}', complex=True)
+                # Radial coefficient
+                R_lm = sp.Symbol(f'R_{l}_{m}', real=True)
                 
-                # Radial function (polynomial for now)
-                f_l = sp.Symbol(f'f_{l}', real=True)  # Could be more complex
+                # Angular part (symbolic representation)
+                Y_lm = sp.Symbol(f'Y_{l}_{m}', real=True)
                 
-                # Spherical harmonic (symbolic representation)
-                Y_lm = sp.Symbol(f'Y_{l}_{m}', complex=True)
-                
-                expression += c_lm * f_l * Y_lm
+                expression += R_lm * Y_lm
         
         return expression
 
@@ -193,13 +190,14 @@ class VariationalAnsatzOptimizer:
         Returns:
             List of Euler-Lagrange equations
         """
+        # Euler-Lagrange equations: d/dx(∂L/∂q') - ∂L/∂q = 0
         equations = []
         
-        # Get parameters in the ansatz
-        parameters = [s for s in ansatz.free_symbols if s not in variables]
+        # Get all parameters in the ansatz
+        ansatz_params = list(ansatz.free_symbols)
         
-        for param in parameters:
-            # ∂L/∂q - d/dx(∂L/∂q') = 0
+        for param in ansatz_params:
+            # Compute ∂L/∂q (direct partial derivative)
             partial_L = sp.diff(lagrangian, param)
             
             # For each variable, compute d/dx(∂L/∂q')
@@ -305,7 +303,11 @@ class SolitonWarpBubble:
         Returns:
             Breather profile expression
         """
-        return (amplitude / sp.cosh(width * self.r)) * sp.cos(frequency * self.t)
+        # Breather: soliton modulated by oscillation
+        envelope = amplitude / sp.cosh(width * self.r)
+        modulation = sp.cos(frequency * self.t)
+        
+        return envelope * modulation
     
     def multi_soliton_superposition(self,
                                    soliton_params: List[Dict[str, float]]) -> sp.Expr:
@@ -318,18 +320,26 @@ class SolitonWarpBubble:
         Returns:
             Multi-soliton expression
         """
-        total = 0
+        total_profile = 0
         
         for i, params in enumerate(soliton_params):
+            soliton_type = params.get('type', 'tanh')
             amplitude = params.get('amplitude', 1.0)
             width = params.get('width', 1.0)
-            center = params.get('center', i + 1.0)
-            phase = params.get('phase', 0.0)
+            center = params.get('center', 0.0)
             
-            soliton = amplitude * sp.tanh(width * (self.r - center) + phase)
-            total += soliton
+            if soliton_type == 'tanh':
+                soliton = amplitude * sp.tanh(width * (self.r - center))
+            elif soliton_type == 'sech':
+                soliton = amplitude / sp.cosh(width * (self.r - center))
+            elif soliton_type == 'kink':
+                soliton = amplitude * (sp.tanh(width * (self.r - center)) + 1)
+            else:
+                raise ValueError(f"Unknown soliton type: {soliton_type}")
+            
+            total_profile += soliton
         
-        return total
+        return total_profile
 
 class GeometricConstraintSolver:
     """
@@ -454,3 +464,62 @@ def create_novel_ansatz(ansatz_type: str, **kwargs) -> Callable:
     
     else:
         raise ValueError(f"Unknown ansatz type: {ansatz_type}")
+
+def soliton_ansatz(params):
+    """
+    Soliton-like ansatz for warp bubble metrics using superposition of Gaussians.
+    
+    This implements the Lentz-inspired approach for creating smooth, localized
+    warp bubble profiles through Gaussian superposition.
+    
+    Args:
+        params: List of parameters [A1, σ1, x01, A2, σ2, x02, ...]
+                where (Ai, σi, x0i) are amplitude, width, and center of each Gaussian
+                
+    Returns:
+        Function f(r) that can be evaluated at any radial distance r
+    """
+    def f(r):
+        """
+        Evaluate the soliton ansatz at radial distance r.
+        
+        Args:
+            r: Radial coordinate (scalar or array)
+            
+        Returns:
+            Ansatz function value(s)
+        """
+        r = np.asarray(r)
+        total = np.zeros_like(r, dtype=float)
+        
+        # Process parameters in groups of 3: (amplitude, width, center)
+        for i in range(0, len(params), 3):
+            if i + 2 < len(params):
+                Ai = params[i]      # Amplitude
+                sigma_i = params[i + 1]  # Width parameter
+                x0_i = params[i + 2]     # Center position
+                
+                # Add Gaussian component: Ai * exp(-((r - x0i)/σi)²)
+                total += Ai * np.exp(-((r - x0_i) / sigma_i)**2)
+        
+        return total
+    
+    return f
+
+def grouped(iterable, n):
+    """
+    Helper function to group iterable into chunks of size n.
+    
+    Args:
+        iterable: Input sequence
+        n: Group size
+        
+    Yields:
+        Tuples of size n from the iterable
+    """
+    it = iter(iterable)
+    while True:
+        chunk = tuple(itertools.islice(it, n))
+        if not chunk:
+            break
+        yield chunk

@@ -86,7 +86,11 @@ class TestNumericalCalculations:
         assert np.all(f > 0)
         assert f[0] > f[-1]  # Should decay with r
           # Test integration
-        integral = np.trapezoid(f, r)  # Updated from deprecated trapz
+        try:
+            integral = np.trapezoid(f, r)  # Updated from deprecated trapz
+        except AttributeError:
+            # Fallback for older numpy versions
+            integral = np.trapz(f, r)
         assert integral > 0
         assert np.isfinite(integral)
 
