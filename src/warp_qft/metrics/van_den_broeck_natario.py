@@ -8,7 +8,7 @@ from scipy.spatial.distance import cdist
 logger = logging.getLogger(__name__)
 
 
-def van_den_broeck_shape(r: float, R_int: float, R_ext: float, σ: float = None) -> float:
+def van_den_broeck_shape(r, R_int: float, R_ext: float, σ: float = None):
     """
     Van den Broeck "volume-reduction" shape function f_vdb(r).
     
@@ -16,7 +16,7 @@ def van_den_broeck_shape(r: float, R_int: float, R_ext: float, σ: float = None)
     Alcubierre profiles, leading to 10^5-10^6x reduction in energy requirements.
     
     Args:
-        r: Radial distance from bubble center
+        r: Radial distance from bubble center (scalar or array)
         R_int: Interior (large) radius of the "payload" region
         R_ext: Exterior (small) radius of the thin neck (R_ext << R_int)
         σ: Optional smoothing length for transition (default: (R_int - R_ext)/10)
@@ -30,15 +30,39 @@ def van_den_broeck_shape(r: float, R_int: float, R_ext: float, σ: float = None)
     if σ is None:
         σ = (R_int - R_ext) / 10.0
 
-    if r <= R_ext:
-        return 1.0
-    elif r >= R_int:
-        return 0.0
-    else:
-        # Smooth "bump" profile using cosine interpolation
-        # This ensures C^∞ smoothness at boundaries
-        x = (r - R_ext) / (R_int - R_ext)  # Normalize to [0, 1]
-        return 0.5 * (1 + np.cos(np.pi * x))  # Smooth transition 1 → 0
+    r = np.asarray(r)
+    
+    # Handle scalar input
+    if r.ndim == 0:
+        r = r.item()
+        if r <= R_ext:
+            return 1.0
+        elif r >= R_int:
+            return 0.0
+        else:
+            # Smooth "bump" profile using cosine interpolation
+            # This ensures C^∞ smoothness at boundaries
+            x = (r - R_ext) / (R_int - R_ext)  # Normalize to [0, 1]
+            return 0.5 * (1 + np.cos(np.pi * x))  # Smooth transition 1 → 0
+    
+    # Handle array input
+    result = np.zeros_like(r, dtype=float)
+    
+    # Interior region: f = 1
+    mask_interior = r <= R_ext
+    result[mask_interior] = 1.0
+    
+    # Exterior region: f = 0
+    mask_exterior = r >= R_int
+    result[mask_exterior] = 0.0
+    
+    # Transition region: smooth cosine profile
+    mask_transition = (r > R_ext) & (r < R_int)
+    if np.any(mask_transition):
+        x = (r[mask_transition] - R_ext) / (R_int - R_ext)  # Normalize to [0, 1]
+        result[mask_transition] = 0.5 * (1 + np.cos(np.pi * x))  # Smooth transition 1 → 0
+    
+    return result
 
 
 def natario_shift_vector(x: np.ndarray, v_bubble: float, R_int: float, R_ext: float, σ: float = None) -> np.ndarray:

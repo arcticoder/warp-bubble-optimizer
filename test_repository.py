@@ -85,9 +85,8 @@ class TestNumericalCalculations:
         assert len(f) == 100
         assert np.all(f > 0)
         assert f[0] > f[-1]  # Should decay with r
-        
-        # Test integration
-        integral = np.trapz(f, r)
+          # Test integration
+        integral = np.trapezoid(f, r)  # Updated from deprecated trapz
         assert integral > 0
         assert np.isfinite(integral)
 
@@ -203,7 +202,7 @@ class TestDemoScripts:
     def test_demo_metric_optimization_syntax(self):
         """Test that demo_metric_optimization.py has valid syntax."""
         try:
-            with open('demo_metric_optimization.py', 'r') as f:
+            with open('demo_metric_optimization.py', 'r', encoding='utf-8') as f:
                 code = f.read()
             
             # Compile to check syntax
@@ -217,7 +216,7 @@ class TestDemoScripts:
     def test_advanced_demo_syntax(self):
         """Test that advanced demo script has valid syntax."""
         try:
-            with open('demo_advanced_ansatz_development.py', 'r') as f:
+            with open('demo_advanced_ansatz_development.py', 'r', encoding='utf-8') as f:
                 code = f.read()
             
             # Compile to check syntax
