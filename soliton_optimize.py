@@ -159,7 +159,7 @@ def analyze_profile(params, name="Soliton"):
     
     plt.tight_layout()
     plt.savefig(f'{name.lower()}_profile_analysis.png', dpi=150, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     return f_vals, rho_vals
 
@@ -309,6 +309,6 @@ def analyze_profile(params, name="Soliton"):
     
     plt.tight_layout()
     plt.savefig(f'{name.lower()}_profile_analysis.png', dpi=150, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     return f_vals, rho_vals

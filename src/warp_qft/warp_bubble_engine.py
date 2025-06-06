@@ -259,7 +259,7 @@ def visualize_scan(results: Dict, violations: Dict, mu_vals: List[float],
     ax6.grid(True)
 
     plt.tight_layout(rect=[0,0,1,0.96])
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
     return fig
 
@@ -774,7 +774,7 @@ def run_power_analysis(mu_range: Tuple[float, float] = (0.1, 1.0),
         if visualize:
             print("\n📈 Generating feasibility visualization...")
             fig = visualize_feasibility_scan(self.feasibility_results)
-            plt.show()
+            plt.close()  # Close instead of show to prevent blocking
         
         return self.feasibility_results
 

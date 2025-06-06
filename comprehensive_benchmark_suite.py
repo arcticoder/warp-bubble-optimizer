@@ -504,7 +504,7 @@ def create_benchmark_plots(results):
         plt.savefig('comprehensive_benchmark_analysis.png', dpi=300, bbox_inches='tight')
         print(f"📈 Benchmark plots saved to: comprehensive_benchmark_analysis.png")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 def save_benchmark_results(results, total_time):
     """Save comprehensive benchmark results to JSON"""

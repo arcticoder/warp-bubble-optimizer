@@ -373,7 +373,7 @@ Parameters:
     
     plt.tight_layout()
     plt.savefig('enhanced_soliton_profile.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 if __name__ == "__main__":
     # Run comprehensive optimization

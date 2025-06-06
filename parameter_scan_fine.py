@@ -539,7 +539,7 @@ def plot_parameter_scan_results(results_6g, results_hc):
     
     plt.tight_layout()
     plt.savefig('parameter_scan_heatmap.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 4. Main Execution ─────────────────────────────────────────────────────────
 if __name__ == "__main__":

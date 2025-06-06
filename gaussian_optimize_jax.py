@@ -413,8 +413,7 @@ class JAXWarpBubbleOptimizer:
             axes[1, 0].text(0.5, 0.5, 'No optimization history available', 
                            ha='center', va='center', transform=axes[1, 0].transAxes)
             axes[1, 0].set_title('Optimization History')
-        
-        # Plot 4: Energy density profile
+          # Plot 4: Energy density profile
         df_dr = np.gradient(f_profile, self.r[1] - self.r[0])
         d2f_dr2 = np.gradient(df_dr, self.r[1] - self.r[0])
         
@@ -438,7 +437,7 @@ class JAXWarpBubbleOptimizer:
         plot_filename = 'jax_gaussian_M6_optimization.png'
         plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
         print(f"\nPlots saved to: {plot_filename}")
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
     
     def save_results(self, params_opt, energy_opt):
         """Save optimization results to JSON file."""

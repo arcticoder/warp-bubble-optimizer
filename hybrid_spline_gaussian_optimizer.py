@@ -792,8 +792,7 @@ def plot_hybrid_profile(result, save_fig=True):
         ax3.set_title('Individual Gaussians')
         ax3.grid(True, alpha=0.3)
         ax3.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    
-    # Plot 4: Energy density
+      # Plot 4: Energy density
     mu_opt, G_geo_opt = params[0], params[1]
     sinc_term = np.sinc(mu_opt / (hbar * c))
     backreaction = 1.0 + beta_back * G_geo_opt * sinc_term
@@ -812,7 +811,7 @@ def plot_hybrid_profile(result, save_fig=True):
         plt.savefig('hybrid_spline_gaussian_profile.png', dpi=300, bbox_inches='tight')
         print(f"📈 Hybrid profile plot saved to: hybrid_spline_gaussian_profile.png")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 12. MAIN EXECUTION ────────────────────────────────────────────────────────
 def main():

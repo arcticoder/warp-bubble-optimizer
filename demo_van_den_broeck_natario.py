@@ -117,7 +117,7 @@ def plot_shape_function_comparison(R_int: float = 100.0, R_ext: float = 2.3):
     
     plt.tight_layout()
     plt.savefig('van_den_broeck_comparison.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     # Print key metrics
     final_energy_vdb = cumulative_vdb[-1]
@@ -220,7 +220,7 @@ def energy_reduction_scan():
     
     plt.tight_layout()
     plt.savefig('energy_reduction_scan.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     # Find optimal parameters
     max_reduction_idx = np.argmax(reduction_factors)

@@ -298,7 +298,7 @@ def plot_parameter_scan_heatmap(results, save_fig=True):
         plt.savefig('parameter_scan_heatmap.png', dpi=300, bbox_inches='tight')
         print("📊 Heatmap saved as 'parameter_scan_heatmap.png'")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 def plot_energy_trends(results, save_fig=True):
     """
@@ -389,7 +389,7 @@ def plot_energy_trends(results, save_fig=True):
         plt.savefig('parameter_trends.png', dpi=300, bbox_inches='tight')
         print("📊 Trends plot saved as 'parameter_trends.png'")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 6. Save and Load Results ───────────────────────────────────────────────────
 def save_scan_results(results, filename='parameter_scan_results.json'):

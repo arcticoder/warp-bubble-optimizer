@@ -428,7 +428,7 @@ def plot_cubic_hybrid_results(params, energy):
     
     plt.tight_layout()
     plt.savefig('hybrid_cubic_analysis.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 if __name__ == "__main__":
     result = run_hybrid_cubic()

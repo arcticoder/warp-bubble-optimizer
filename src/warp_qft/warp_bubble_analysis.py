@@ -347,7 +347,7 @@ def visualize_scan(results, violations, mu_vals, tau_vals, R_vals):
     ax6.grid(True)
 
     plt.tight_layout(rect=[0,0,1,0.96])
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
     return fig
 

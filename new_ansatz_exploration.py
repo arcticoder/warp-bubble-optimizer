@@ -483,7 +483,7 @@ def plot_ansatz_comparison(comparison_results: Dict, save_path: Optional[str] = 
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         logger.info(f"Saved comparison plot to {save_path}")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 
 def generate_ansatz_report(comparison_results: Dict) -> str:

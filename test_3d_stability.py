@@ -376,12 +376,11 @@ class WarpBubble3DStabilityAnalyzer:
         axes[1, 1].set_title('Mode Classification Distribution')
         
         plt.tight_layout()
-        
-        # Save plot
+          # Save plot
         plot_filename = f'stability_analysis_{profile_type}.png'
         plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
         print(f"Stability plots saved to: {plot_filename}")
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
     
     def run_comprehensive_stability_test(self):
         """Run stability analysis on multiple profile types."""

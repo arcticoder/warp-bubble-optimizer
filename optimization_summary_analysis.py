@@ -267,7 +267,7 @@ def create_comprehensive_plots(results):
     plt.tight_layout()
     plt.savefig('comprehensive_optimization_summary.png', dpi=300, bbox_inches='tight')
     print(f"\n📊 Comprehensive plots saved to: comprehensive_optimization_summary.png")
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 def generate_final_report(results):
     """Generate a final summary report."""

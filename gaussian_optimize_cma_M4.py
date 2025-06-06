@@ -526,7 +526,7 @@ def plot_cma_profile(result, save_fig=True):
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         print(f"📊 Profile saved as: {filename}")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     return fig
 
 # ── 10. PARAMETER SCANNING ───────────────────────────────────────────────────

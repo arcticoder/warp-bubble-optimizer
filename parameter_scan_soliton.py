@@ -160,7 +160,7 @@ def create_scan_visualization(results):
         
         plt.tight_layout()
         plt.savefig('soliton_parameter_scan_results.png', dpi=150, bbox_inches='tight')
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
         
         print("📊 Scan visualization saved as 'soliton_parameter_scan_results.png'")
         

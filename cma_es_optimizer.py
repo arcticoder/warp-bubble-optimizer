@@ -472,7 +472,7 @@ def plot_cma_profile(result, save_fig=True):
         plt.savefig('cma_es_profile.png', dpi=300, bbox_inches='tight')
         print("📊 Profile saved as 'cma_es_profile.png'")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 11. Main Execution ────────────────────────────────────────────────────────
 if __name__ == "__main__":

@@ -334,7 +334,7 @@ class MetricBackreactionAnalyzer:
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
     
     def generate_backreaction_report(self) -> str:
         """

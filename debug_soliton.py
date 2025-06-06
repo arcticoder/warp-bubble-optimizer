@@ -130,7 +130,7 @@ def analyze_test_params():
     
     plt.tight_layout()
     plt.savefig('soliton_debug_analysis.png', dpi=150, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     return total_energy
 

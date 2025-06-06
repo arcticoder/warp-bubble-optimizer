@@ -845,7 +845,7 @@ Boundary Conditions: ✓
     
     plt.tight_layout()
     plt.savefig(f'{result["ansatz"].lower()}_profile.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     print(f"   ✅ Profile saved as {result['ansatz'].lower()}_profile.png")
 
@@ -1461,7 +1461,7 @@ Boundary Conditions: ✓
     
     plt.tight_layout()
     plt.savefig(f'{result["ansatz"].lower()}_profile.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
     
     print(f"   ✅ Profile saved as {result['ansatz'].lower()}_profile.png")
 

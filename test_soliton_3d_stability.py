@@ -334,7 +334,7 @@ class SolitonStabilityTester:
         plt.tight_layout()
         plt.savefig('soliton_stability_analysis.png', dpi=300, bbox_inches='tight')
         print(f"\n📊 Stability plots saved to 'soliton_stability_analysis.png'")
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
 
 def main():
     """Main execution"""

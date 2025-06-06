@@ -666,7 +666,7 @@ def plot_hybrid_cubic_profile(result, save_fig=True):
         plt.savefig('hybrid_cubic_profile.png', dpi=300, bbox_inches='tight')
         print("📊 Profile saved as 'hybrid_cubic_profile.png'")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 10. Main Execution ────────────────────────────────────────────────────────
 if __name__ == "__main__":

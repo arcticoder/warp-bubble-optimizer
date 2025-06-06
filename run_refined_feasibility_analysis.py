@@ -60,7 +60,7 @@
         if 'feasibility_heatmap' in self.results:
             self.save_heatmap_plot()
         
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
     
     def save_heatmap_plot(self):
         """Save a high-quality standalone heatmap plot."""

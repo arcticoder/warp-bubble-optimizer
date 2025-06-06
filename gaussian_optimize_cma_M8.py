@@ -934,7 +934,7 @@ def plot_M8_profile(result, save_fig=True):
         plt.savefig('cma_M8_two_stage_profile.png', dpi=300, bbox_inches='tight')
         print(f"📈 Profile plot saved to: cma_M8_two_stage_profile.png")
     
-    plt.show()
+    plt.close()  # Close instead of show to prevent blocking
 
 # ── 12. MAIN EXECUTION ────────────────────────────────────────────────────────
 def main():

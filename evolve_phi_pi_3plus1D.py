@@ -418,7 +418,7 @@ class WarpBubble3D1Evolution:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Saved evolution plot to {save_path}")
         
-        plt.show()
+        plt.close()  # Close instead of show to prevent blocking
 
 
 def test_ansatz_stability(ansatz_params: Dict, evolution_time: float = 10.0) -> Dict:
