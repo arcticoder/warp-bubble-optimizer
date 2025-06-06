@@ -39,6 +39,27 @@ from .enhancement_pathway import (
     MultiBubbleSuperposition,
     ComprehensiveEnhancementCalculator
 )
+# New optimization and development modules
+from .variational_optimizer import (
+    MetricAnsatzOptimizer,
+    EnergyConstraintHandler,
+    VariationalCalculus,
+    create_ansatz_optimizer
+)
+from .numerical_integration import (
+    WarpBubbleIntegrator,
+    EnergyMomentumCalculator,
+    GeometricQuantityCalculator,
+    SpecializedIntegrals,
+    create_energy_calculator
+)
+from .metric_ansatz_development import (
+    MetricAnsatzBuilder,
+    VariationalAnsatzOptimizer,
+    SolitonWarpBubble,
+    GeometricConstraintSolver,
+    create_novel_ansatz
+)
 from .metrics import (
     van_den_broeck_shape,
     natario_shift_vector,
@@ -75,7 +96,24 @@ __all__ = [
     "EnhancementConfig",
     "CavityBoostCalculator",
     "QuantumSqueezingEnhancer",
-    "MultiBubbleSuperposition",    "ComprehensiveEnhancementCalculator",
+    "MultiBubbleSuperposition",
+    "ComprehensiveEnhancementCalculator",
+    # New optimization and development tools
+    "MetricAnsatzOptimizer",
+    "EnergyConstraintHandler",
+    "VariationalCalculus",
+    "create_ansatz_optimizer",
+    "WarpBubbleIntegrator",
+    "EnergyMomentumCalculator",
+    "GeometricQuantityCalculator",
+    "SpecializedIntegrals",
+    "create_energy_calculator",
+    "MetricAnsatzBuilder",
+    "VariationalAnsatzOptimizer",
+    "SolitonWarpBubble",
+    "GeometricConstraintSolver",
+    "create_novel_ansatz",
+    # Metric functions
     "van_den_broeck_shape",
     "natario_shift_vector", 
     "van_den_broeck_natario_metric",
