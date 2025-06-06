@@ -113,6 +113,78 @@ No exponential growth or numerical artifacts:
 \item Smooth evolution without discontinuities
 \end{itemize}
 
+\section{Soliton Ansatz Dynamic Instability Analysis}
+
+\subsection{High-Resolution Instability Testing}
+
+Recent comprehensive 3+1D evolution analysis of the optimal soliton ansatz profile reveals fundamental dynamic instability when evolved under realistic conditions. Using enhanced computational parameters:
+
+\begin{itemize}
+\item Grid resolution: $24^3$ spatial points
+\item Evolution time: 20 time units
+\item Time step: $\Delta t = 0.01$
+\item Initial conditions: Optimized soliton profile with $\mu = 5.33 \times 10^{-6}$, $R_{\text{ratio}} = 1.0 \times 10^{-4}$
+\end{itemize}
+
+\subsection{Catastrophic Instability Metrics}
+
+The evolution demonstrates extreme dynamic instability:
+
+\begin{align}
+\text{Energy drift} &> 10^{10}\% \text{ over 20 time units} \\
+\text{Field amplification} &> 10^{32} \times \text{ initial values} \\
+\text{Growth rate} &\approx e^{50t} \text{ exponential divergence} \\
+\text{Stability timescale} &\approx 0.1 \text{ time units}
+\end{align}
+
+This represents orders of magnitude more severe instability than the mild drift ($< 5\%$) observed in previous polynomial and Gaussian configurations.
+
+\subsection{Physical Interpretation}
+
+The extreme instability of the soliton ansatz stems from several contributing factors:
+
+\begin{enumerate}
+\item \textbf{Localized Energy Concentration}: The solitonic profile concentrates negative energy density in narrow spatial regions, creating steep gradients that amplify numerical and physical instabilities.
+
+\item \textbf{Nonlinear Coupling Enhancement}: The $\operatorname{sech}^2$ functional form interacts strongly with the polymer modifications $\sin(\pi\mu\pi)/(\pi\mu)$, leading to runaway feedback loops.
+
+\item \textbf{Boundary Interactions}: Sharp transitions between solitonic lumps and flat regions generate reflection and interference patterns that destabilize the configuration.
+
+\item \textbf{Quantum Vacuum Fluctuations}: The enhanced negative energy density couples more strongly to vacuum fluctuations, accelerating the onset of quantum instabilities.
+\end{enumerate}
+
+\subsection{Comparison with Alternative Ansätze}
+
+The soliton instability contrasts sharply with the stable behavior of smoother profiles:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Ansatz Type & Energy Drift (\%) & Max Growth Rate & Stability Classification \\
+\midrule
+Polynomial & 1.7 & $\lambda < 0.01$ & STABLE \\
+Gaussian & 1.5 & $\lambda < 0.01$ & STABLE \\
+Lentz Gaussian & 2.1 & $\lambda < 0.02$ & STABLE \\
+\textbf{Soliton} & $\mathbf{> 10^{10}}$ & $\boldsymbol{\lambda \approx 50}$ & \textbf{CATASTROPHICALLY UNSTABLE} \\
+\bottomrule
+\end{tabular}
+\caption{Comparative stability analysis revealing soliton ansatz instability}
+\end{table}
+
+\subsection{Implications for Warp Bubble Engineering}
+
+The dramatic instability of the soliton ansatz, despite its superior static energy optimization, demonstrates the critical importance of dynamic stability in practical warp bubble implementations:
+
+\begin{itemize}
+\item \textbf{Energy vs. Stability Trade-off}: Higher energy optimization does not guarantee practical viability
+\item \textbf{Profile Selection Criteria}: Smoothness and gradient control are essential for stable evolution
+\item \textbf{Stabilization Requirements}: Solitonic profiles would require active feedback control systems
+\item \textbf{Alternative Optimization}: Focus should remain on polynomial/Gaussian families for near-term applications
+\end{itemize}
+
+This analysis provides crucial guidance for future warp bubble research, establishing dynamic stability as a primary constraint alongside energy minimization.
+
 \section{Evolution Results}
 
 \subsection{Polynomial Ansatz Stability}

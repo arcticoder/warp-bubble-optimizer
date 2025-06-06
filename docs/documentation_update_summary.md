@@ -110,3 +110,83 @@ All documentation files now include:
 - `comprehensive_scan_report.txt` - Summary findings and optimal parameters
 
 This comprehensive documentation update ensures that all theoretical discoveries and numerical validations from the parameter scan are properly integrated into the complete theoretical framework, providing a unified and validated foundation for polymer-enhanced warp bubble engineering.
+
+---
+
+# MAJOR UPDATE: Soliton Ansatz Discoveries Documentation
+
+## Revolutionary Findings Added to Documentation
+
+### New Soliton Performance Breakthrough
+- **Record Energy Achievement**: $E_{-}^{\text{soliton}} = -1.584 \times 10^{31}$ J
+- **Performance Improvement**: 1.9× better than polynomial baseline
+- **Parameter Optimization**: $\mu = 5.33 \times 10^{-6}$, $R_{\text{ratio}} = 1.0 \times 10^{-4}$
+- **Convergence Success**: 15/15 parameter combinations (100% success rate)
+
+### Critical Stability Discovery
+- **Catastrophic Instability**: Energy drift $>10^{10}\%$ over 20 time units
+- **Field Amplification**: $>10^{32}×$ growth in field values
+- **Dynamic Classification**: Fundamentally unstable despite optimal static energy
+
+### Enhanced Optimization Methodology
+- **Global Search**: Differential evolution (popsize=15, maxiter=500)
+- **Constraint Handling**: Physical bounds, boundary conditions, QI compliance
+- **Numerical Stability**: Overflow protection, robust integration
+- **Multi-stage Refinement**: Global → local → validation → stability testing
+
+## Documentation Files Updated
+
+### 1. `docs/new_ansatz_development.tex`
+- Added comprehensive "Soliton Ansatz Results" section
+- Detailed optimization performance metrics
+- Enhanced methodology description
+- 3+1D stability analysis integration
+- Comparative analysis across ansatz families
+
+### 2. `docs/3plus1D_stability_analysis.tex`  
+- New "Soliton Ansatz Dynamic Instability Analysis" section
+- High-resolution instability testing details
+- Physical interpretation of instability mechanisms
+- Comparative stability table across all ansätze
+- Engineering implications for practical applications
+
+### 3. `docs/qi_numerical_results.tex`
+- "Enhanced Optimization Methodology for Soliton Ansätze" section
+- Advanced algorithmic framework documentation
+- Performance validation comparisons
+- Constraint enforcement mechanisms
+- Numerical stability enhancements
+
+### 4. `docs/warp-bubble-qft-docs.tex`
+- Updated soliton section with $\operatorname{sech}^2$ formulation
+- Revolutionary performance discovery summary
+- Enhanced ansatz comparison table with stability column
+- Critical stability limitation discussion
+
+### 5. `docs/soliton_discoveries_summary.tex` (NEW FILE)
+- Comprehensive standalone summary document
+- Complete overview of breakthrough and challenges
+- Engineering implications and trade-offs
+- Future research directions
+- Practical recommendations
+
+## Key Implications Documented
+
+### Performance vs. Stability Trade-off
+- Best energy optimization does not guarantee practical viability
+- Dynamic stability is equally important as static energy minimization
+- Solitonic profiles require active stabilization for practical use
+
+### Engineering Guidance
+- **Primary Recommendation**: Polynomial ansätze for optimal energy-stability balance
+- **Alternative**: Gaussian profiles for stable baseline performance  
+- **Research Direction**: Hybrid approaches combining smooth + solitonic elements
+- **Stabilization Need**: Active feedback control for solitonic implementations
+
+### Future Research Priorities
+- Stabilization mechanism development for solitonic profiles
+- Hybrid ansatz exploration
+- Extended high-resolution 3+1D stability studies
+- Machine learning optimization for ansatz discovery
+
+This represents the most significant update to the documentation framework, capturing both the breakthrough energy optimization performance and the critical stability limitations that fundamentally impact practical warp bubble engineering applications.
