@@ -1,1 +1,1 @@
-{'maxiter': 500}
+{'maxfevals': 3000}
