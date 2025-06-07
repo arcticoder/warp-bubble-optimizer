@@ -310,7 +310,17 @@ def E_negative_fast(params, mu0=None, G_geo=None, ansatz_type='gaussian'):
     
     # Vectorized integration: ∫ ρ(r) × 4πr² dr
     integral = np.sum(rho_vals * vol_weights) * dr
-    return integral * c4_8piG
+    energy = integral * c4_8piG
+    
+    # Enforce LQG-modified QI bound
+    try:
+        from src.warp_qft.stability import enforce_lqg_bound
+        energy = enforce_lqg_bound(energy, R, tau)
+    except ImportError:
+        # Fallback for standalone use
+        print("⚠️  LQG bound enforcement unavailable - using raw energy")
+    
+    return energy
 
 # ── 7. PHYSICS-INFORMED CONSTRAINT PENALTIES ──────────────────────────────────
 def curvature_penalty(params, ansatz_type='gaussian'):
@@ -359,19 +369,30 @@ def monotonicity_penalty(params, ansatz_type='gaussian'):
     
     return config.lam_mono * integral
 
-def penalty_functions(params, mu0=None, G_geo=None, ansatz_type='gaussian'):
+def penalty_functions(params, mu0=None, G_geo=None, ansatz_type='gaussian', flight_time=None):
     """
     Comprehensive penalty function including all constraints
+    Uses LQG-modified quantum inequality bound instead of Ford-Roman
     """
     if mu0 is None:
         mu0 = mu0_default
     if G_geo is None:
         G_geo = G_geo_default
+    if flight_time is None:
+        flight_time = tau  # Use default sampling time
     
-    # QI penalty at r=0
+    # Import LQG bounds from stability module
+    from src.warp_qft.stability import lqg_modified_bounds
+    
+    # LQG-modified QI penalty at r=0 (stricter than Ford-Roman)
     rho0 = rho_eff_vectorized(0.0, params, mu0, G_geo, ansatz_type)
-    qi_bound = - (hbar * np.sinc(mu0 / np.pi)) / (12.0 * np.pi * tau**2)
-    qi_violation = max(0.0, -(rho0 - qi_bound))
+    
+    # Use LQG-modified bound: E_- ≥ -C_LQG / T^4
+    lqg_bounds = lqg_modified_bounds(rho0, R, flight_time)
+    lqg_bound = lqg_bounds["lqg_bound"]
+    
+    # Penalty for violating LQG bound (more restrictive than Ford-Roman)
+    qi_violation = max(0.0, -(rho0 - lqg_bound))
     P_qi = config.lam_qi * (qi_violation**2)
     
     # Boundary conditions
@@ -410,14 +431,23 @@ def penalty_functions(params, mu0=None, G_geo=None, ansatz_type='gaussian'):
     
     return P_qi + P_bound + P_curv + P_mono + P_continuity
 
-def objective_function(params, mu0=None, G_geo=None, ansatz_type='gaussian'):
+def objective_function(params, mu0=None, G_geo=None, ansatz_type='gaussian', flight_time=None):
     """
     Complete objective function: E_negative + all penalties
+    Enforces LQG-modified quantum inequality bound
     """
     try:
+        if flight_time is None:
+            flight_time = tau
+            
         energy = E_negative_fast(params, mu0, G_geo, ansatz_type)
-        penalty = penalty_functions(params, mu0, G_geo, ansatz_type)
-        return energy + penalty
+        penalty = penalty_functions(params, mu0, G_geo, ansatz_type, flight_time)
+        
+        # Enforce LQG bound: E_- ≥ -C_LQG / T^4
+        from src.warp_qft.stability import enforce_lqg_bound
+        energy_bounded = enforce_lqg_bound(energy, R, flight_time)
+        
+        return energy_bounded + penalty
     except Exception as e:
         print(f"⚠️  Objective evaluation failed: {e}")
         return 1e10  # Large penalty for failed evaluations

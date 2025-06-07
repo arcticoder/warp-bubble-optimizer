@@ -29,7 +29,22 @@ try:
 except ImportError:
     print("⚠️  CMA-ES not available. Install with: pip install cma")
 
-# ── 1. PHYSICAL CONSTANTS ─────────────────────────────────────────────────────
+# ── LQG BOUND ENFORCEMENT ──────────────────────────────────────────────────────
+# Import LQG-modified quantum inequality bound enforcement
+try:
+    import sys
+    sys.path.append('src')
+    from src.warp_qft.stability import enforce_lqg_bound, lqg_modified_bounds
+    HAS_LQG_BOUNDS = True
+    print("✅ LQG-modified quantum inequality bounds loaded")
+except ImportError:
+    HAS_LQG_BOUNDS = False
+    print("⚠️  LQG bounds not available - using classical energy computation")
+    def enforce_lqg_bound(energy, spatial_scale, flight_time, C_lqg=None):
+        """Fallback function when LQG bounds module is not available"""
+        return energy  # No enforcement
+
+# ── 1. PHYSICAL CONSTANTS ──────────────────────────────────────────────────────
 beta_back = 1.9443254780147017
 hbar      = 1.0545718e-34  # ℏ (SI)
 c         = 299792458      # Speed of light (m/s)
@@ -160,15 +175,21 @@ def E_negative_hybrid(params, mu0=None, G_geo=None):
     
     # Calculate f'(r) on grid
     fp_vals = f_hybrid_prime(r_grid, params)
-    
-    # Apply enhancement factors
+      # Apply enhancement factors
     sinc_val = np.sinc(mu0 / np.pi) if mu0 > 0 else 1.0
     prefac = - (v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo
     rho_vals = prefac * (fp_vals**2)
     
     # Vectorized integration: ∫ ρ(r) × 4πr² dr
     integral = np.sum(rho_vals * vol_weights) * dr
-    return integral * c4_8piG
+    E_negative = integral * c4_8piG
+    
+    # ⭐ ENFORCE LQG-MODIFIED QUANTUM INEQUALITY BOUND ⭐
+    # Target: Push E₋ as close as possible to -C_LQG/T^4 (stricter than Ford-Roman)
+    if HAS_LQG_BOUNDS:
+        E_negative = enforce_lqg_bound(E_negative, R, tau)
+    
+    return E_negative
 
 def rho_eff_hybrid(r, params, mu0=None, G_geo=None):
     """Effective energy density for hybrid ansatz"""

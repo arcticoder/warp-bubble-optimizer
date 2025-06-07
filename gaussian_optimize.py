@@ -47,6 +47,21 @@ tau             = 1e-9           # sampling time
 v               = 1.0            # warp velocity (c = 1 units)
 R               = 1.0            # bubble radius = 1 m
 
+# ── LQG BOUND ENFORCEMENT ──────────────────────────────────────────────────────
+# Import LQG-modified quantum inequality bound enforcement
+try:
+    import sys
+    sys.path.append('src')
+    from src.warp_qft.stability import enforce_lqg_bound, lqg_modified_bounds
+    HAS_LQG_BOUNDS = True
+    print("✅ LQG-modified quantum inequality bounds loaded")
+except ImportError:
+    HAS_LQG_BOUNDS = False
+    print("⚠️  LQG bounds not available - using classical energy computation")
+    def enforce_lqg_bound(energy, spatial_scale, flight_time, C_lqg=None):
+        """Fallback function when LQG bounds module is not available"""
+        return energy  # No enforcement
+
 # Number of Gaussians - NEXT LEVEL: Increased to 5 for even better energy minimization
 # Based on empirical testing: M=3 → M=4 gives ~15% improvement, M=4 → M=5 gives ~8% more
 M_gauss         = 5
@@ -229,7 +244,14 @@ def E_negative_hybrid(params):
     prefac = - (v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo
     rho_vals = prefac * (fp_vals**2)
     integral = np.sum(rho_vals * vol_weights) * dr
-    return integral * c4_8piG
+    E_negative = integral * c4_8piG
+    
+    # ⭐ ENFORCE LQG-MODIFIED QUANTUM INEQUALITY BOUND ⭐
+    # Target: Push E₋ as close as possible to -C_LQG/T^4 (stricter than Ford-Roman)
+    if HAS_LQG_BOUNDS:
+        E_negative = enforce_lqg_bound(E_negative, R, tau)
+    
+    return E_negative
 
 def penalty_hybrid(params, lam_qi=1e50, lam_bound=1e4, lam_continuity=1e5):
     """
@@ -447,7 +469,14 @@ def E_negative_gauss_fast(params):
     
     # Vectorized integration: ∫ ρ(r) × 4πr² dr
     integral = np.sum(rho_vals * vol_weights) * dr
-    return integral * c4_8piG
+    E_negative = integral * c4_8piG
+    
+    # ⭐ ENFORCE LQG-MODIFIED QUANTUM INEQUALITY BOUND ⭐
+    # Target: Push E₋ as close as possible to -C_LQG/T^4 (stricter than Ford-Roman)
+    if HAS_LQG_BOUNDS:
+        E_negative = enforce_lqg_bound(E_negative, R, tau)
+    
+    return E_negative
 
 def E_negative_gauss_slow(params):
     """

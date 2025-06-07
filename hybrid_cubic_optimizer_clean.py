@@ -142,8 +142,7 @@ def E_negative_hybrid_cubic(params, mu_val=None, G_geo_val=None):
     
     # Polymer sinc function enhancement
     sinc_val = np.sinc(mu_use / np.pi) if mu_use > 0 else 1.0
-    
-    # Effective density prefactor
+      # Effective density prefactor
     prefactor = -(v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo_use
     
     # Calculate effective density
@@ -153,7 +152,17 @@ def E_negative_hybrid_cubic(params, mu_val=None, G_geo_val=None):
     integral = np.sum(rho_vals * vol_weights) * dr
     
     # Convert to Joules
-    return integral * c4_8piG
+    energy = integral * c4_8piG
+    
+    # Enforce LQG-modified QI bound
+    try:
+        from src.warp_qft.stability import enforce_lqg_bound
+        energy = enforce_lqg_bound(energy, R, tau)
+    except ImportError:
+        # Fallback for standalone use
+        print("⚠️  LQG bound enforcement unavailable - using raw energy")
+    
+    return energy
 
 # ── 6. Enhanced Penalty Functions ─────────────────────────────────────────────
 def penalty_hybrid_cubic(params, lam_qi=1e50, lam_bound=1e6, lam_continuity=1e6, 

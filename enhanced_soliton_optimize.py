@@ -115,7 +115,19 @@ def calculate_total_energy(params, mu=1e-6, R_ratio=1e-5):
         result, error = quad(integrand, 1e-6, 10*R, 
                            limit=1000, epsabs=1e-12, epsrel=1e-10)
         
-        return result if np.isfinite(result) else 0.0
+        energy = result if np.isfinite(result) else 0.0
+        
+        # Enforce LQG-modified QI bound
+        try:
+            from src.warp_qft.stability import enforce_lqg_bound
+            # Use travel time estimate
+            flight_time = R / c  # Time for light to cross bubble
+            energy = enforce_lqg_bound(energy, R, flight_time)
+        except ImportError:
+            # Fallback for standalone use
+            print("⚠️  LQG bound enforcement unavailable - using raw energy")
+        
+        return energy
         
     except Exception as e:
         print(f"Warning: Energy calculation failed: {e}")

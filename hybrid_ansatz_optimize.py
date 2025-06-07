@@ -266,13 +266,12 @@ class HybridAnsatzOptimizer:
     # ── Energy and Optimization ───────────────────────────────────────────────
     def rho_eff_hybrid(self, r, params):
         """
-        Effective energy density for hybrid ansatz
-        """
+        Effective energy density for hybrid ansatz        """
         fp = self.f_hybrid_prime(r, params)
         sinc_val = np.sinc(mu0 / np.pi) if mu0 > 0 else 1.0
         prefac = - (v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo
         return prefac * (fp**2)
-    
+        
     def E_negative_hybrid(self, params):
         """
         Total negative energy for hybrid ansatz
@@ -282,16 +281,36 @@ class HybridAnsatzOptimizer:
             return rho_val * 4.0 * np.pi * (rr**2)
         
         val, _ = quad(integrand, 0.0, R, limit=200)
-        return val * c4_8piG
+        energy = val * c4_8piG
+        
+        # Enforce LQG-modified QI bound
+        try:
+            from src.warp_qft.stability import enforce_lqg_bound
+            energy = enforce_lqg_bound(energy, R, tau)
+        except ImportError:
+            # Fallback for standalone use
+            print("⚠️  LQG bound enforcement unavailable - using raw energy")
+        
+        return energy
     
-    def penalty_hybrid(self, params, lam_qi=1e50, lam_bound=1e6):
+    def penalty_hybrid(self, params, lam_qi=1e50, lam_bound=1e6, flight_time=None):
         """
-        Penalty function for hybrid ansatz
+        Penalty function for hybrid ansatz using LQG-modified QI bound
         """
-        # QI penalty
+        if flight_time is None:
+            flight_time = tau
+            
+        # Import LQG bounds from stability module
+        from src.warp_qft.stability import lqg_modified_bounds
+        
+        # LQG-modified QI penalty (stricter than Ford-Roman)
         rho0 = self.rho_eff_hybrid(0.0, params)
-        qi_bound = - (hbar * np.sinc(mu0 / np.pi)) / (12.0 * np.pi * tau**2)
-        qi_violation = max(0.0, -(rho0 - qi_bound))
+        
+        # Use LQG-modified bound: E_- ≥ -C_LQG / T^4
+        lqg_bounds = lqg_modified_bounds(rho0, R, flight_time)
+        lqg_bound = lqg_bounds["lqg_bound"]
+        
+        qi_violation = max(0.0, -(rho0 - lqg_bound))
         P_qi = lam_qi * (qi_violation**2)
         
         # Boundary conditions

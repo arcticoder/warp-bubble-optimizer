@@ -40,6 +40,21 @@ G_geo_default = 1e-5       # Van den Broeck–Natário factor
 # Conversion factor for natural units to Joules
 c4_8piG = c**4 / (8.0 * np.pi * G)  # ≈ 4.815×10⁴² J⋅m⁻³
 
+# ── LQG BOUND ENFORCEMENT ──────────────────────────────────────────────────────
+# Import LQG-modified quantum inequality bound enforcement
+try:
+    import sys
+    sys.path.append('src')
+    from src.warp_qft.stability import enforce_lqg_bound, lqg_modified_bounds
+    HAS_LQG_BOUNDS = True
+    print("✅ LQG-modified quantum inequality bounds loaded")
+except ImportError:
+    HAS_LQG_BOUNDS = False
+    print("⚠️  LQG bounds not available - using classical energy computation")
+    def enforce_lqg_bound(energy, spatial_scale, flight_time, C_lqg=None):
+        """Fallback function when LQG bounds module is not available"""
+        return energy  # No enforcement
+
 # ── 2. ANSATZ CONFIGURATION ──────────────────────────────────────────────────
 M_gauss = 4  # Number of Gaussian lumps (optimal balance)
 
@@ -113,12 +128,18 @@ def E_negative_cma(params, mu0=None, G_geo=None):
     
     # Calculate effective density
     rho_vals = prefactor * (fp_vals**2)
-    
-    # Vectorized integration: ∫ ρ(r) * 4π r² dr
+      # Vectorized integration: ∫ ρ(r) * 4π r² dr
     integral = np.sum(rho_vals * vol_weights) * dr
     
     # Convert to Joules
-    return integral * c4_8piG
+    E_negative = integral * c4_8piG
+    
+    # ⭐ ENFORCE LQG-MODIFIED QUANTUM INEQUALITY BOUND ⭐
+    # Target: Push E₋ as close as possible to -C_LQG/T^4 (stricter than Ford-Roman)
+    if HAS_LQG_BOUNDS:
+        E_negative = enforce_lqg_bound(E_negative, R, tau)
+    
+    return E_negative
 
 # ── 5. ENHANCED PENALTY FUNCTIONS ────────────────────────────────────────────
 def penalty_cma(params, mu0=None, G_geo=None, 

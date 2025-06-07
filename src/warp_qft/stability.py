@@ -304,3 +304,97 @@ def stability_analysis(negative_energy: float, spatial_scale: float,
         "polymer_bounds": polymer_bounds,
         "duration_info": duration_info
     }
+
+
+def lqg_modified_bounds(energy_density: float, spatial_scale: float,
+                       flight_time: float, C_lqg: Optional[float] = None,
+                       temporal_scale: Optional[float] = None) -> Dict:
+    """
+    Compute LQG-modified quantum inequality bounds.
+    
+    The LQG-modified bound is stricter than Ford-Roman:
+    E_- ≥ -C_LQG / T^4
+    
+    where C_LQG << C (classical Ford-Roman constant) and T is the sampling/flight time.
+    This provides a more restrictive lower bound on negative energy.
+    
+    Args:
+        energy_density: Peak negative energy density
+        spatial_scale: Characteristic spatial scale
+        flight_time: Sampling/flight time duration T
+        C_lqg: LQG modification constant (if None, use default)
+        temporal_scale: Characteristic temporal scale (if None, use flight_time)
+        
+    Returns:
+        Dictionary with LQG-modified bounds and analysis
+    """
+    if temporal_scale is None:
+        temporal_scale = flight_time
+    
+    # Default LQG constant - much smaller than classical Ford-Roman
+    if C_lqg is None:
+        hbar_c = 1.0  # Natural units
+        C_classical = hbar_c / (12 * np.pi)  # Classical Ford-Roman constant
+        # LQG modification makes bound stricter by factor of ~100-1000
+        C_lqg = C_classical / 100.0  # C_LQG << C
+    
+    # LQG-modified bound: E_- ≥ -C_LQG / T^4
+    max_negative_integral = -C_lqg / (flight_time**4)
+    
+    # Convert to maximum density for given spatial extent
+    max_negative_density = max_negative_integral / spatial_scale
+    
+    # Violation occurs when magnitude of negative energy density exceeds bound
+    violates_bound = abs(energy_density) > abs(max_negative_density) if energy_density < 0 else False
+    
+    # Violation factor - higher means more severe violation
+    violation_factor = abs(energy_density / max_negative_density) if max_negative_density != 0 else np.inf
+    
+    # Compare with classical Ford-Roman bound
+    classical_bounds = ford_roman_bounds(energy_density, spatial_scale, temporal_scale)
+    strictness_factor = abs(max_negative_density / classical_bounds["ford_roman_bound"]) if classical_bounds["ford_roman_bound"] != 0 else np.inf
+    
+    return {
+        "lqg_bound": max_negative_density,
+        "max_negative_integral": max_negative_integral,
+        "spatial_scale": spatial_scale,
+        "temporal_scale": temporal_scale,
+        "flight_time": flight_time,
+        "C_lqg": C_lqg,
+        "energy_density": energy_density,
+        "violates_bound": violates_bound,
+        "violation_factor": violation_factor,
+        "strictness_factor": strictness_factor,  # How much stricter than Ford-Roman
+        "bound_type": "lqg_modified"
+    }
+
+
+def enforce_lqg_bound(computed_energy: float, spatial_scale: float, 
+                      flight_time: float, C_lqg: Optional[float] = None) -> float:
+    """
+    Enforce LQG-modified quantum inequality bound on computed negative energy.
+    
+    This function ensures that any computed negative energy E_- satisfies:
+    E_- ≥ -C_LQG / T^4
+    
+    If the computed energy violates this bound, it is clamped to the bound value.
+    
+    Args:
+        computed_energy: Raw computed negative energy
+        spatial_scale: Characteristic spatial scale
+        flight_time: Sampling/flight time duration T
+        C_lqg: LQG modification constant (if None, use default)
+        
+    Returns:
+        Energy value respecting LQG bound
+    """
+    if computed_energy >= 0:
+        return computed_energy
+    
+    # Get LQG bound
+    lqg_bounds = lqg_modified_bounds(computed_energy, spatial_scale, flight_time, C_lqg)
+    lqg_limit = lqg_bounds["lqg_bound"]
+    
+    # Enforce bound: E_- ≥ -C_LQG/T^4
+    # Since lqg_limit is negative, we want max(computed_energy, lqg_limit)
+    return max(computed_energy, lqg_limit)
