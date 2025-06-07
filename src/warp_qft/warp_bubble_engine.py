@@ -13,6 +13,7 @@ Based on theoretical foundations in docs/*.tex
 """
 
 import numpy as np
+from typing import Tuple, Dict, List, Optional, Callable
 try:
     from scipy.integrate import simpson
 except ImportError:
@@ -878,3 +879,371 @@ def optimize_for_feasibility(target_ratio: float = 1.0,
                 if ratio >= target_ratio:
                     print(f"✅ Target achieved at iteration {iteration}!")
                     break
+
+class TimeDependentWarpEngine:
+    """
+    Extended warp bubble engine with 4D spacetime capabilities.
+    
+    Supports temporal smearing for quantum inequality exploitation
+    and gravity compensation for realistic flight scenarios.
+    """
+    
+    def __init__(self, bubble_volume: float = 1.0, flight_duration: float = 2e6,
+                 C_LQG: float = 1e-3):
+        """
+        Initialize time-dependent warp bubble engine.
+        
+        Args:
+            bubble_volume: Bubble volume in m³
+            flight_duration: Total flight time in seconds  
+            C_LQG: LQG quantum inequality constant (J·s⁴)
+        """
+        self.V = bubble_volume
+        self.T_total = flight_duration  
+        self.C_LQG = C_LQG
+        self.R = (3 * self.V / (4 * np.pi))**(1/3)  # Spherical bubble radius
+        
+        # Physical constants
+        self.c = 2.998e8  # m/s
+        self.G = 6.674e-11  # m³/kg/s²
+        self.hbar = 1.055e-34  # J·s
+        self.g_earth = 9.81  # m/s²
+        
+        print(f"Time-Dependent Warp Engine initialized:")
+        print(f"  Volume: {self.V:.2f} m³, Radius: {self.R:.3f} m") 
+        print(f"  Flight duration: {self.T_total/86400:.1f} days")
+        print(f"  QI bound: {self.quantum_inequality_bound():.2e} J")
+    
+    def quantum_inequality_bound(self) -> float:
+        """Compute quantum inequality lower bound for this configuration."""
+        return self.V * self.C_LQG / (self.T_total**4)
+    
+    def energy_density_4d(self, r: np.ndarray, t: np.ndarray, 
+                         shape_func: Callable, accel_func: Callable,
+                         mu: float, G_geo: float) -> np.ndarray:
+        """
+        Compute 4D energy density T₀₀(r,t) with temporal modulation.
+        
+        Args:
+            r: Radial coordinates
+            t: Time coordinates
+            shape_func: Spatial shape function f(r)
+            accel_func: Temporal acceleration function a(t)
+            mu: LQG polymer parameter
+            G_geo: LQG geometric coupling
+            
+        Returns:
+            Energy density array T₀₀(r,t)
+        """
+        # Spatial and temporal profiles
+        f_spatial = shape_func(r)
+        a_temporal = accel_func(t)
+        
+        # Time modulation envelope (smooth ramp on/off)
+        ramp_time = self.T_total * 0.1  # 10% of flight for ramp
+        
+        if np.isscalar(t):
+            t_arr = np.array([t])
+        else:
+            t_arr = t
+            
+        envelope = np.ones_like(t_arr)
+        
+        # Smooth ramp-on
+        ramp_on_mask = t_arr < ramp_time
+        envelope[ramp_on_mask] = 0.5 * (1 + np.tanh((t_arr[ramp_on_mask] - ramp_time/2) / (ramp_time/10)))
+        
+        # Smooth ramp-off  
+        ramp_off_mask = t_arr > (self.T_total - ramp_time)
+        envelope[ramp_off_mask] = 0.5 * (1 + np.tanh((self.T_total - ramp_time/2 - t_arr[ramp_off_mask]) / (ramp_time/10)))
+        
+        if np.isscalar(t):
+            envelope = envelope[0]
+        
+        # Combined amplitude
+        amplitude = np.outer(f_spatial, envelope) if not np.isscalar(t) else f_spatial * envelope
+        
+        # Classical energy density contribution
+        velocity_factor = np.outer(np.ones_like(r), a_temporal * t_arr / self.c) if not np.isscalar(t) else a_temporal * t / self.c
+        T00_classical = amplitude**2 * velocity_factor**2
+        
+        # LQG correction
+        sinc_argument = np.pi * mu * amplitude
+        sinc_factor = np.sinc(sinc_argument)  # sinc(x) = sin(πx)/(πx)
+        lqg_correction = 1 + G_geo * sinc_factor
+        
+        # Total energy density (negative for exotic energy)
+        T00_total = -T00_classical * lqg_correction
+        
+        return T00_total
+    
+    def integrate_total_energy_4d(self, shape_func: Callable, accel_func: Callable,
+                                 mu: float, G_geo: float,
+                                 Nr: int = 128, Nt: int = 128) -> float:
+        """
+        Integrate total exotic energy over 4D spacetime.
+        
+        E_total = ∫₀ᵀ ∫₀ᴿ T₀₀(r,t) * 4πr² dr dt
+        """
+        # Create grids
+        r_grid = np.linspace(0, self.R, Nr)
+        t_grid = np.linspace(0, self.T_total, Nt)
+        dr = self.R / (Nr - 1) if Nr > 1 else self.R
+        dt = self.T_total / (Nt - 1) if Nt > 1 else self.T_total
+        
+        # Compute energy density over grid
+        T00_grid = self.energy_density_4d(r_grid, t_grid, shape_func, accel_func, mu, G_geo)
+        
+        # 4D volume element integration
+        total_energy = 0.0
+        for i, r in enumerate(r_grid):
+            for j, t in enumerate(t_grid):
+                volume_element = 4 * np.pi * r**2 * dr * dt
+                total_energy += T00_grid[i, j] * volume_element
+        
+        return total_energy
+    
+    def gravity_compensation_check(self, accel_func: Callable, Nt: int = 100) -> Dict:
+        """
+        Check if acceleration profile provides sufficient gravity compensation.
+        
+        Returns:
+            Dictionary with compensation analysis
+        """
+        t_grid = np.linspace(0, self.T_total, Nt)
+        a_vals = accel_func(t_grid)
+        
+        min_accel = np.min(a_vals)
+        mean_accel = np.mean(a_vals)
+        
+        # Check compensation criteria
+        always_compensated = np.all(a_vals >= self.g_earth)
+        compensation_fraction = np.sum(a_vals >= self.g_earth) / len(a_vals)
+        
+        return {
+            'always_compensated': always_compensated,
+            'compensation_fraction': compensation_fraction,
+            'min_acceleration': min_accel,
+            'mean_acceleration': mean_accel,
+            'gravity_deficit': np.maximum(self.g_earth - min_accel, 0.0)
+        }
+    
+    def quantum_inequality_check(self, total_energy: float) -> Dict:
+        """
+        Check compliance with quantum inequality bounds.
+        
+        Args:
+            total_energy: Total integrated exotic energy
+            
+        Returns:
+            Dictionary with QI analysis
+        """
+        qi_bound = self.quantum_inequality_bound()
+        energy_magnitude = abs(total_energy)
+        
+        violates_qi = energy_magnitude < qi_bound
+        violation_ratio = qi_bound / energy_magnitude if energy_magnitude > 0 else np.inf
+        
+        return {
+            'violates_quantum_inequality': violates_qi,
+            'qi_bound': qi_bound,
+            'energy_magnitude': energy_magnitude,
+            'violation_ratio': violation_ratio,
+            'is_near_optimal': abs(violation_ratio - 1.0) < 0.1
+        }
+    
+    def optimize_temporal_profile(self, shape_func: Callable, 
+                                 target_accel: float = None,
+                                 profile_type: str = "smooth_ramp") -> Callable:
+        """
+        Generate optimized temporal acceleration profile.
+        
+        Args:
+            shape_func: Spatial bubble shape function
+            target_accel: Target cruise acceleration (default: 1.1*g)
+            profile_type: "constant", "linear", "smooth_ramp", or "energy_optimal"
+            
+        Returns:
+            Optimized acceleration function a(t)
+        """
+        if target_accel is None:
+            target_accel = self.g_earth * 1.2  # 20% above gravity
+        
+        if profile_type == "constant":
+            def accel_func(t):
+                return np.full_like(t, target_accel)
+                
+        elif profile_type == "linear":
+            def accel_func(t):
+                a_start = target_accel * 1.5  # Higher initial acceleration
+                a_end = target_accel * 0.8    # Lower final acceleration
+                return a_start + (a_end - a_start) * t / self.T_total
+                
+        elif profile_type == "smooth_ramp":
+            def accel_func(t):
+                ramp_fraction = 0.2  # 20% of flight for ramp
+                T_ramp = self.T_total * ramp_fraction
+                
+                # Smooth S-curve ramp-up and ramp-down
+                result = np.zeros_like(t)
+                
+                # Ramp up
+                mask_up = t < T_ramp
+                result[mask_up] = target_accel * 0.5 * (1 - np.cos(np.pi * t[mask_up] / T_ramp))
+                
+                # Cruise
+                mask_cruise = (t >= T_ramp) & (t <= self.T_total - T_ramp)
+                result[mask_cruise] = target_accel
+                
+                # Ramp down
+                mask_down = t > self.T_total - T_ramp
+                t_down = t[mask_down] - (self.T_total - T_ramp)
+                result[mask_down] = target_accel * 0.5 * (1 - np.cos(np.pi * t_down / T_ramp))
+                
+                return result
+                
+        elif profile_type == "energy_optimal":
+            def accel_func(t):
+                # Energy-optimal profile minimizing total impulse
+                t_norm = t / self.T_total
+                
+                # Base gravity compensation
+                a_base = self.g_earth * 1.1
+                
+                # Gaussian enhancement for efficient cruise
+                sigma = 0.3
+                a_boost = target_accel * 0.5 * np.exp(-((t_norm - 0.5) / sigma)**2)
+                
+                return a_base + a_boost
+        
+        else:
+            raise ValueError(f"Unknown profile type: {profile_type}")
+        
+        return accel_func
+    
+    def comprehensive_feasibility_analysis(self, shape_func: Callable,
+                                         mu_range: Tuple[float, float] = (1e-6, 1e-4),
+                                         G_geo_range: Tuple[float, float] = (1e-5, 1e-3),
+                                         n_samples: int = 20) -> Dict:
+        """
+        Comprehensive feasibility analysis across LQG parameter space.
+        
+        Args:
+            shape_func: Spatial shape function
+            mu_range: Range of polymer parameters to test
+            G_geo_range: Range of geometric couplings to test
+            n_samples: Number of parameter samples
+            
+        Returns:
+            Dictionary with feasibility analysis results
+        """
+        mu_vals = np.logspace(np.log10(mu_range[0]), np.log10(mu_range[1]), n_samples)
+        G_geo_vals = np.logspace(np.log10(G_geo_range[0]), np.log10(G_geo_range[1]), n_samples)
+        
+        results = []
+        feasible_count = 0
+        
+        # Optimize temporal profile
+        accel_func = self.optimize_temporal_profile(shape_func, profile_type="smooth_ramp")
+        
+        for mu in mu_vals:
+            for G_geo in G_geo_vals:
+                # Compute total energy
+                E_total = self.integrate_total_energy_4d(shape_func, accel_func, mu, G_geo)
+                
+                # Check constraints
+                qi_check = self.quantum_inequality_check(E_total)
+                grav_check = self.gravity_compensation_check(accel_func)
+                
+                # Feasibility criteria
+                is_feasible = (
+                    qi_check['is_near_optimal'] and
+                    grav_check['always_compensated']
+                )
+                
+                if is_feasible:
+                    feasible_count += 1
+                
+                results.append({
+                    'mu': mu,
+                    'G_geo': G_geo,
+                    'total_energy': E_total,
+                    'qi_check': qi_check,
+                    'gravity_check': grav_check,
+                    'is_feasible': is_feasible
+                })
+        
+        # Summary statistics
+        feasible_results = [r for r in results if r['is_feasible']]
+        
+        summary = {
+            'total_configurations': len(results),
+            'feasible_configurations': feasible_count,
+            'feasibility_rate': feasible_count / len(results),
+            'all_results': results,
+            'feasible_results': feasible_results
+        }
+        
+        if feasible_results:
+            energies = [r['total_energy'] for r in feasible_results]
+            summary.update({
+                'best_energy': min(energies, key=abs),
+                'energy_range': (min(energies), max(energies)),
+                'mean_energy': np.mean(energies)
+            })
+        
+        return summary
+
+
+def demonstrate_time_dependent_engine():
+    """
+    Demonstrate the time-dependent warp bubble engine capabilities.
+    """
+    print("Time-Dependent Warp Bubble Engine Demonstration")
+    print("=" * 50)
+    
+    # Example shape function (Van den Broeck-like)
+    def vdb_shape(r):
+        R_int, R_ext = 0.8, 0.2
+        sigma = 0.1
+        return np.where(
+            r <= R_ext, 1.0,
+            np.where(r >= R_int, 0.0,
+                    0.5 * (1 + np.tanh((R_int + R_ext - 2*r) / (2*sigma))))
+        )
+    
+    # Test different bubble configurations
+    configs = [
+        {"volume": 1.0, "duration": 7*86400, "name": "1m³, 1 week"},
+        {"volume": 5.0, "duration": 21*86400, "name": "5m³, 3 weeks"},
+        {"volume": 10.0, "duration": 60*86400, "name": "10m³, 2 months"}
+    ]
+    
+    for config in configs:
+        print(f"\nConfiguration: {config['name']}")
+        print("-" * 30)
+        
+        # Create engine
+        engine = TimeDependentWarpEngine(
+            bubble_volume=config["volume"],
+            flight_duration=config["duration"]
+        )
+        
+        # Run feasibility analysis
+        analysis = engine.comprehensive_feasibility_analysis(
+            vdb_shape, n_samples=10  # Reduced for demo
+        )
+        
+        print(f"  Feasibility rate: {analysis['feasibility_rate']:.1%}")
+        print(f"  QI bound: {engine.quantum_inequality_bound():.2e} J")
+        
+        if analysis['feasible_results']:
+            best_energy = analysis['best_energy']
+            print(f"  Best energy: {best_energy:.2e} J")
+            print(f"  Energy ratio: {abs(best_energy)/engine.quantum_inequality_bound():.2f}")
+    
+    print(f"\nTime-dependent engine demonstration complete!")
+
+
+if __name__ == "__main__":
+    demonstrate_time_dependent_engine()

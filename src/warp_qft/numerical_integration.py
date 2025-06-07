@@ -8,6 +8,7 @@ spacetimes.
 """
 
 import numpy as np
+import time
 from scipy.integrate import quad, dblquad, tplquad, simpson
 try:
     from scipy.integrate import trapezoid as trapz
@@ -362,3 +363,275 @@ def create_energy_calculator(metric_type: str) -> Callable:
         
     else:
         raise ValueError(f"Unknown metric type: {metric_type}")
+
+class SpacetimeIntegrator:
+    """
+    Specialized 4D spacetime integration for warp bubble calculations.
+    
+    Provides efficient integration over (t,r,θ,φ) coordinates with
+    support for temporal smearing and quantum inequality bounds.
+    """
+    
+    def __init__(self, Nr: int = 128, Nt: int = 128, Ntheta: int = 32, Nphi: int = 64):
+        """
+        Initialize 4D spacetime integrator.
+        
+        Args:
+            Nr: Radial grid points
+            Nt: Temporal grid points  
+            Ntheta: Polar angle grid points
+            Nphi: Azimuthal angle grid points
+        """
+        self.Nr = Nr
+        self.Nt = Nt
+        self.Ntheta = Ntheta
+        self.Nphi = Nphi
+    
+    def integrate_4d_energy(self, energy_density_func: Callable, 
+                           R: float, T: float,
+                           integration_method: str = "simpson") -> float:
+        """
+        Integrate energy density over 4D spacetime volume.
+        
+        ∫∫∫∫ ρ(t,r,θ,φ) * r² * sin(θ) dt dr dθ dφ
+        
+        Args:
+            energy_density_func: Function ρ(t,r,θ,φ)
+            R: Maximum radius
+            T: Total time duration
+            integration_method: "simpson", "trapezoid", or "monte_carlo"
+            
+        Returns:
+            Total integrated energy
+        """
+        # Create coordinate grids
+        t_grid = np.linspace(0, T, self.Nt)
+        r_grid = np.linspace(0, R, self.Nr) 
+        theta_grid = np.linspace(0, np.pi, self.Ntheta)
+        phi_grid = np.linspace(0, 2*np.pi, self.Nphi)
+        
+        # Grid spacing
+        dt = T / (self.Nt - 1) if self.Nt > 1 else T
+        dr = R / (self.Nr - 1) if self.Nr > 1 else R
+        dtheta = np.pi / (self.Ntheta - 1) if self.Ntheta > 1 else np.pi
+        dphi = 2*np.pi / (self.Nphi - 1) if self.Nphi > 1 else 2*np.pi
+        
+        total_energy = 0.0
+        
+        if integration_method == "simpson" and all(n >= 3 for n in [self.Nt, self.Nr, self.Ntheta, self.Nphi]):
+            # Use Simpson's rule for higher accuracy
+            for i, t in enumerate(t_grid):
+                for j, r in enumerate(r_grid):
+                    # Integrate over angles for fixed (t,r)
+                    integrand_2d = np.zeros((self.Ntheta, self.Nphi))
+                    
+                    for k, theta in enumerate(theta_grid):
+                        for l, phi in enumerate(phi_grid):
+                            rho = energy_density_func(t, r, theta, phi)
+                            jacobian = r**2 * np.sin(theta)
+                            integrand_2d[k, l] = rho * jacobian
+                    
+                    # 2D Simpson integration over angles
+                    angular_integral = simpson_2d(integrand_2d, dtheta, dphi)
+                    
+                    # Weight for Simpson's rule in (t,r)
+                    t_weight = simpson_weight(i, self.Nt)
+                    r_weight = simpson_weight(j, self.Nr)
+                    
+                    total_energy += angular_integral * t_weight * r_weight * dt * dr
+                    
+        else:
+            # Fallback to trapezoidal rule
+            for t in t_grid:
+                for r in r_grid:
+                    for theta in theta_grid:
+                        for phi in phi_grid:
+                            rho = energy_density_func(t, r, theta, phi)
+                            jacobian = r**2 * np.sin(theta)
+                            total_energy += rho * jacobian * dt * dr * dtheta * dphi
+        
+        return total_energy
+    
+    def temporal_averaged_energy(self, energy_density_func: Callable,
+                               sampling_func: Callable,
+                               R: float, T: float) -> float:
+        """
+        Compute temporally averaged energy with sampling function.
+        
+        Used for quantum inequality calculations:
+        ∫ ρ(t,r) * f(t) * 4πr² dt dr
+        
+        Args:
+            energy_density_func: ρ(t,r) 
+            sampling_func: Temporal sampling f(t)
+            R: Maximum radius
+            T: Total time
+            
+        Returns:
+            Temporally averaged energy
+        """
+        t_grid = np.linspace(0, T, self.Nt)
+        r_grid = np.linspace(0, R, self.Nr)
+        dt = T / (self.Nt - 1) if self.Nt > 1 else T
+        dr = R / (self.Nr - 1) if self.Nr > 1 else R
+        
+        total_energy = 0.0
+        
+        for t in t_grid:
+            f_t = sampling_func(t)
+            for r in r_grid:
+                rho = energy_density_func(t, r)
+                volume_element = 4 * np.pi * r**2
+                total_energy += rho * f_t * volume_element * dt * dr
+        
+        return total_energy
+    
+    def energy_moments(self, energy_density_func: Callable,
+                      R: float, T: float, max_moment: int = 4) -> Dict[int, float]:
+        """
+        Compute energy moments for stability analysis.
+        
+        M_n = ∫∫ r^n * |ρ(t,r)| * 4πr² dt dr
+        
+        Returns:
+            Dictionary of moments {n: M_n}
+        """
+        t_grid = np.linspace(0, T, self.Nt)
+        r_grid = np.linspace(0, R, self.Nr)
+        dt = T / (self.Nt - 1) if self.Nt > 1 else T
+        dr = R / (self.Nr - 1) if self.Nr > 1 else R
+        
+        moments = {n: 0.0 for n in range(max_moment + 1)}
+        
+        for t in t_grid:
+            for r in r_grid:
+                rho = abs(energy_density_func(t, r))
+                volume_element = 4 * np.pi * r**2
+                
+                for n in range(max_moment + 1):
+                    moments[n] += (r**n) * rho * volume_element * dt * dr
+        
+        return moments
+
+
+def simpson_2d(integrand: np.ndarray, dx: float, dy: float) -> float:
+    """
+    2D Simpson's rule integration.
+    """
+    Nx, Ny = integrand.shape
+    
+    # 1D Simpson weights
+    wx = np.ones(Nx)
+    wx[1:-1:2] = 4  # Odd indices
+    wx[2:-1:2] = 2  # Even indices (except endpoints)
+    wx /= 3
+    
+    wy = np.ones(Ny) 
+    wy[1:-1:2] = 4
+    wy[2:-1:2] = 2
+    wy /= 3
+    
+    # 2D integration
+    result = 0.0
+    for i in range(Nx):
+        for j in range(Ny):
+            result += integrand[i, j] * wx[i] * wy[j]
+    
+    return result * dx * dy
+
+
+def simpson_weight(index: int, N: int) -> float:
+    """
+    Simpson's rule weight for given index.
+    """
+    if index == 0 or index == N - 1:
+        return 1.0 / 3.0
+    elif index % 2 == 1:
+        return 4.0 / 3.0
+    else:
+        return 2.0 / 3.0
+
+
+def quantum_inequality_sampling(t: np.ndarray, tau: float, 
+                              sampling_type: str = "gaussian") -> np.ndarray:
+    """
+    Generate sampling functions for quantum inequality calculations.
+    
+    Args:
+        t: Time array
+        tau: Sampling timescale
+        sampling_type: "gaussian", "lorentzian", or "exponential"
+        
+    Returns:
+        Sampling function values f(t)
+    """
+    if sampling_type == "gaussian":
+        return np.exp(-t**2 / (2 * tau**2)) / (np.sqrt(2 * np.pi) * tau)
+    elif sampling_type == "lorentzian":
+        return (tau / np.pi) / (t**2 + tau**2)
+    elif sampling_type == "exponential":
+        return np.exp(-np.abs(t) / tau) / (2 * tau)
+    else:
+        raise ValueError(f"Unknown sampling type: {sampling_type}")
+
+
+def compute_lqg_corrected_energy(energy_classical: float, 
+                               mu: float, G_geo: float,
+                               field_amplitude: float) -> float:
+    """
+    Apply LQG corrections to classical energy calculation.
+    
+    E_LQG = E_classical * (1 + G_geo * sinc(π * μ * φ))
+    
+    Args:
+        energy_classical: Classical energy value
+        mu: LQG polymer parameter  
+        G_geo: Geometric coupling constant
+        field_amplitude: Typical field amplitude
+        
+    Returns:
+        LQG-corrected energy
+    """
+    sinc_factor = np.sinc(np.pi * mu * field_amplitude)
+    correction_factor = 1 + G_geo * sinc_factor
+    
+    return energy_classical * correction_factor
+
+
+def benchmark_4d_integration():
+    """
+    Benchmark 4D spacetime integration performance.
+    """
+    print("4D Spacetime Integration Benchmark")
+    print("=" * 40)
+    
+    # Test function: Gaussian energy density
+    def test_energy_density(t, r, theta=None, phi=None):
+        R0, T0 = 1.0, 1000.0
+        sigma_r, sigma_t = 0.3, 200.0
+        return -np.exp(-(r/sigma_r)**2 - ((t-T0/2)/sigma_t)**2)
+    
+    # Test different grid sizes
+    grid_sizes = [32, 64, 128]
+    R, T = 2.0, 2000.0
+    
+    results = {}
+    
+    for N in grid_sizes:
+        integrator = SpacetimeIntegrator(Nr=N, Nt=N)
+        
+        start_time = time.time()
+        energy = integrator.integrate_4d_energy(test_energy_density, R, T, "trapezoid")
+        integration_time = time.time() - start_time
+        
+        results[N] = {
+            'energy': energy,
+            'time': integration_time,
+            'points': N**4
+        }
+        
+        print(f"Grid {N}×{N}×{N}×{N}: E = {energy:.3e} J, "
+              f"Time = {integration_time:.2f} s, "
+              f"Rate = {N**4/integration_time:.0f} pts/s")
+    
+    return results
