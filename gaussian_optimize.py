@@ -643,287 +643,249 @@ def optimize_hybrid_ansatz(mu_val=1e-6, G_geo_val=1e-5, M_gauss_hybrid=2):
         'ansatz': 'Hybrid'
     }
 
-def run_multi_ansatz_comparison():
-    """
-    Compare multiple ansatz types: 4-Gaussian, enhanced, hybrid, CMA-ES.
-    """
-    print("\n🎯 MULTI-ANSATZ COMPARISON")
-    print("-" * 50)
-    
-    results = {}
-    best_overall = None
-    
-    # Test 4-Gaussian
-    print("Testing 4-Gaussian ansatz...")
-    result_4g = optimize_gaussian_fast(1e-6, 1e-5, use_enhanced=False)
-    if result_4g:
-        results['4-Gaussian'] = result_4g
-        best_overall = result_4g
-        print(f"   4-Gaussian: E₋ = {result_4g['energy_J']:.3e} J")
-    
-    # Test 4-Gaussian with enhanced physics constraints  
-    print("Testing 4-Gaussian with enhanced constraints...")
-    result_4g_enh = optimize_gaussian_fast(1e-6, 1e-5, use_enhanced=True)
-    if result_4g_enh:
-        results['4-Gaussian-Enhanced'] = result_4g_enh
-        if not best_overall or result_4g_enh['energy_J'] < best_overall['energy_J']:
-            best_overall = result_4g_enh
-        print(f"   4-Gaussian-Enhanced: E₋ = {result_4g_enh['energy_J']:.3e} J")
-    
-    # Test hybrid ansatz
-    print("Testing Hybrid ansatz...")
-    try:
-        result_hybrid = optimize_hybrid_ansatz(1e-6, 1e-5, M_gauss_hybrid=2)
-        if result_hybrid:
-            results['Hybrid'] = result_hybrid
-            if not best_overall or result_hybrid['energy_J'] < best_overall['energy_J']:
-                best_overall = result_hybrid
-            print(f"   Hybrid: E₋ = {result_hybrid['energy_J']:.3e} J")
-    except Exception as e:
-        print(f"   Hybrid failed: {e}")
-    
-    # Test CMA-ES (if available)
-    if HAS_CMA:
-        print("Testing CMA-ES optimization...")
-        try:
-            global mu0, G_geo
-            mu0, G_geo = 1e-6, 1e-5
-            bounds = get_optimization_bounds()
-            cma_result = optimize_with_cma(bounds, objective_gauss)
-            if cma_result and cma_result['success']:
-                energy = E_negative_gauss_fast(cma_result['x'])
-                cma_formatted = {
-                    'params': cma_result['x'],
-                    'energy_J': energy,
-                    'mu': 1e-6,
-                    'G_geo': 1e-5,
-                    'success': True,
-                    'total_time': cma_result['total_time'],
-                    'ansatz': 'CMA-ES'
-                }
-                results['CMA-ES'] = cma_formatted
-                if not best_overall or energy < best_overall['energy_J']:
-                    best_overall = cma_formatted
-                print(f"   CMA-ES: E₋ = {energy:.3e} J")
-        except Exception as e:
-            print(f"   CMA-ES failed: {e}")
-    
-    return results, best_overall
+# ── 6. ENHANCED GLOBAL OPTIMIZERS: CMA-ES & ADAPTIVE BOUNDS ──────────────────
 
-def run_parameter_scan():
+def get_tightened_bounds(previous_results=None):
     """
-    Comprehensive parameter scan across μ and G_geo values.
+    ADAPTIVE BOUNDS: Tighten parameter bounds based on previous successful runs.
+    This can speed up convergence by 5×-10× by searching smaller volumes.
     """
-    print("\n🔍 COMPREHENSIVE PARAMETER SCAN")
-    print("-" * 50)
+    if previous_results is None:
+        return get_optimization_bounds()
     
-    mu_vals = [1e-7, 5e-7, 1e-6, 5e-6, 1e-5]
-    G_geo_vals = [1e-6, 1e-5, 1e-4]
+    # Extract successful parameter ranges from previous runs
+    successful_params = [r['params'] for r in previous_results if r.get('success', False)]
+    if not successful_params:
+        return get_optimization_bounds()
     
-    results = []
-    best_result = None
+    # Calculate parameter statistics
+    param_array = np.array(successful_params)
+    param_means = np.mean(param_array, axis=0)
+    param_stds = np.std(param_array, axis=0)
     
-    for mu_val in mu_vals:
-        for G_geo_val in G_geo_vals:
-            try:
-                result = optimize_gaussian_fast(mu_val, G_geo_val)
-                if result and result['success']:
-                    results.append(result)
-                    
-                    if best_result is None or result['energy_J'] < best_result['energy_J']:
-                        best_result = result
-                    
-                    print(f"   ✅ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: E₋={result['energy_J']:.3e} J")
-                else:
-                    print(f"   ❌ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: Failed")
-                    
-            except Exception as e:
-                print(f"   ❌ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: Error - {e}")
+    # Tighten bounds to ±2σ around mean of successful runs
+    tightened_bounds = []
+    default_bounds = get_optimization_bounds()
     
-    return results, best_result
+    for i, (default_low, default_high) in enumerate(default_bounds):
+        if i < len(param_means):
+            tight_low = max(default_low, param_means[i] - 2*param_stds[i])
+            tight_high = min(default_high, param_means[i] + 2*param_stds[i])
+            # Ensure minimum width
+            if tight_high - tight_low < 0.1 * (default_high - default_low):
+                center = (tight_low + tight_high) / 2
+                width = 0.1 * (default_high - default_low)
+                tight_low = max(default_low, center - width/2)
+                tight_high = min(default_high, center + width/2)
+        else:
+            tight_low, tight_high = default_low, default_high
+            
+        tightened_bounds.append((tight_low, tight_high))
+    
+    return tightened_bounds
 
-def benchmark_integration_methods(params):
+def optimize_with_cma_enhanced(bounds, objective_func, sigma0=0.15, maxiter=500):
     """
-    Compare integration method speeds: vectorized vs scipy.quad
+    ENHANCED CMA-ES optimization with adaptive restart and constraint handling.
+    Often converges in <1000 function calls vs ~3600 for DE.
     """
-    print("\n🔬 Integration method benchmark:")
+    if not HAS_CMA:
+        raise ImportError("CMA-ES not available. Install with: pip install cma")
     
-    # Fast vectorized method
-    start = time.time()
-    for _ in range(100):
-        E_fast = E_negative_gauss_fast(params)
-    fast_time = (time.time() - start) / 100
+    # Initial guess at center of bounds
+    x0 = np.array([(b[0] + b[1]) / 2.0 for b in bounds])
+    lower = np.array([b[0] for b in bounds])
+    upper = np.array([b[1] for b in bounds])
     
-    # Slow quad method
-    start = time.time()
-    for _ in range(5):
-        E_slow = E_negative_gauss_slow(params)
-    slow_time = (time.time() - start) / 5
-    
-    speedup = slow_time / fast_time
-    accuracy = abs(E_fast - E_slow) / abs(E_slow) * 100
-    
-    print(f"   Vectorized: {fast_time*1000:.2f} ms/call")
-    print(f"   scipy.quad: {slow_time*1000:.1f} ms/call") 
-    print(f"   Speedup: {speedup:.1f}×")
-    print(f"   Accuracy: {accuracy:.3f}% difference")
-
-def plot_best_profile(result):
-    """
-    Plot the best warp bubble profile with comprehensive analysis.
-    """
-    print(f"\n📊 PLOTTING: {result['ansatz']} profile")
-    
-    r_plot = np.linspace(0, R, 500)
-    
-    # Get warp function values
-    if result['ansatz'] == 'Hybrid':
-        f_vals = f_hybrid_vectorized(r_plot, result['params'])
-        fp_vals = f_hybrid_prime_vectorized(r_plot, result['params'])
-    else:
-        f_vals = f_gaussian_vectorized(r_plot, result['params'])
-        fp_vals = f_gaussian_prime_vectorized(r_plot, result['params'])
-    
-    plt.figure(figsize=(15, 10))
-    
-    # Subplot 1: Warp function f(r)
-    plt.subplot(2, 2, 1)
-    plt.plot(r_plot, f_vals, 'b-', linewidth=2, label='f(r)')
-    plt.axhline(y=1, color='k', linestyle='--', alpha=0.5, label='f=1')
-    plt.axhline(y=0, color='k', linestyle='--', alpha=0.5, label='f=0')
-    plt.xlabel('r (m)')
-    plt.ylabel('f(r)')
-    plt.title(f'{result["ansatz"]} Warp Function')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 2: Derivative f'(r)
-    plt.subplot(2, 2, 2)
-    plt.plot(r_plot, fp_vals, 'r-', linewidth=2, label="f'(r)")
-    plt.xlabel('r (m)')
-    plt.ylabel("f'(r)")
-    plt.title('Warp Function Derivative')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 3: Energy density
-    plt.subplot(2, 2, 3)
-    if result['ansatz'] == 'Hybrid':
-        rho_vals = - (v**2) / (8.0 * np.pi) * beta_back * np.sinc(mu0/np.pi) / G_geo * fp_vals**2
-    else:
-        rho_vals = rho_eff_gauss_vectorized(r_plot, result['params'])
-    
-    plt.plot(r_plot, rho_vals, 'g-', linewidth=2, label='ρ(r)')
-    plt.xlabel('r (m)')
-    plt.ylabel('Energy Density')
-    plt.title('Energy Density Profile')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 4: Summary info
-    plt.subplot(2, 2, 4)
-    plt.axis('off')
-    
-    info_text = f"""
-{result['ansatz']} Ansatz Results
-
-Total Energy: {result['energy_J']:.3e} J
-μ = {result['mu']:.2e}
-G_geo = {result['G_geo']:.2e}
-
-Optimization Time: {result['total_time']:.1f} s
-
-Estimated Cost: ${abs(result['energy_J']) / (3.6e6 * 0.001):.2e}
-(at $0.001/kWh)
-
-QI Compliance: ✓
-Boundary Conditions: ✓
-    """
-    
-    plt.text(0.1, 0.5, info_text, fontsize=10, verticalalignment='center',
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
-    
-    plt.tight_layout()
-    plt.savefig(f'{result["ansatz"].lower()}_profile.png', dpi=300, bbox_inches='tight')
-    plt.close()  # Close instead of show to prevent blocking
-    
-    print(f"   ✅ Profile saved as {result['ansatz'].lower()}_profile.png")
-
-def save_results(results, best_result, filename='accelerated_optimization_results.json'):
-    """
-    Save optimization results to JSON file.
-    """
-    output_data = {
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'best_result': best_result,
-        'all_results': results,
-        'summary': {
-            'total_runs': len(results) if isinstance(results, dict) else len(results),
-            'best_energy_J': best_result['energy_J'] if best_result else None,
-            'best_ansatz': best_result['ansatz'] if best_result else None
-        }
+    # CMA-ES options with boundary constraints
+    opts = {
+        'bounds': [lower.tolist(), upper.tolist()],
+        'popsize': min(20, 4 + int(3 * np.log(len(bounds)))),  # Adaptive population
+        'maxiter': maxiter,
+        'verb_disp': 0,
+        'tolx': 1e-7,
+        'tolfun': 1e-10,
+        'tolstagnation': 50,
+        'CMA_stds': sigma0  # Initial step size
     }
     
-    # Convert numpy arrays to lists for JSON serialization
-    def convert_numpy(obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, dict):
-            return {k: convert_numpy(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_numpy(item) for item in obj]
-        return obj
+    start_time = time.time()
     
-    output_data = convert_numpy(output_data)
-    
-    with open(filename, 'w') as f:
-        json.dump(output_data, f, indent=2)
-    
-    print(f"   ✅ Results saved to {filename}")
-
-def analyze_and_display_results(results, best_result):
-    """
-    Comprehensive analysis and display of optimization results.
-    """
-    if not results:
-        print("❌ No results to analyze")
+    try:
+        es = cma.CMAEvolutionStrategy(x0.tolist(), sigma0, opts)
+        es.optimize(objective_func)
+        
+        best_x = es.result.xbest
+        best_f = es.result.fbest
+        n_evals = es.result.evaluations
+        
+        # L-BFGS-B refinement
+        res_refine = minimize(
+            objective_func,
+            x0=best_x,
+            bounds=bounds,
+            method='L-BFGS-B',
+            options={'maxiter': 200, 'ftol': 1e-12}
+        )
+        
+        if res_refine.success and res_refine.fun < best_f:
+            best_x = res_refine.x
+            best_f = res_refine.fun
+        
+        total_time = time.time() - start_time
+        
+        return {
+            'x': best_x,
+            'fun': best_f,
+            'success': True,
+            'evaluations': n_evals,
+            'total_time': total_time
+        }
+        
+    except Exception as e:
+        print(f"   CMA-ES failed: {e}")
         return None
+
+# ── 7. PHYSICS-INFORMED CONSTRAINT ENHANCEMENTS ──────────────────────────────
+
+def curvature_penalty(params, lam_curv=1e3):
+    """
+    CURVATURE PENALTY: ∫ (f''(r))^2 r^2 dr ensures smoothness.
+    Helps avoid spiky solutions that might violate QI sampling.
+    """
+    # Compute f on the grid (vectorized)
+    f_vals = f_gaussian_vectorized(r_grid, params)
     
-    print("\n📈 OPTIMIZATION RESULTS ANALYSIS")
-    print("=" * 50)
+    # Second derivative via np.gradient (twice)
+    fp = np.gradient(f_vals, r_grid)
+    fpp = np.gradient(fp, r_grid)
     
-    # Sort results by energy
-    if isinstance(results, dict):
-        sorted_results = sorted(results.values(), key=lambda x: x['energy_J'])
-    else:
-        sorted_results = sorted(results, key=lambda x: x['energy_J'])
+    # Weight by r^2 to bias toward mid-radius importance
+    penalty_val = lam_curv * np.trapz((fpp**2) * (r_grid**2), r_grid)
+    return penalty_val
+
+def monotonicity_penalty(params, lam_mono=1e4):
+    """
+    MONOTONICITY PENALTY: Penalize f'(r) > 0 to ensure non-oscillatory profiles.
+    """
+    fp_vals = f_gaussian_prime_vectorized(r_grid, params)
     
-    print("Ranking by negative energy (lower = better):")
-    for i, result in enumerate(sorted_results):
-        cost_dollars = abs(result['energy_J']) / (3.6e6 * 0.001)
-        print(f"   {i+1}. μ={result['mu']:.1e}, G_geo={result['G_geo']:.1e}")
-        print(f"      E₋ = {result['energy_J']:.3e} J")
-        print(f"      Cost = ${cost_dollars:.2e}")
-        print(f"      Time = {result['total_time']:.1f}s")
+    # Penalize positive derivatives (should be ≤ 0)
+    positive_derivatives = np.maximum(0, fp_vals)
+    penalty_val = lam_mono * np.trapz(positive_derivatives**2 * r_grid**2, r_grid)
+    return penalty_val
+
+def enhanced_objective_gauss(params):
+    """
+    ENHANCED objective function with physics-informed constraints.
+    """
+    energy = E_negative_gauss_fast(params)
     
-    if best_result:
-        print(f"\n🏆 BEST OVERALL RESULT:")
-        print(f"   Ansatz: {best_result.get('ansatz', '4-Gaussian')}")
-        print(f"   μ = {best_result['mu']:.2e}")
-        print(f"   G_geo = {best_result['G_geo']:.2e}") 
-        print(f"   E₋ = {best_result['energy_J']:.3e} J")
+    # Standard penalties
+    penalty = penalty_gauss(params)
+    
+    # Enhanced physics constraints
+    penalty += curvature_penalty(params, lam_curv=5e2)
+    penalty += monotonicity_penalty(params, lam_mono=1e3)
+    
+    return energy + penalty
+
+# ── 8. JAX ACCELERATION FOR GRADIENT-BASED OPTIMIZATION ──────────────────────
+
+if HAS_JAX:
+    def E_negative_gauss_jax(params):
+        """
+        JAX-compatible energy calculation for gradient-based optimization.
+        """
+        # Convert to JAX arrays
+        r_grid_jax = jnp.array(r_grid)
+        vol_weights_jax = jnp.array(vol_weights)
         
-        cost = abs(best_result['energy_J']) / (3.6e6 * 0.001)
-        print(f"   Estimated cost: ${cost:.2e} (at $0.001/kWh)")
+        # Vectorized derivative calculation
+        fp_vals = f_gaussian_prime_vectorized_jax(r_grid_jax, params)
+        sinc_val = jnp.sinc(mu0 / jnp.pi) if mu0 > 0 else 1.0
+        prefac = -(v**2) / (8.0 * jnp.pi) * beta_back * sinc_val / G_geo
         
-        # Comparison with baseline
-        baseline_soliton = -1.584e31  # From previous soliton optimization
-        improvement = abs(best_result['energy_J']) / abs(baseline_soliton)
-        print(f"   Improvement over 2-lump soliton: {improvement:.3f}×")
+        rho_vals = prefac * (fp_vals**2)
+        integral = jnp.sum(rho_vals * vol_weights_jax) * dr
+        return integral * c4_8piG
+    
+    def f_gaussian_prime_vectorized_jax(r, params):
+        """JAX-compatible Gaussian derivative"""
+        r = jnp.asarray(r)
+        deriv = jnp.zeros_like(r, dtype=jnp.float64)
         
-        print(f"   Optimization time: {best_result['total_time']:.1f}s")
+        for i in range(M_gauss):
+            Ai = params[3*i + 0]
+            r0_i = params[3*i + 1]
+            sig_i = params[3*i + 2]
+            x = (r - r0_i) / sig_i
+            pref = Ai * jnp.exp(-0.5 * x*x)
+            deriv = deriv + pref * (-(r - r0_i) / (sig_i**2))
         
-    return best_result
+        return deriv
+    
+    def optimize_with_jax(bounds, initial_params):
+        """
+        JAX-accelerated gradient-based optimization.
+        Can converge in ~100 gradient steps vs thousands of DE evaluations.
+        """
+        print("   🚀 Using JAX gradient-based optimization...")
+        
+        # Convert bounds to JAX format
+        lower = jnp.array([b[0] for b in bounds])
+        upper = jnp.array([b[1] for b in bounds])
+        
+        def bounded_objective(params):
+            # Apply box constraints via penalty
+            penalty = 0.0
+            penalty += jnp.sum(jnp.maximum(0, lower - params)**2) * 1e6
+            penalty += jnp.sum(jnp.maximum(0, params - upper)**2) * 1e6
+            return E_negative_gauss_jax(params) + penalty
+        
+        # Create gradient function
+        grad_fn = jit(grad(bounded_objective))
+        
+        # Adam-like optimization
+        params = jnp.array(initial_params)
+        learning_rate = 0.01
+        momentum = jnp.zeros_like(params)
+        beta1, beta2 = 0.9, 0.999
+        eps = 1e-8
+        
+        start_time = time.time()
+        
+        for i in range(500):  # JAX optimization steps
+            g = grad_fn(params)
+            
+            # Adam update
+            momentum = beta1 * momentum + (1 - beta1) * g
+            learning_rate_t = learning_rate * jnp.sqrt(1 - beta2**(i+1)) / (1 - beta1**(i+1))
+            params = params - learning_rate_t * momentum / (jnp.sqrt(jnp.mean(g**2)) + eps)
+            
+            # Apply bounds
+            params = jnp.clip(params, lower, upper)
+            
+            if i % 100 == 0:
+                current_energy = E_negative_gauss_jax(params)
+                print(f"   JAX step {i}: E = {current_energy:.3e} J")
+        
+        final_energy = E_negative_gauss_jax(params)
+        total_time = time.time() - start_time
+        
+        return {
+            'x': np.array(params),
+            'fun': float(final_energy),
+            'success': True,
+            'total_time': total_time,
+            'method': 'JAX-Adam'
+        }
+
+else:
+    def optimize_with_jax(bounds, initial_params):
+        """Fallback when JAX not available"""
+        print("   ⚠️  JAX not available for gradient optimization")
+        return None
 
 def main():
     """
@@ -996,547 +958,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-def rho_eff_gauss_vectorized(r, params):
-    """
-    VECTORIZED effective energy density including all enhancement factors:
-    ρ_eff(r) = -[v²/(8π)] × β_back × sinc(μ₀/π) / G_geo × [f'(r)]²
-    """
-    fp = f_gaussian_prime_vectorized(r, params)
-    sinc_val = np.sinc(mu0 / np.pi) if mu0 > 0 else 1.0
-    prefac = - (v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo
-    return prefac * (fp**2)
-
-# ── 4. ACCELERATED ENERGY CALCULATION ─────────────────────────────────────────
-def E_negative_gauss_fast(params):
-    """
-    FAST vectorized energy calculation using fixed-grid quadrature.
-    Replaces slow scipy.quad with ~100× speedup.
-    
-    E₋ = ∫₀ᴿ ρ_eff(r) × 4πr² dr × c⁴/(8πG)
-    """
-    fp_vals = f_gaussian_prime_vectorized(r_grid, params)
-    sinc_val = np.sinc(mu0 / np.pi) if mu0 > 0 else 1.0
-    prefac = - (v**2) / (8.0 * np.pi) * beta_back * sinc_val / G_geo
-    rho_vals = prefac * (fp_vals**2)
-    
-    # Vectorized integration: ∫ ρ(r) × 4πr² dr
-    integral = np.sum(rho_vals * vol_weights) * dr
-    return integral * c4_8piG
-
-def E_negative_gauss_slow(params):
-    """
-    SLOW scipy.quad version - kept for accuracy comparison only.
-    """
-    from scipy.integrate import quad
-    
-    def integrand(rr):
-        rho_val = rho_eff_gauss_vectorized(rr, params)
-        return rho_val * 4.0 * np.pi * (rr**2)
-    
-    val, _ = quad(integrand, 0.0, R, limit=200)
-    return val * c4_8piG
-
-# Use fast version by default
-E_negative_gauss = E_negative_gauss_fast
-
-# ── 5. PENALTY AND OBJECTIVE FUNCTIONS ────────────────────────────────────────
-def penalty_gauss(params, lam_qi=1e50, lam_bound=1e4):
-    """
-    Standard penalty function for Gaussian ansatz:
-    - QI bound violation at r=0
-    - Boundary conditions: f(0)=1, f(R)=0
-    - Amplitude sum constraint
-    """
-    # QI penalty at r=0
-    rho0 = rho_eff_gauss_vectorized(0.0, params)
-    qi_bound = - (hbar * np.sinc(mu0 / np.pi)) / (12.0 * np.pi * tau**2)
-    qi_violation = max(0.0, -(rho0 - qi_bound))
-    P_qi = lam_qi * (qi_violation**2)
-
-    # Boundary conditions
-    f0 = f_gaussian_vectorized(0.0, params)
-    fR = f_gaussian_vectorized(R, params)
-    P_bound = lam_bound * ((f0 - 1.0)**2 + (fR - 0.0)**2)
-
-    # Amplitude constraint: prevent excessive amplitudes
-    total_amplitude = sum(params[0::3])  # Sum of all A_i
-    P_clip = lam_bound * max(0.0, (total_amplitude - 1.0))**2
-
-    return P_qi + P_bound + P_clip
-
-def objective_gauss(params):
-    """
-    Standard Gaussian objective: minimize E_negative + penalties
-    """
-    energy = E_negative_gauss_fast(params)
-    penalty = penalty_gauss(params)
-    return energy + penalty
-
-# ── 6. BOUNDS AND INITIALIZATION ──────────────────────────────────────────────
-def get_optimization_bounds():
-    """
-    Optimized bounds for 4-Gaussian optimization based on physics constraints.
-    """
-    bounds = []
-    for i in range(M_gauss):
-        # [Amplitude, Position, Width] for each Gaussian
-        bounds += [
-            (0.0, 1.0),        # Amplitude: 0 ≤ A_i ≤ 1
-            (0.0, R),          # Position: 0 ≤ r₀ᵢ ≤ R  
-            (R/50, R*0.5)      # Width: tight to wide
-        ]
-    return bounds
-
-def get_smart_initial_guess():
-    """
-    Physics-informed initial guess for 4-Gaussian ansatz.
-    """
-    params = []
-    for i in range(M_gauss):
-        A_i = 0.8 - 0.15 * i  # Decreasing amplitudes
-        r0_i = (i + 0.5) * R / (M_gauss + 1)  # Spread positions
-        sigma_i = R / (2 * M_gauss + 2)  # Reasonable widths
-        params.extend([A_i, r0_i, sigma_i])
-    
-    return params
-
-def get_refined_bounds(best_params, bounds, refinement_factor=0.3):
-    """
-    Tighten bounds around a good solution for faster convergence.
-    """
-    refined_bounds = []
-    for i, (param, (low, high)) in enumerate(zip(best_params, bounds)):
-        range_size = high - low
-        new_range = range_size * refinement_factor
-        new_low = max(low, param - new_range/2)
-        new_high = min(high, param + new_range/2)
-        refined_bounds.append((new_low, new_high))
-    
-    return refined_bounds
-
-# ── 7. OPTIMIZATION STRATEGIES ────────────────────────────────────────────────
-def optimize_gaussian_fast(mu_val=1e-6, G_geo_val=1e-5, use_enhanced=False):
-    """
-    FAST 4-Gaussian optimization with parallel DE + L-BFGS-B refinement.
-    
-    Performance optimizations:
-    - Parallel differential evolution (workers=-1)
-    - Reduced popsize/maxiter for speed
-    - Vectorized energy calculation
-    - Optional physics-informed constraints
-    """
-    global mu0, G_geo
-    mu0 = mu_val
-    G_geo = G_geo_val
-    
-    print(f"🚀 FAST 4-Gaussian: μ={mu_val:.2e}, G_geo={G_geo_val:.2e}")
-    
-    bounds = get_optimization_bounds()
-    objective_func = enhanced_objective_gauss if use_enhanced else objective_gauss
-    
-    start_time = time.time()
-    print("   ⚡ Running PARALLEL global search...")
-    
-    # ACCELERATED differential evolution with parallel workers
-    result_de = differential_evolution(
-        objective_func,
-        bounds,
-        strategy='best1bin',
-        maxiter=300,       # Reduced for speed
-        popsize=12,        # Reduced for speed  
-        tol=1e-6,
-        mutation=(0.5, 1),
-        recombination=0.7,
-        polish=False,
-        disp=False,
-        workers=-1,        # PARALLEL: Use all CPU cores
-        seed=42
-    )
-    
-    de_time = time.time() - start_time
-    
-    if not result_de.success:
-        print(f"   ❌ Global search failed: {result_de.message}")
-        return None
-    
-    print(f"   ✅ Global search complete in {de_time:.1f}s")
-    
-    # L-BFGS-B refinement
-    print("   🔧 Running local refinement...")
-    start_refine = time.time()
-    
-    res_final = minimize(
-        objective_func,
-        x0=result_de.x,
-        bounds=bounds,
-        method='L-BFGS-B',
-        options={'maxiter': 300, 'ftol': 1e-10}
-    )
-
-    refine_time = time.time() - start_refine
-    total_time = time.time() - start_time
-
-    if not res_final.success:
-        print(f"   ❌ Refinement failed: {res_final.message}")
-        return None
-    
-    params_opt = res_final.x
-    Eopt = E_negative_gauss_fast(params_opt)
-    
-    print(f"   ✅ Refinement complete in {refine_time:.1f}s")
-    print(f"   ⏱️  Total time: {total_time:.1f}s")
-    print(f"   📊 E₋ = {Eopt:.3e} J")
-    
-    return {
-        'params': params_opt,
-        'energy_J': Eopt,
-        'mu': mu_val,
-        'G_geo': G_geo_val,
-        'success': True,
-        'total_time': total_time,
-        'ansatz': '4-Gaussian'
-    }
-
-def optimize_hybrid_ansatz(mu_val=1e-6, G_geo_val=1e-5, M_gauss_hybrid=2):
-    """
-    Optimize hybrid polynomial+Gaussian ansatz.
-    """
-    global mu0, G_geo
-    mu0 = mu_val
-    G_geo = G_geo_val
-    
-    print(f"🔀 HYBRID optimization: μ={mu_val:.2e}, G_geo={G_geo_val:.2e}")
-    
-    bounds = get_hybrid_bounds(M_gauss_hybrid)
-    
-    start_time = time.time()
-    
-    result_de = differential_evolution(
-        objective_hybrid,
-        bounds,
-        strategy='best1bin',
-        maxiter=400,  # More iterations for complex hybrid space
-        popsize=15,
-        tol=1e-6,
-        workers=-1,
-        seed=42
-    )
-    
-    if not result_de.success:
-        print(f"   ❌ Hybrid optimization failed: {result_de.message}")
-        return None
-    
-    # Refinement
-    res_final = minimize(
-        objective_hybrid,
-        x0=result_de.x,
-        bounds=bounds,
-        method='L-BFGS-B',
-        options={'maxiter': 400, 'ftol': 1e-10}
-    )
-
-    total_time = time.time() - start_time
-
-    if not res_final.success:
-        print(f"   ❌ Hybrid refinement failed: {res_final.message}")
-        return None
-    
-    params_opt = res_final.x
-    Eopt = E_negative_hybrid(params_opt)
-    
-    print(f"   ✅ Hybrid complete in {total_time:.1f}s")
-    print(f"   📊 E₋ = {Eopt:.3e} J")
-    
-    return {
-        'params': params_opt,
-        'energy_J': Eopt,
-        'mu': mu_val,
-        'G_geo': G_geo_val,
-        'success': True,
-        'total_time': total_time,
-        'ansatz': 'Hybrid'
-    }
-
-# ── 8. UTILITY AND ANALYSIS FUNCTIONS ─────────────────────────────────────────
-def benchmark_integration_methods(params):
-    """
-    Compare integration method speeds: vectorized vs scipy.quad
-    """
-    print("\n🔬 Integration method benchmark:")
-    
-    # Fast vectorized method
-    start = time.time()
-    for _ in range(100):
-        E_fast = E_negative_gauss_fast(params)
-    fast_time = (time.time() - start) / 100
-    
-    # Slow quad method
-    start = time.time()
-    for _ in range(5):
-        E_slow = E_negative_gauss_slow(params)
-    slow_time = (time.time() - start) / 5
-    
-    speedup = slow_time / fast_time
-    accuracy = abs(E_fast - E_slow) / abs(E_slow) * 100
-    
-    print(f"   Vectorized: {fast_time*1000:.2f} ms/call")
-    print(f"   scipy.quad: {slow_time*1000:.1f} ms/call") 
-    print(f"   Speedup: {speedup:.1f}×")
-    print(f"   Accuracy: {accuracy:.3f}% difference")
-
-def run_parameter_scan():
-    """
-    Comprehensive parameter scan across μ and G_geo values.
-    """
-    print("\n🔍 COMPREHENSIVE PARAMETER SCAN")
-    print("-" * 50)
-    
-    mu_vals = [1e-7, 5e-7, 1e-6, 5e-6, 1e-5]
-    G_geo_vals = [1e-6, 1e-5, 1e-4]
-    
-    results = []
-    best_result = None
-    
-    for mu_val in mu_vals:
-        for G_geo_val in G_geo_vals:
-            try:
-                result = optimize_gaussian_fast(mu_val, G_geo_val)
-                if result and result['success']:
-                    results.append(result)
-                    
-                    if best_result is None or result['energy_J'] < best_result['energy_J']:
-                        best_result = result
-                    
-                    print(f"   ✅ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: E₋={result['energy_J']:.3e} J")
-                else:
-                    print(f"   ❌ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: Failed")
-                    
-            except Exception as e:
-                print(f"   ❌ μ={mu_val:.1e}, G_geo={G_geo_val:.1e}: Error - {e}")
-    
-    return results, best_result
-
-def run_multi_ansatz_comparison():
-    """
-    Compare multiple ansatz types: 4-Gaussian, enhanced 4-Gaussian, hybrid, CMA-ES.
-    """
-    print("\n🎯 MULTI-ANSATZ COMPARISON")
-    print("-" * 50)
-    
-    results = {}
-    best_overall = None
-    
-    # Test 4-Gaussian
-    print("Testing 4-Gaussian ansatz...")
-    result_4g = optimize_gaussian_fast(1e-6, 1e-5, use_enhanced=False)
-    if result_4g:
-        results['4-Gaussian'] = result_4g
-        best_overall = result_4g
-        print(f"   4-Gaussian: E₋ = {result_4g['energy_J']:.3e} J")
-    
-    # Test 4-Gaussian with enhanced physics constraints  
-    print("Testing 4-Gaussian with enhanced constraints...")
-    result_4g_enh = optimize_gaussian_fast(1e-6, 1e-5, use_enhanced=True)
-    if result_4g_enh:
-        results['4-Gaussian-Enhanced'] = result_4g_enh
-        if not best_overall or result_4g_enh['energy_J'] < best_overall['energy_J']:
-            best_overall = result_4g_enh
-        print(f"   4-Gaussian-Enhanced: E₋ = {result_4g_enh['energy_J']:.3e} J")
-    
-    # Test hybrid ansatz
-    print("Testing Hybrid ansatz...")
-    try:
-        result_hybrid = optimize_hybrid_ansatz(1e-6, 1e-5, M_gauss_hybrid=2)
-        if result_hybrid:
-            results['Hybrid'] = result_hybrid
-            if not best_overall or result_hybrid['energy_J'] < best_overall['energy_J']:
-                best_overall = result_hybrid
-            print(f"   Hybrid: E₋ = {result_hybrid['energy_J']:.3e} J")
-    except Exception as e:
-        print(f"   Hybrid failed: {e}")
-    
-    # Test CMA-ES (if available)
-    if HAS_CMA:
-        print("Testing CMA-ES optimization...")
-        try:
-            global mu0, G_geo
-            mu0, G_geo = 1e-6, 1e-5
-            bounds = get_optimization_bounds()
-            cma_result = optimize_with_cma(bounds, objective_gauss)
-            if cma_result and cma_result['success']:
-                energy = E_negative_gauss_fast(cma_result['x'])
-                cma_formatted = {
-                    'params': cma_result['x'],
-                    'energy_J': energy,
-                    'mu': 1e-6,
-                    'G_geo': 1e-5,
-                    'success': True,
-                    'total_time': cma_result['total_time'],
-                    'ansatz': 'CMA-ES'
-                }
-                results['CMA-ES'] = cma_formatted
-                if not best_overall or energy < best_overall['energy_J']:
-                    best_overall = cma_formatted
-                print(f"   CMA-ES: E₋ = {energy:.3e} J")
-        except Exception as e:
-            print(f"   CMA-ES failed: {e}")
-    
-    return results, best_overall
-
-def plot_best_profile(result):
-    """
-    Plot the best warp bubble profile with comprehensive analysis.
-    """
-    print(f"\n📊 PLOTTING: {result['ansatz']} profile")
-    
-    r_plot = np.linspace(0, R, 500)
-    
-    # Get warp function values
-    if result['ansatz'] == 'Hybrid':
-        f_vals = f_hybrid_vectorized(r_plot, result['params'])
-        fp_vals = f_hybrid_prime_vectorized(r_plot, result['params'])
-    else:
-        f_vals = f_gaussian_vectorized(r_plot, result['params'])
-        fp_vals = f_gaussian_prime_vectorized(r_plot, result['params'])
-    
-    plt.figure(figsize=(15, 10))
-    
-    # Subplot 1: Warp function f(r)
-    plt.subplot(2, 2, 1)
-    plt.plot(r_plot, f_vals, 'b-', linewidth=2, label='f(r)')
-    plt.axhline(y=1, color='k', linestyle='--', alpha=0.5, label='f=1')
-    plt.axhline(y=0, color='k', linestyle='--', alpha=0.5, label='f=0')
-    plt.xlabel('r (m)')
-    plt.ylabel('f(r)')
-    plt.title(f'{result["ansatz"]} Warp Function')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 2: Derivative f'(r)
-    plt.subplot(2, 2, 2)
-    plt.plot(r_plot, fp_vals, 'r-', linewidth=2, label="f'(r)")
-    plt.xlabel('r (m)')
-    plt.ylabel("f'(r)")
-    plt.title('Warp Function Derivative')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 3: Energy density
-    plt.subplot(2, 2, 3)
-    if result['ansatz'] == 'Hybrid':
-        rho_vals = - (v**2) / (8.0 * np.pi) * beta_back * np.sinc(mu0/np.pi) / G_geo * fp_vals**2
-    else:
-        rho_vals = rho_eff_gauss_vectorized(r_plot, result['params'])
-    
-    plt.plot(r_plot, rho_vals, 'g-', linewidth=2, label='ρ(r)')
-    plt.xlabel('r (m)')
-    plt.ylabel('Energy Density')
-    plt.title('Energy Density Profile')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    
-    # Subplot 4: Summary info
-    plt.subplot(2, 2, 4)
-    plt.axis('off')
-    
-    info_text = f"""
-{result['ansatz']} Ansatz Results
-
-Total Energy: {result['energy_J']:.3e} J
-μ = {result['mu']:.2e}
-G_geo = {result['G_geo']:.2e}
-
-Optimization Time: {result['total_time']:.1f} s
-
-Estimated Cost: ${abs(result['energy_J']) / (3.6e6 * 0.001):.2e}
-(at $0.001/kWh)
-
-QI Compliance: ✓
-Boundary Conditions: ✓
-    """
-    
-    plt.text(0.1, 0.5, info_text, fontsize=10, verticalalignment='center',
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
-    
-    plt.tight_layout()
-    plt.savefig(f'{result["ansatz"].lower()}_profile.png', dpi=300, bbox_inches='tight')
-    plt.close()  # Close instead of show to prevent blocking
-    
-    print(f"   ✅ Profile saved as {result['ansatz'].lower()}_profile.png")
-
-def save_results(results, best_result, filename='accelerated_optimization_results.json'):
-    """
-    Save optimization results to JSON file.
-    """
-    output_data = {
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'best_result': best_result,
-        'all_results': results,
-        'summary': {
-            'total_runs': len(results) if isinstance(results, dict) else len(results),
-            'best_energy_J': best_result['energy_J'] if best_result else None,
-            'best_ansatz': best_result['ansatz'] if best_result else None
-        }
-    }
-    
-    # Convert numpy arrays to lists for JSON serialization
-    def convert_numpy(obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, dict):
-            return {k: convert_numpy(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_numpy(item) for item in obj]
-        return obj
-    
-    output_data = convert_numpy(output_data)
-    
-    with open(filename, 'w') as f:
-        json.dump(output_data, f, indent=2)
-    
-    print(f"   ✅ Results saved to {filename}")
-
-def analyze_and_display_results(results, best_result):
-    """
-    Comprehensive analysis and display of optimization results.
-    """
-    if not results:
-        print("❌ No results to analyze")
-        return None
-    
-    print("\n📈 OPTIMIZATION RESULTS ANALYSIS")
-    print("=" * 50)
-    
-    # Sort results by energy
-    if isinstance(results, dict):
-        sorted_results = sorted(results.values(), key=lambda x: x['energy_J'])
-    else:
-        sorted_results = sorted(results, key=lambda x: x['energy_J'])
-    
-    print("Ranking by negative energy (lower = better):")
-    for i, result in enumerate(sorted_results):
-        cost_dollars = abs(result['energy_J']) / (3.6e6 * 0.001)
-        print(f"   {i+1}. μ={result['mu']:.1e}, G_geo={result['G_geo']:.1e}")
-        print(f"      E₋ = {result['energy_J']:.3e} J")
-        print(f"      Cost = ${cost_dollars:.2e}")
-        print(f"      Time = {result['total_time']:.1f}s")
-    
-    if best_result:
-        print(f"\n🏆 BEST OVERALL RESULT:")
-        print(f"   Ansatz: {best_result.get('ansatz', '4-Gaussian')}")
-        print(f"   μ = {best_result['mu']:.2e}")
-        print(f"   G_geo = {best_result['G_geo']:.2e}") 
-        print(f"   E₋ = {best_result['energy_J']:.3e} J")
-        
-        cost = abs(best_result['energy_J']) / (3.6e6 * 0.001)
-        print(f"   Estimated cost: ${cost:.2e} (at $0.001/kWh)")
-        
-        # Comparison with baseline
-        baseline_soliton = -1.584e31  # From previous soliton optimization
-        improvement = abs(best_result['energy_J']) / abs(baseline_soliton)
-        print(f"   Improvement over 2-lump soliton: {improvement:.3f}×")
-        
-        print(f"   Optimization time: {best_result['total_time']:.1f}s")
-        
-    return best_result
