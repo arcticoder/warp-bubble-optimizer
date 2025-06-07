@@ -354,7 +354,7 @@ class BreakthroughWarpDemonstrator:
         plt.savefig(filename, dpi=300, bbox_inches='tight')
         print(f"💾 Saved: {filename}")
         
-        plt.show()
+        plt.close('all')
         return fig
 
 def demonstrate_t4_scaling():
@@ -455,7 +455,7 @@ def demonstrate_t4_scaling():
     
     plt.tight_layout()
     plt.savefig('breakthrough_t4_scaling_verification.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close('all')
     
     # Summary
     long_flight = [r for r in results if r['flight_time'] == max(flight_times) and r['volume'] == 1000][0]

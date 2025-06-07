@@ -537,7 +537,7 @@ Performance:
                        dpi=300, bbox_inches='tight')
             print(f"Visualization saved to {save_path / 'jax_4d_optimization_results.png'}")
         
-        plt.show()
+        plt.close('all')
     
     def save_results(self, results: Dict, save_dir: str):
         """Save optimization results to files."""
@@ -640,7 +640,7 @@ def run_parameter_study():
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.savefig('parameter_study_scaling.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close('all')
     
     return results
 

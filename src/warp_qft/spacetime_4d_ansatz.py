@@ -411,7 +411,7 @@ def demonstrate_4d_ansatz():
     
     plt.tight_layout()
     plt.savefig('4d_spacetime_ansatz_demo.png', dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.close('all')
     
     print("4D ansatz demonstration complete!")
     print("Saved visualization to '4d_spacetime_ansatz_demo.png'")
