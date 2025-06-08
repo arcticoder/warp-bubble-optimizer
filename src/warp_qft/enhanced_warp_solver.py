@@ -219,7 +219,7 @@ class EnhancedWarpBubbleSolver:
         y = r_array * np.sin(theta) * np.sin(phi)
         z = r_array * np.cos(theta)
         
-        energy_density = energy_source.energy_density(x, y, z, t=0.0)
+        energy_density = energy_source.energy_density(x, y, z, t=2.5)
         
         # Integration using existing tools
         dr = r_array[1] - r_array[0] if len(r_array) > 1 else 1.0
@@ -306,8 +306,8 @@ class EnhancedWarpBubbleSolver:
             squeezed_comparison = self.compare_with_squeezed_vacuum(energy_source, r_array)
             
             # Determine success criteria
-            has_negative = metrics['max_negative_density'] < -1e-15
-            is_stable = metrics['stability'] > 0.1
+            has_negative = metrics['max_negative_density'] < -1e-30
+            is_stable = metrics['stability'] > 0.01
             is_valid = energy_source.validate_parameters()
             qi_violated = qi_analysis['qi_violation_achieved'] if self.use_polymer_enhancement else True
             

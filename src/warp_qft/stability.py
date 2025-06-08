@@ -398,3 +398,56 @@ def enforce_lqg_bound(computed_energy: float, spatial_scale: float,
     # Enforce bound: E_- ≥ -C_LQG/T^4
     # Since lqg_limit is negative, we want max(computed_energy, lqg_limit)
     return max(computed_energy, lqg_limit)
+
+
+class WarpBubbleStability:
+    """
+    Warp bubble stability analyzer.
+    
+    Provides methods for analyzing stability of warp bubble configurations
+    and quantum inequality violations.
+    """
+    
+    def __init__(self):
+        """Initialize the stability analyzer."""
+        self.logger = logging.getLogger(__name__)
+        
+    def analyze_stability(self, energy_density: float, spatial_scale: float, 
+                         temporal_scale: Optional[float] = None) -> Dict:
+        """
+        Analyze stability of a warp bubble configuration.
+        
+        Args:
+            energy_density: Peak energy density
+            spatial_scale: Characteristic spatial scale
+            temporal_scale: Characteristic temporal scale
+            
+        Returns:
+            Dictionary with stability analysis results
+        """
+        # Use existing Ford-Roman bounds analysis
+        ford_roman_result = ford_roman_bounds(energy_density, spatial_scale, temporal_scale)
+        
+        # Add additional stability metrics
+        stability_result = {
+            **ford_roman_result,
+            "overall_stable": not ford_roman_result["violates_bound"],
+            "stability_score": 1.0 if not ford_roman_result["violates_bound"] else 0.5,
+            "analysis_method": "ford_roman_bounds"
+        }
+        
+        return stability_result
+        
+    def check_qi_violation(self, energy_density: float, spatial_scale: float) -> bool:
+        """
+        Check if configuration violates quantum inequalities.
+        
+        Args:
+            energy_density: Energy density to check
+            spatial_scale: Spatial scale
+            
+        Returns:
+            True if quantum inequalities are violated
+        """
+        bounds = ford_roman_bounds(energy_density, spatial_scale)
+        return bounds["violates_bound"]

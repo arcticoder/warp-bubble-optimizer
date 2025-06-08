@@ -617,9 +617,9 @@ class UltimateBSplineOptimizer:
         # Parameter bounds for JAX
         bounds = jnp.array([
             [0.1, 10.0],  # μ bounds
-            [1e-12, 1e-10],  # G_geo bounds
-        ] + [[-2.0, 2.0]] * self.n_control_points)
-          def bounded_objective_core(params):
+            [1e-12, 1e-10],  # G_geo bounds        ] + [[-2.0, 2.0]] * self.n_control_points)
+        
+        def bounded_objective_core(params):
             """Core objective with parameter clipping (for gradient computation)"""
             params_clipped = jnp.clip(params, bounds[:, 0], bounds[:, 1])
             return self.objective_function_core(params_clipped)
