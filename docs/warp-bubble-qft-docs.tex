@@ -852,6 +852,15 @@ The enhanced optimization framework implements a multi-stage pipeline that syste
    \item Classification of stability modes (STABLE/MARGINALLY\_STABLE/UNSTABLE)
    \end{itemize}
 
+\item \textbf{3D Mesh Validation} (\texttt{run\_3d\_mesh\_validation.py})
+   \begin{itemize}
+   \item \texttt{WarpBubbleSolver}--based 3D-mesh stage to confirm candidate energy sources before optimization
+   \item Finite element analysis on adaptive 3D spatial mesh
+   \item Full 3+1D Einstein field equation verification on mesh
+   \item Energy-momentum tensor consistency validation
+   \item Numerical convergence and causality checks
+   \end{itemize}
+
 \item \textbf{Comprehensive Result Analysis} (\texttt{analyze\_results.py})
    \begin{itemize}
    \item Statistical analysis and visualization of all optimization results
@@ -868,6 +877,7 @@ The complete optimization pipeline follows this algorithmic flow:
 \item \textbf{Initialization}: Load physical parameters and constraints
 \item \textbf{Ansatz Selection}: Choose from 6-Gaussian, hybrid cubic, or CMA-ES approaches
 \item \textbf{Parameter Optimization}: Apply fast/fine parameter scanning
+\item \textbf{3D Mesh Validation}: Confirm candidate energy sources using mesh-based solver
 \item \textbf{Global Optimization}: Execute CMA-ES or JAX-based gradient descent
 \item \textbf{Stability Verification}: Perform 3+1D eigenvalue analysis
 \item \textbf{Result Analysis}: Generate comprehensive performance metrics

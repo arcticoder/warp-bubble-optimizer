@@ -48,6 +48,7 @@ where $\mathcal{S}_{\text{coordinator}}$ intelligently selects and sequences opt
 \item \textbf{Strategy Selection Phase}: Choose optimal method combination
 \item \textbf{Global Search Phase}: Population-based exploration
 \item \textbf{Surrogate Modeling Phase}: Build predictive metamodels
+\item \textbf{3D Mesh Validation Phase}: Confirm candidate energy sources using mesh-based solver
 \item \textbf{Multi-Objective Phase}: Pareto frontier exploration
 \item \textbf{Local Refinement Phase}: Gradient-based acceleration
 \item \textbf{Validation Phase}: Physics constraint verification
@@ -262,6 +263,48 @@ P_{\text{success}}(\text{method} | \boldsymbol{\phi}_{\text{problem}}) = \text{M
 \begin{equation}
 \text{Sharpe\_Ratio} = \frac{\mathbb{E}[\text{Performance}] - R_f}{\text{Std}[\text{Performance}]}
 \end{equation}
+
+\section{3D Mesh Validation Integration}
+
+\paragraph{3D Mesh Validation} 
+We now include a \texttt{WarpBubbleSolver}--based 3D-mesh stage to confirm candidate energy sources before optimization, using our \texttt{run\_3d\_mesh\_validation.py} driver.
+
+\subsection{Mesh-Based Solution Verification}
+
+The 3D mesh validation phase serves as a critical intermediate step between surrogate modeling and multi-objective optimization. This stage employs finite element analysis on a 3D spatial mesh to verify that candidate solutions from the surrogate model phase represent physically realizable warp bubble configurations.
+
+\textbf{Mesh Validation Workflow}:
+\begin{enumerate}
+\item Extract promising candidates from GP surrogate models
+\item Generate adaptive 3D mesh around candidate bubble geometry
+\item Solve full 3+1D Einstein field equations on mesh
+\item Verify energy-momentum tensor consistency
+\item Filter candidates based on numerical convergence criteria
+\item Pass validated candidates to multi-objective optimization
+\end{enumerate}
+
+\textbf{Validation Criteria}:
+\begin{align}
+\text{Mesh\_Convergence} &= \|\mathbf{R}_h - \mathbf{R}_{h/2}\|_2 < \epsilon_{\text{mesh}} \\
+\text{Energy\_Conservation} &= \left|\int T_{\mu\nu} \sqrt{-g} \, d^4x - E_{\text{expected}}\right| < \delta_E \\
+\text{Causality\_Check} &= \text{det}(g_{\mu\nu}) < 0 \text{ everywhere}
+\end{align}
+
+where $\mathbf{R}_h$ represents the discretized Ricci tensor on mesh with spacing $h$.
+
+\subsection{Adaptive Mesh Refinement Strategy}
+
+\textbf{Error Estimation}:
+\begin{equation}
+\eta_K^2 = h_K^4 \|\nabla^2 u_h\|_{L^2(K)}^2 + \frac{h_K}{2} \|\llbracket \nabla u_h \rrbracket\|_{L^2(\partial K)}^2
+\end{equation}
+
+\textbf{Refinement Criterion}:
+\begin{equation}
+\text{Refine cell } K \text{ if: } \eta_K > \alpha \max_j \eta_j
+\end{equation}
+
+This validation stage significantly improves optimization reliability by ensuring that only numerically stable and physically consistent candidates proceed to the computationally expensive multi-objective phase.
 
 \section{Implementation Framework}
 
