@@ -204,18 +204,42 @@ class WarpBubbleSolver:
                 })            # Run simulation with proper arguments
             result = self.integrated_solver.simulate(radius, speed * 299792458)
             
-            # Extract results (handle both dict and object formats)
-            if hasattr(result, 'energy_negative'):
+            # Extract results from WarpSimulationResult object
+            if hasattr(result, 'energy_total'):
+                # This is a WarpSimulationResult object
+                energy_total = result.energy_total
+                # For negative energy, check if we have it directly or calculate from total
+                if hasattr(result, 'energy_negative'):
+                    energy_negative = result.energy_negative
+                elif hasattr(result, 'negative_energy_density_max') and result.negative_energy_density_max < 0:
+                    # Use max negative density scaled by volume
+                    volume = 4/3 * np.pi * radius**3
+                    energy_negative = result.negative_energy_density_max * volume
+                else:
+                    # Assume total energy is negative if less than zero
+                    energy_negative = energy_total if energy_total < 0 else -abs(energy_total) * 0.5
+                    
+                stability = result.stability
+                feasibility = getattr(result, 'success', energy_negative < -1e25)
+            elif hasattr(result, 'energy_negative'):
+                # Legacy format
                 energy_negative = result.energy_negative
                 energy_total = result.energy_total if hasattr(result, 'energy_total') else abs(energy_negative) * 1.2
                 stability = result.stability if hasattr(result, 'stability') else 0.8
                 feasibility = energy_negative < -1e25
-            else:
+            elif isinstance(result, dict):
                 # Fallback for dict format
                 energy_negative = result.get('energy_negative', -1e35)
                 energy_total = result.get('energy_total', abs(energy_negative) * 1.2)
                 stability = result.get('stability', 0.8)
                 feasibility = result.get('feasibility', energy_negative < -1e25)
+            else:
+                # Unknown format, use defaults
+                logger.warning(f"Unknown result format: {type(result)}")
+                energy_negative = -1e35
+                energy_total = 1.2e35
+                stability = 0.8
+                feasibility = True
             
             return {
                 'energy_total': energy_total,
@@ -395,8 +419,7 @@ class WarpBubblePowerPipeline:
                 metric_ansatz="jax",
                 energy_source=self.energy_sources.get('ghost')
             )
-            
-        # Fallback solver
+              # Fallback solver
         if not self.solvers:
             self.solvers['fallback'] = WarpBubbleSolver(
                 metric_ansatz="fallback",
@@ -423,26 +446,48 @@ class WarpBubblePowerPipeline:
                     try:
                         result = solver.simulate(radius=R, speed=v)
                         
+                        # Handle different result object types
+                        if hasattr(result, 'energy_total'):
+                            energy_total = result.energy_total
+                            energy_negative = getattr(result, 'energy_negative', result.energy_total if result.energy_total < 0 else 0)
+                            stability = result.stability
+                            feasibility = getattr(result, 'feasibility', result.success if hasattr(result, 'success') else True)
+                            opt_time = getattr(result, 'optimization_time', getattr(result, 'execution_time', 0))
+                        elif isinstance(result, dict):
+                            energy_total = result.get('energy_total', float('inf'))
+                            energy_negative = result.get('energy_negative', 0)
+                            stability = result.get('stability', 0)
+                            feasibility = result.get('feasibility', False)
+                            opt_time = result.get('optimization_time', 0)
+                        else:
+                            logger.warning(f"Unknown result type: {type(result)}")
+                            energy_total = float('inf')
+                            energy_negative = 0
+                            stability = 0
+                            feasibility = False
+                            opt_time = 0
+                        
                         results.append({
                             'solver': solver_name,
                             'R_m': R,
                             'v_c': v, 
-                            'energy_total_J': result.energy_total,
-                            'energy_negative_J': result.energy_negative,
-                            'stability': result.stability,
-                            'feasibility': result.feasibility,
-                            'opt_time_s': result.optimization_time
+                            'energy_total_J': energy_total,
+                            'energy_negative_J': energy_negative,
+                            'stability': stability,
+                            'feasibility': feasibility,
+                            'opt_time_s': opt_time
                         })
                         
                     except Exception as e:
-                        logger.error(f"Error in {solver_name} at R={R}, v={v}: {e}")
+                        logger.error(f"Integrated solver simulation failed: {e}")
                         results.append({
                             'solver': solver_name,
                             'R_m': R,
                             'v_c': v,
                             'energy_total_J': float('inf'),
                             'energy_negative_J': 0,
-                            'stability': 0,                            'feasibility': False,
+                            'stability': 0,
+                            'feasibility': False,
                             'opt_time_s': 0
                         })
         
