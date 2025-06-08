@@ -168,9 +168,9 @@ class WarpBubblePowerPipeline:
         logger.info("=" * 60)
         logger.info("STEP 2: Parameter Sweep (Radius & Speed)")
         logger.info("=" * 60)
+          # Get sweep parameters
+        sweep_config = self.config.get('parameter_sweep', {})
         
-        # Get sweep parameters
-        sweep_config = self.config.get('parameter_sweep', {})\n        
         radii = sweep_config.get('radii', [5.0, 10.0, 20.0])
         speeds = sweep_config.get('speeds', [1000, 5000, 10000])
         
@@ -639,9 +639,17 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python warp_bubble_power_pipeline.py
-  python warp_bubble_power_pipeline.py --config my_config.json
-  python warp_bubble_power_pipeline.py --output my_results/ --config custom.json
+  # Quick power sweep for initial analysis
+  python warp_bubble_power_pipeline.py --quick --output-dir results/quick_sweep
+  
+  # Validate existing results
+  python warp_bubble_power_pipeline.py --validate-only --output-dir results/quick_sweep
+  
+  # Full optimization pipeline
+  python warp_bubble_power_pipeline.py --config production_config.json --output-dir results/full_optimization
+  
+  # Extract optimal parameters from previous run
+  python warp_bubble_power_pipeline.py --extract-params --output-dir results/full_optimization
         """
     )
     
@@ -652,7 +660,7 @@ Examples:
     )
     
     parser.add_argument(
-        '--output',
+        '--output-dir',
         default='results',
         help='Output directory for results'
     )
@@ -664,6 +672,33 @@ Examples:
         help='Logging level'
     )
     
+    # Mode selection
+    mode_group = parser.add_mutually_exclusive_group()
+    
+    mode_group.add_argument(
+        '--quick',
+        action='store_true',
+        help='Run quick parameter sweep only (no optimization)'
+    )
+    
+    mode_group.add_argument(
+        '--validate-only',
+        action='store_true',
+        help='Validate existing optimization results only'
+    )
+    
+    mode_group.add_argument(
+        '--extract-params',
+        action='store_true',
+        help='Extract optimal parameters from existing results'
+    )
+    
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='Force overwrite existing results'
+    )
+    
     args = parser.parse_args()
     
     # Set logging level
@@ -672,9 +707,18 @@ Examples:
     # Load configuration
     config = load_config(args.config)
     
-    # Create and run pipeline
-    pipeline = WarpBubblePowerPipeline(config, args.output)
-    pipeline.run_complete_pipeline()
+    # Create pipeline
+    pipeline = WarpBubblePowerPipeline(config, args.output_dir)
+    
+    # Run based on mode
+    if args.quick:
+        pipeline.run_quick_sweep()
+    elif args.validate_only:
+        pipeline.run_validation_only()
+    elif args.extract_params:
+        pipeline.extract_optimal_parameters()
+    else:
+        pipeline.run_complete_pipeline()
 
 
 if __name__ == "__main__":
