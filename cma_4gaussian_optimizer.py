@@ -22,7 +22,7 @@ try:
     print("✅ CMA-ES available for enhanced global optimization")
 except ImportError:
     print("❌ CMA-ES not available. Install with: pip install cma")
-    exit(1)
+    HAS_CMA = False
 
 # ── 1. PHYSICAL CONSTANTS ─────────────────────────────────────────────────────
 beta_back = 1.9443254780147017
