@@ -52,6 +52,21 @@ except ImportError:
         def __enter__(self): return self
         def __exit__(self, *args): pass
 
+# Atmospheric constraints import
+try:
+    from atmospheric_constraints import AtmosphericConstraints, TrajectoryAnalyzer
+    ATMOSPHERIC_AVAILABLE = True
+    print("🌍 Atmospheric constraints enabled for sub-luminal operations")
+except ImportError:
+    ATMOSPHERIC_AVAILABLE = False
+    print("⚠️  Atmospheric constraints not available")
+    class AtmosphericConstraints:
+        def __init__(self, *args, **kwargs): pass
+        def get_safe_velocity(self, *args, **kwargs): return 1e6  # No limit
+    class TrajectoryAnalyzer:
+        def __init__(self, *args, **kwargs): pass
+        def analyze_trajectory(self, *args, **kwargs): return {}
+
 @dataclass
 class ImpulseProfile:
     """Configuration for impulse engine velocity profile."""
@@ -166,14 +181,16 @@ def compute_negative_energy_integral(velocity: float, warp_params: WarpParameter
     return jnp.trapz(integrand, rs)
 
 def simulate_impulse_maneuver(profile: ImpulseProfile, warp_params: WarpParameters, 
-                            enable_progress: bool = True) -> Dict[str, Any]:
+                            enable_progress: bool = True, 
+                            altitude_m: float = 0.0) -> Dict[str, Any]:
     """
-    Simulate complete impulse engine maneuver.
+    Simulate complete impulse engine maneuver with atmospheric constraints.
     
     Args:
         profile: Velocity profile configuration
         warp_params: Warp bubble parameters
         enable_progress: Enable progress tracking
+        altitude_m: Operating altitude in meters (for atmospheric constraints)
         
     Returns:
         Simulation results dictionary
@@ -202,6 +219,30 @@ def simulate_impulse_maneuver(profile: ImpulseProfile, warp_params: WarpParamete
         
         # Compute velocity at each time step
         vs = v_profile_batch(ts, profile.v_max, profile.t_up, profile.t_hold, profile.t_down)
+        
+        # Apply atmospheric constraints if available
+        atmospheric_warnings = []
+        atmospheric_analysis = {}
+        if ATMOSPHERIC_AVAILABLE:
+            constraints = AtmosphericConstraints()
+            safe_v_max = constraints.get_safe_velocity(altitude_m)
+            
+            if profile.v_max > safe_v_max:
+                atmospheric_warnings.append(
+                    f"Velocity {profile.v_max:.0f} m/s exceeds safe limit "
+                    f"{safe_v_max:.0f} m/s at altitude {altitude_m:.0f} m"
+                )
+                # Cap velocities to safe limits
+                vs = jnp.minimum(vs, safe_v_max)
+            
+            # Perform trajectory analysis if doing vertical maneuvers
+            if altitude_m != 0.0:
+                analyzer = TrajectoryAnalyzer(constraints)
+                atmospheric_analysis = analyzer.analyze_trajectory(
+                    altitudes=jnp.full_like(ts, altitude_m),
+                    velocities=vs,
+                    times=ts
+                )
         
         if progress: 
             progress.update("Computing energy densities", step_number=3)
@@ -242,7 +283,9 @@ def simulate_impulse_maneuver(profile: ImpulseProfile, warp_params: WarpParamete
             'hold_avg_energy': float(E_hold_avg),
             'maneuver_duration': float(t_total),
             'profile': profile,
-            'warp_params': warp_params
+            'warp_params': warp_params,
+            'atmospheric_warnings': atmospheric_warnings,
+            'atmospheric_analysis': atmospheric_analysis
         }
         
         if progress: progress.complete({'total_energy_GJ': E_total/1e9})
@@ -255,17 +298,18 @@ class DummyContext:
     def __exit__(self, *args): pass
 
 def parameter_sweep(v_max_range: List[float], t_ramp_range: List[float], 
-                   warp_params: WarpParameters) -> Dict[str, Any]:
+                   warp_params: WarpParameters, altitude_m: float = 0.0) -> Dict[str, Any]:
     """
-    Perform parameter sweep over velocity and ramp times.
+    Perform parameter sweep over velocity and ramp times with atmospheric constraints.
     
     Args:
         v_max_range: List of maximum velocities to test
         t_ramp_range: List of ramp times to test
         warp_params: Fixed warp parameters
+        altitude_m: Operating altitude in meters
         
     Returns:
-        Sweep results with energy scaling analysis
+        Sweep results with energy scaling analysis and atmospheric limits
     """
     print("🔬 Running parameter sweep for impulse engine...")
     
@@ -303,7 +347,7 @@ def parameter_sweep(v_max_range: List[float], t_ramp_range: List[float],
                     n_steps=200   # Reduced for speed
                 )
                 
-                sim_results = simulate_impulse_maneuver(profile, warp_params, enable_progress=False)
+                sim_results = simulate_impulse_maneuver(profile, warp_params, enable_progress=False, altitude_m=altitude_m)
                 energy_matrix[i, j] = sim_results['total_energy']
                 
                 run_count += 1

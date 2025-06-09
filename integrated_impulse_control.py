@@ -43,6 +43,15 @@ try:
 except ImportError:
     PROGRESS_AVAILABLE = False
 
+# Atmospheric constraints import
+try:
+    from atmospheric_constraints import AtmosphericConstraints, TrajectoryAnalyzer
+    ATMOSPHERIC_AVAILABLE = True
+    print("🌍 Atmospheric constraints enabled for integrated control")
+except ImportError:
+    ATMOSPHERIC_AVAILABLE = False
+    print("⚠️  Atmospheric constraints not available")
+
 # JAX imports with fallback
 try:
     import jax.numpy as jnp
@@ -97,7 +106,12 @@ class IntegratedImpulseController:
         self.current_orientation = Quaternion(1.0, 0.0, 0.0, 0.0)
         self.current_velocity = Vector3D(0.0, 0.0, 0.0)
         self.current_angular_velocity = 0.0
-          # Control system configuration
+        
+        # Atmospheric constraints
+        self.atmospheric_constraints = AtmosphericConstraints() if ATMOSPHERIC_AVAILABLE else None
+        self.current_altitude = 0.0  # Track current altitude for constraints
+        
+        # Control system configuration
         self.control_config = {
             'sensor': SensorConfig(noise_level=0.01, update_rate=50.0),
             'actuator': ActuatorConfig(response_time=0.02, damping_factor=0.9),
