@@ -38,7 +38,11 @@ The framework enables complete system validation without physical hardware throu
 \item Digital-twin sensor simulation (radar, IMU, thermocouple arrays)
 \item Power system and flight computer modeling with realistic performance characteristics
 \item Electromagnetic field generator simulation with actuation delays and efficiency curves
+\item Negative energy generator twin with exotic matter physics modeling
+\item Warp field generator twin with spacetime curvature field simulation
+\item Hull structural twin with stress analysis and failure mode prediction
 \item Integrated sensor fusion and control loop validation
+\item Complete spacecraft lifecycle simulation (\texttt{simulate\_full\_warp\_MVP.py})
 \end{itemize}
 
 \subsubsection{Protection System Integration}
@@ -81,6 +85,13 @@ python demo_full_warp_pipeline.py
 
 # Digital-twin hardware validation
 python demo_full_warp_simulated_hardware.py
+
+# Complete MVP with all digital twins
+python simulate_full_warp_MVP.py
+
+# Individual digital twin testing
+python simulate_power_and_flight_computer.py
+python simulated_interfaces.py
 
 # Protection system testing
 python integrated_space_protection.py

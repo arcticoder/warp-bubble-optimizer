@@ -92,6 +92,9 @@ python integrated_space_protection.py
 ### Quick Start: Digital Twin Integration
 
 ```bash
+# Complete MVP digital twin simulation (ALL subsystems)
+python simulate_full_warp_MVP.py
+
 # Complete digital twin MVP demonstration
 python simulate_power_and_flight_computer.py
 
@@ -104,6 +107,7 @@ python demo_full_warp_simulated_hardware.py
 
 ### Digital Twin Documentation
 
+- **`simulate_full_warp_MVP.py`** - Complete MVP simulation with all digital twin subsystems
 - **`simulated_interfaces.py`** - Core digital twin hardware interface implementations  
 - **`simulate_power_and_flight_computer.py`** - Advanced power and flight computer simulation
 - **`demo_full_warp_pipeline.py`** - Integrated protection pipeline with digital twin integration
