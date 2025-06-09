@@ -23,8 +23,10 @@ Digital Twin Components:
 
 import numpy as np
 import time
+import os
 from typing import Dict, List, Tuple, Optional, Any, Callable
 from dataclasses import dataclass
+import os
 
 # Import core digital twin systems
 try:
@@ -304,15 +306,59 @@ class SimulatedHullStructural:
             'safe_operation': stress_factor < 0.8 and thermal_factor < 0.9
         }
 
+@dataclass
+class SimulationConfig:
+    """Configuration for simulation fidelity and parameters."""
+    spatial_resolution: int = 100
+    temporal_dt: float = 1.0
+    sensor_noise_level: float = 0.01
+    monte_carlo_samples: int = 1
+    enable_jax_acceleration: bool = True
+    detailed_logging: bool = False
+    total_time: float = 120.0
+
+def load_config_from_environment() -> SimulationConfig:
+    """Load simulation configuration from environment variables."""
+    return SimulationConfig(
+        spatial_resolution=int(os.environ.get("SIM_GRID_RESOLUTION", "100")),
+        temporal_dt=float(os.environ.get("SIM_TIME_STEP", "1.0")),
+        sensor_noise_level=float(os.environ.get("SIM_SENSOR_NOISE", "0.01")),
+        monte_carlo_samples=int(os.environ.get("SIM_MONTE_CARLO_SAMPLES", "1")),
+        enable_jax_acceleration=os.environ.get("SIM_ENABLE_JAX", "True").lower() == "true",
+        detailed_logging=os.environ.get("SIM_DETAILED_LOGGING", "False").lower() == "true"
+    )
+
+def apply_sensor_noise(base_reading: float, noise_level: float) -> float:
+    """Apply realistic sensor noise to readings."""
+    import random
+    noise = random.gauss(0, noise_level * abs(base_reading))
+    return base_reading + noise
+
 def run_full_simulation():
+    """
+    Run complete digital twin simulation with default configuration.
+    """
+    config = load_config_from_environment()
+    return run_full_simulation_with_config(config)
+
+def run_full_simulation_with_config(config: SimulationConfig):
     """
     Run complete digital twin simulation of warp bubble spacecraft.
     
     Integrates all subsystems in realistic mission scenario with full
     sensor feedback, power management, and structural monitoring.
+      Args:
+        config: Simulation configuration including fidelity parameters
     """
     print("🚀 FULL WARP MVP DIGITAL TWIN SIMULATION")
     print("=" * 55)
+    print(f"🔧 Fidelity Configuration:")
+    print(f"   Grid Resolution: {config.spatial_resolution}")
+    print(f"   Time Step: {config.temporal_dt}s")
+    print(f"   Sensor Noise: {config.sensor_noise_level*100:.1f}%")
+    print(f"   Monte Carlo Samples: {config.monte_carlo_samples}")
+    print(f"   JAX Acceleration: {config.enable_jax_acceleration}")
+    print(f"   Detailed Logging: {config.detailed_logging}")
     
     if not CORE_AVAILABLE:
         print("❌ Core systems not available - simulation cannot run")
@@ -348,11 +394,9 @@ def run_full_simulation():
     print(f"\n🎯 Mission Scenario: Complete Warp Descent Simulation")
     print(f"   Initial position: [{state['pos'][0]:.0f}, {state['pos'][1]:.0f}, {state['pos'][2]/1000:.0f}] km")
     print(f"   Initial velocity: [{state['vel'][0]:.0f}, {state['vel'][1]:.0f}, {state['vel'][2]:.0f}] m/s")
-    print(f"   Bubble parameters: R={state['bubble_params']['R']} m, δ={state['bubble_params']['delta']}")
-    
-    # Simulation parameters
-    dt = 1.0  # 1 second time steps
-    total_time = 120.0  # 2 minute simulation
+    print(f"   Bubble parameters: R={state['bubble_params']['R']} m, δ={state['bubble_params']['delta']}")    # Simulation parameters from configuration
+    dt = config.temporal_dt
+    total_time = config.total_time
     steps = int(total_time / dt)
     
     # Performance tracking
@@ -360,85 +404,140 @@ def run_full_simulation():
     total_exotic_energy = 0.0
     max_stress = 0.0
     min_structural_health = 1.0
+    control_frequency_samples = []
     
-    print(f"\n🔄 Running {total_time:.0f}s Simulation ({steps} steps)...")
+    print(f"\n🔄 Running {total_time:.0f}s Simulation ({steps} steps) at {1/dt:.1f} Hz...")
     
-    for step in range(steps):
-        if step % 20 == 0:
-            print(f"\n--- Step {step+1}/{steps} (t = {step*dt:.0f}s) ---")
+    # Monte Carlo simulation support
+    mc_results = []
+    samples_to_run = max(1, config.monte_carlo_samples)
+    
+    for sample in range(samples_to_run):
+        if config.monte_carlo_samples > 1:
+            print(f"\n🎲 Monte Carlo Sample {sample+1}/{samples_to_run}")
         
-        # 1) Flight computer executes control law
-        def control_law(s):
-            new_state = s.copy()
-            # Enforce atmospheric safety
-            h = s['pos'][2]
-            v_mag = np.linalg.norm(s['vel'])
+        # Reset for each sample
+        sample_energy = 0.0
+        sample_exotic = 0.0
+        sample_max_stress = 0.0
+        sample_min_health = 1.0
+        
+        for step in range(steps):
+            step_start_time = time.time()
             
-            if h < 100e3:  # In atmosphere
-                v_thermal = atmo.max_velocity_thermal(h)
-                v_drag = atmo.max_velocity_drag(h)
-                v_safe = min(v_thermal, v_drag)
+            if step % max(1, int(20/config.temporal_dt)) == 0 and config.detailed_logging:
+                print(f"\n--- Step {step+1}/{steps} (t = {step*dt:.1f}s) ---")
+            
+            # 1) Flight computer executes control law
+            def control_law(s):
+                new_state = s.copy()
+                # Enforce atmospheric safety
+                h = s['pos'][2]
+                v_mag = np.linalg.norm(s['vel'])
                 
-                if v_mag > v_safe:
-                    new_state['vel'] = s['vel'] * (v_safe / v_mag)
-                    if step % 20 == 0:
-                        print(f"   🌍 Atmospheric safety: decel {v_mag:.0f} → {v_safe:.0f} m/s")
+                if h < 100e3:  # In atmosphere
+                    v_thermal = atmo.max_velocity_thermal(h)
+                    v_drag = atmo.max_velocity_drag(h)
+                    v_safe = min(v_thermal, v_drag)
+                    
+                    if v_mag > v_safe:
+                        new_state['vel'] = s['vel'] * (v_safe / v_mag)
+                        if step % 20 == 0:
+                            print(f"   🌍 Atmospheric safety: decel {v_mag:.0f} → {v_safe:.0f} m/s")
+                
+                return new_state
             
-            return new_state
+            state = flight_cpu.execute_control_law(control_law, state, dt)
+            
+            # 2) Negative energy generator pulse simulation
+            if WARP_QFT_AVAILABLE:
+                required_exotic = compute_negative_energy_pulse(state['vel'], state['bubble_params'])
+            else:
+                required_exotic = -1e15  # Fallback value
+            
+            neg_result = neg_energy_gen.generate_exotic_pulse(required_exotic, dt)
+            
+            # 3) Warp field generator power simulation
+            warp_field_gen.set_warp_field(state['bubble_params'], state['vel'])
+            field_result = warp_field_gen.update_field(dt)
+            
+            # 4) Power system integration
+            total_power_load = (neg_result['input_power_required'] + 
+                               field_result['energy_consumed']/dt + 
+                               50e3)  # Base systems: 50 kW        
+            power_result = power_sys.supply_power(total_power_load, dt)
+            
+            # 5) Hull structural analysis
+            acceleration = np.array([0.0, 0.0, -9.81e-6])  # Minimal perturbations
+            struct_result = hull_structure.apply_warp_loads(
+                field_result['current_power'], acceleration
+            )
+            
+            # 6) Sensor suite integration with noise
+            base_acceleration = sensors['imu'].read_acceleration()
+            base_temperature = sensors['thermocouple'].read_temperature()
+            
+            sensor_data = {
+                'radar_detections': sensors['radar'].scan(state['pos'], state['vel']),
+                'acceleration': [apply_sensor_noise(a, config.sensor_noise_level) for a in base_acceleration],
+                'temperature': apply_sensor_noise(base_temperature, config.sensor_noise_level),
+                'em_field_power': field_result['current_power']
+            }
+            
+            # 7) Advance spacecraft kinematics with grid resolution effects
+            integration_error = 1.0 / config.spatial_resolution
+            pos_noise = np.random.normal(0, integration_error, 3) if config.spatial_resolution < 1000 else np.zeros(3)
+            
+            state['pos'] += state['vel'] * dt + pos_noise
+            state['time'] += dt
+            
+            # Track control frequency
+            step_end_time = time.time()
+            step_duration = step_end_time - step_start_time
+            if step_duration > 0:
+                control_frequency_samples.append(1.0 / step_duration)
+            
+            # Update sample tracking
+            sample_energy += power_result['energy_consumed']
+            sample_exotic += abs(neg_result['exotic_energy_generated'])
+            sample_max_stress = max(sample_max_stress, struct_result['total_stress'])
+            sample_min_health = min(sample_min_health, struct_result['structural_health'])
+            
+            # Update overall tracking
+            total_input_energy += power_result['energy_consumed']
+            total_exotic_energy += abs(neg_result['exotic_energy_generated'])
+            max_stress = max(max_stress, struct_result['total_stress'])
+            min_structural_health = min(min_structural_health, struct_result['structural_health'])
+            
+            # Log periodic status
+            if step % max(1, int(20/config.temporal_dt)) == 0 and config.detailed_logging:
+                print(f"   ⚡ Power: {total_power_load/1e6:.1f} MW, Exotic: {abs(neg_result['exotic_energy_generated'])/1e12:.1f} TJ")
+                print(f"   🔧 Field: {field_result['current_power']/1e6:.1f} MW, Stability: {field_result['field_stability']:.3f}")
+                print(f"   🏗️  Stress: {struct_result['total_stress']/1e6:.1f} MPa, Health: {struct_result['structural_health']:.3f}")
+                print(f"   📍 Alt: {state['pos'][2]/1000:.1f} km, Speed: {np.linalg.norm(state['vel']):.0f} m/s")
         
-        state = flight_cpu.execute_control_law(control_law, state, dt)
+        # Store sample results for Monte Carlo analysis
+        mc_results.append({
+            'total_energy': sample_energy,
+            'total_exotic': sample_exotic,
+            'max_stress': sample_max_stress,
+            'min_health': sample_min_health,
+            'mission_success': sample_min_health > 0.8
+        })
         
-        # 2) Negative energy generator pulse simulation
-        if WARP_QFT_AVAILABLE:
-            required_exotic = compute_negative_energy_pulse(state['vel'], state['bubble_params'])
-        else:
-            required_exotic = -1e15  # Fallback value
-        
-        neg_result = neg_energy_gen.generate_exotic_pulse(required_exotic, dt)
-        
-        # 3) Warp field generator power simulation
-        warp_field_gen.set_warp_field(state['bubble_params'], state['vel'])
-        field_result = warp_field_gen.update_field(dt)
-        
-        # 4) Power system integration
-        total_power_load = (neg_result['input_power_required'] + 
-                           field_result['energy_consumed']/dt + 
-                           50e3)  # Base systems: 50 kW
-        
-        power_result = power_sys.supply_power(total_power_load, dt)
-        total_input_energy += power_result['energy_consumed']
-        total_exotic_energy += abs(neg_result['exotic_energy_generated'])
-        
-        # 5) Hull structural analysis
-        acceleration = np.array([0.0, 0.0, -9.81e-6])  # Minimal perturbations
-        struct_result = hull_structure.apply_warp_loads(
-            field_result['current_power'], acceleration
-        )
-        
-        max_stress = max(max_stress, struct_result['total_stress'])
-        min_structural_health = min(min_structural_health, struct_result['structural_health'])
-        
-        # 6) Sensor suite integration
-        sensor_data = {
-            'radar_detections': sensors['radar'].scan(state['pos'], state['vel']),
-            'acceleration': sensors['imu'].read_acceleration(),
-            'temperature': sensors['thermocouple'].read_temperature(),
-            'em_field_power': field_result['current_power']
-        }
-        
-        # 7) Advance spacecraft kinematics
-        state['pos'] += state['vel'] * dt
-        state['time'] += dt
-        
-        # Log periodic status
-        if step % 20 == 0:
-            print(f"   ⚡ Power: {total_power_load/1e6:.1f} MW, Exotic: {abs(neg_result['exotic_energy_generated'])/1e12:.1f} TJ")
-            print(f"   🔧 Field: {field_result['current_power']/1e6:.1f} MW, Stability: {field_result['field_stability']:.3f}")
-            print(f"   🏗️  Stress: {struct_result['total_stress']/1e6:.1f} MPa, Health: {struct_result['structural_health']:.3f}")
-            print(f"   📍 Alt: {state['pos'][2]/1000:.1f} km, Speed: {np.linalg.norm(state['vel']):.0f} m/s")
+        # Update overall tracking
+        total_input_energy += sample_energy
+        total_exotic_energy += sample_exotic
+        max_stress = max(max_stress, sample_max_stress)
+        min_structural_health = min(min_structural_health, sample_min_health)
     
-    # Final system status
+    # Final system status and analysis
     power_status = power_sys.get_system_status()
+    
+    # Calculate performance metrics
+    avg_control_frequency = np.mean(control_frequency_samples) if control_frequency_samples else 0.0
+    energy_overhead = total_input_energy / (1e12)  # Normalize to TJ
+    mission_success_rate = sum(r['mission_success'] for r in mc_results) / len(mc_results)
     
     print(f"\n📊 SIMULATION COMPLETE - DIGITAL TWIN MVP RESULTS")
     print(f"=" * 55)
@@ -447,42 +546,33 @@ def run_full_simulation():
     print(f"   Final velocity: {np.linalg.norm(state['vel']):.0f} m/s")
     print(f"   Total mission time: {total_time:.0f} s")
     
+    if config.monte_carlo_samples > 1:
+        print(f"\n🎲 Monte Carlo Analysis Results:")
+        print(f"   Mission Success Rate: {mission_success_rate*100:.1f}%")
+        print(f"   Mean Structural Health: {np.mean([r['min_health'] for r in mc_results]):.3f}")
+        print(f"   Health Std Dev: {np.std([r['min_health'] for r in mc_results]):.3f}")
+    
     print(f"\n⚡ Power System Performance:")
     print(f"   Energy consumed: {total_input_energy/1e9:.1f} GJ")
     print(f"   Energy remaining: {power_status['energy_stored']/1e9:.1f} GJ")
     print(f"   System efficiency: {power_status.get('efficiency', 0.85)*100:.1f}%")
     
-    print(f"\n🌌 Exotic Energy Generation:")
-    print(f"   Total exotic energy: {total_exotic_energy/1e12:.1f} TJ")
-    print(f"   Negative energy pulses: {len(neg_energy_gen.pulse_history)}")
-    print(f"   Average field strength: {neg_energy_gen.field_strength:.1f} T")
+    print(f"\n🔬 Fidelity Performance Metrics:")
+    print(f"   Average Control Frequency: {avg_control_frequency:.1f} Hz")
+    print(f"   Grid Resolution: {config.spatial_resolution} points")
+    print(f"   Time Step: {config.temporal_dt} s")
+    print(f"   Sensor Noise Level: {config.sensor_noise_level*100:.1f}%")
     
-    print(f"\n🔧 Warp Field Performance:")
-    print(f"   Final field power: {warp_field_gen.current_field_power/1e6:.1f} MW")
-    print(f"   Field stability: {warp_field_gen.field_stability:.3f}")
-    print(f"   Total field energy: {warp_field_gen.total_field_energy/1e9:.1f} GJ")
-    
-    print(f"\n🏗️  Structural Integrity:")
-    print(f"   Maximum stress: {max_stress/1e6:.1f} MPa")
-    print(f"   Final structural health: {min_structural_health:.3f}")
-    print(f"   Fatigue damage: {hull_structure.fatigue_damage:.2e}")
-    
-    print(f"\n💻 Flight Computer Metrics:")
-    print(f"   Control cycles executed: {len(flight_cpu.execution_history)}")
-    print(f"   Average CPU load: {flight_cpu.cpu_load*100:.1f}%")
-    print(f"   System uptime: 100.0%")
-    
-    print(f"\n🔬 Digital Twin Validation:")
-    print(f"   All subsystems operational: ✓")
-    print(f"   Real-time performance: >10 Hz achieved")
-    print(f"   Energy overhead: <1% of mission budget")
-    print(f"   Sensor integration: Complete")
-    print(f"   Failure modes tested: Monte Carlo ready")
-    
-    print(f"\n🎯 MVP DIGITAL TWIN STATUS: COMPLETE SUCCESS")
-    print(f"   Full spacecraft simulation achieved without physical hardware")
-    print(f"   All exotic physics and protection systems validated")
-    print(f"   Ready for mission planning and hardware development")
+    # Return results for fidelity analysis
+    return {
+        'control_frequency': avg_control_frequency,
+        'energy_overhead': energy_overhead / 1e6,  # Normalize
+        'final_structural_health': min_structural_health,
+        'mission_success_rate': mission_success_rate,
+        'total_energy_consumed': total_input_energy,
+        'monte_carlo_results': mc_results,
+        'config': config
+    }
 
 if __name__ == "__main__":
     run_full_simulation()

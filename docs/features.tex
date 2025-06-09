@@ -232,6 +232,42 @@ This document provides a comprehensive reference for all features implemented in
 \item \textbf{Visualization**: Matplotlib and other plotting libraries for analysis and debugging
 \end{itemize}
 
+\section{Adaptive Fidelity Simulation Features}
+
+\subsection{Progressive Resolution Enhancement}
+\begin{itemize}
+\item \textbf{Implementation}: \texttt{fidelity\_runner.py}
+\item \textbf{Spatial Scaling}: Grid resolution from 100 to 2000+ points for field calculations
+\item \textbf{Temporal Scaling}: Time steps from 1.0s to 0.05s for high-precision integration
+\item \textbf{Automated Progression}: Coarse → Medium → Fine → Ultra-Fine → Monte Carlo analysis
+\item \textbf{Performance Monitoring}: Real-time tracking of control frequency, memory usage, and simulation time
+\end{itemize}
+
+\subsection{Configurable Fidelity Parameters}
+\begin{itemize}
+\item \textbf{Spatial Resolution}: Grid size for spatial sampling and field calculations
+\item \textbf{Temporal Resolution}: Integration time step and control loop frequency
+\item \textbf{Sensor Noise Modeling}: Configurable noise levels from 0.5\% to 5\% for realistic validation
+\item \textbf{Monte Carlo Sampling}: Statistical analysis with 1 to 1000+ samples for reliability assessment
+\item \textbf{JAX Acceleration}: Optional GPU/CPU optimization with automatic fallback
+\end{itemize}
+
+\subsection{Performance Scaling Analysis}
+\begin{itemize}
+\item \textbf{Execution Time Tracking}: Precise measurement of simulation duration across fidelity levels
+\item \textbf{Memory Usage Monitoring}: RAM consumption analysis for large-scale simulations
+\item \textbf{Control Frequency Analysis}: Real-time performance validation at each fidelity level
+\item \textbf{Scaling Recommendations}: Automated analysis of computational cost vs. accuracy trade-offs
+\end{itemize}
+
+\subsection{Monte Carlo Reliability Assessment}
+\begin{itemize}
+\item \textbf{Statistical Sampling}: Large-scale uncertainty propagation through system parameters
+\item \textbf{Failure Mode Analysis}: Comprehensive reliability assessment with failure injection
+\item \textbf{Mission Success Metrics}: Quantitative assessment of mission completion probability
+\item \textbf{Parametric Uncertainty}: Systematic analysis of sensor noise, debris flux, and thermal profiles
+\end{itemize}
+
 \section{Conclusion}
 
 The Warp Bubble Optimizer Framework provides a comprehensive feature set spanning theoretical quantum field theory through practical spacecraft simulation. The integration of digital-twin hardware interfaces enables complete system validation without physical prototypes, while the multi-scale protection systems address the full spectrum of space environment threats. This feature-complete implementation supports both current research needs and future development toward practical warp bubble technology.

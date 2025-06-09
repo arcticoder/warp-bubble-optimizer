@@ -89,6 +89,15 @@ python demo_full_warp_simulated_hardware.py
 # Complete MVP with all digital twins
 python simulate_full_warp_MVP.py
 
+# Adaptive fidelity progression (coarse to fine)
+python fidelity_runner.py
+
+# Quick fidelity test (coarse and medium only)
+python fidelity_runner.py quick
+
+# Monte Carlo reliability analysis
+python fidelity_runner.py monte-carlo
+
 # Individual digital twin testing
 python simulate_power_and_flight_computer.py
 python simulated_interfaces.py
