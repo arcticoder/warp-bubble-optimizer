@@ -28,6 +28,25 @@ import time
 from pathlib import Path
 from typing import Dict, Tuple, Optional, List
 
+# ProgressTracker import with fallback
+try:
+    from progress_tracker import ProgressTracker
+    PROGRESS_AVAILABLE = True
+except ImportError:
+    PROGRESS_AVAILABLE = False
+    class ProgressTracker:
+        def __init__(self, *args, **kwargs): pass
+        def update(self, *args, **kwargs): pass
+        def set_stage(self, *args, **kwargs): pass
+        def log_metric(self, *args, **kwargs): pass
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+
+class DummyContext:
+    """Dummy context manager for fallback."""
+    def __enter__(self): return self
+    def __exit__(self, *args): pass
+
 # Try to import JAX, fallback to NumPy if not available
 try:
     import jax
@@ -302,8 +321,7 @@ class JAX4DWarpOptimizer:
         theta_init = jnp.concatenate([
             jnp.array([mu_init, G_geo_init]),
             jnp.array(spatial_cps_init),
-            jnp.array(temporal_cps_init)
-        ])
+            jnp.array(temporal_cps_init)        ])
         
         return theta_init
     
@@ -327,29 +345,52 @@ class JAX4DWarpOptimizer:
         
         start_time = time.time()
         
-        if JAX_AVAILABLE:
-            # Use JAX optimization
+        # Initialize progress tracking
+        progress = None
+        if PROGRESS_AVAILABLE:
             try:
-                result = minimize(
-                    self.objective_function,
-                    theta_init,
-                    method='BFGS',
-                    options={
-                        'maxiter': max_iterations,
-                        'gtol': tolerance
-                    }
+                progress = ProgressTracker(
+                    total_iterations=max_iterations,
+                    description="4D Warp Bubble Optimization",
+                    log_level=logging.INFO if 'logging' in globals() else None
                 )
-                theta_opt = result.x
-                success = result.success
-                iterations = result.nit
-                
+                progress.set_stage("parameter_optimization")
+                progress.log_metric("initial_exotic_energy", initial_energy)
+                progress.log_metric("qi_bound", self.qi_bound)
             except Exception as e:
-                print(f"JAX optimization failed: {e}")
-                # Fallback to simple gradient descent
-                theta_opt, success, iterations = self._fallback_optimization(theta_init, max_iterations)
-        else:
-            # NumPy fallback optimization
-            theta_opt, success, iterations = self._fallback_optimization(theta_init, max_iterations)
+                print(f"Failed to initialize ProgressTracker: {e}")
+                progress = None
+        
+        with progress if progress else DummyContext():
+            if JAX_AVAILABLE:
+                # Use JAX optimization
+                try:
+                    result = minimize(
+                        self.objective_function,
+                        theta_init,
+                        method='BFGS',
+                        options={
+                            'maxiter': max_iterations,
+                            'gtol': tolerance
+                        }
+                    )
+                    theta_opt = result.x
+                    success = result.success
+                    iterations = result.nit
+                    
+                    if progress:
+                        try:
+                            progress.update(iterations)
+                        except Exception as e:
+                            print(f"Progress update failed: {e}")
+                    
+                except Exception as e:
+                    print(f"JAX optimization failed: {e}")
+                    # Fallback to simple gradient descent
+                    theta_opt, success, iterations = self._fallback_optimization(theta_init, max_iterations, progress)
+            else:
+                # NumPy fallback optimization
+                theta_opt, success, iterations = self._fallback_optimization(theta_init, max_iterations, progress)
         
         optimization_time = time.time() - start_time
         
@@ -385,14 +426,13 @@ class JAX4DWarpOptimizer:
         print(f"  Energy/QI ratio: {energy_ratio:.3f}")
         print(f"  Gravity compensated: {gravity_check}")
         print(f"  QI bound satisfied: {qi_check}")
-        print(f"  Overall feasible: {results['is_feasible']}")
-        
+        print(f"  Overall feasible: {results['is_feasible']}")        
         if energy_ratio < 1.1:
             print("  🎉 Near-optimal solution found!")
         
         return results
     
-    def _fallback_optimization(self, theta_init: jnp.ndarray, max_iter: int) -> Tuple:
+    def _fallback_optimization(self, theta_init: jnp.ndarray, max_iter: int, progress=None) -> Tuple:
         """Simple gradient descent fallback when JAX optimization fails."""
         theta = theta_init.copy()
         learning_rate = 1e-6
@@ -403,12 +443,25 @@ class JAX4DWarpOptimizer:
             if i % 100 == 0:
                 obj_val = self.objective_function(theta)
                 print(f"  Iteration {i}: objective = {obj_val:.2e}")
+                
+                # Update progress
+                if progress:
+                    try:
+                        progress.update(100 if i > 0 else 1)
+                        progress.log_metric("objective_value", float(obj_val))
+                    except Exception as e:
+                        print(f"Progress update failed: {e}")
             
             gradient = grad_func(theta)
             theta = theta - learning_rate * gradient
             
             # Simple convergence check
             if i > 10 and jnp.linalg.norm(gradient) < 1e-8:
+                if progress:
+                    try:
+                        progress.update(max_iter - i)  # Complete remaining iterations
+                    except Exception:
+                        pass
                 return theta, True, i
         
         return theta, False, max_iter
