@@ -168,10 +168,10 @@ def test_progress_tracker_direct():
         from progress_tracker import ProgressTracker
         
         print("  ✅ ProgressTracker imported successfully")
-          # Test basic functionality
-        with ProgressTracker(total_steps=100, description="Test Progress") as progress:
-            for i in range(0, 101, 20):
-                progress.update(test_value=i)
+        # Test basic functionality
+        with ProgressTracker(total_steps=5, description="Test Progress") as progress:
+            for i in range(5):
+                progress.update(f"Test Step {i+1}", step_number=i+1)
                 time.sleep(0.05)  # Brief pause
         
         print("  ✅ ProgressTracker test completed successfully")

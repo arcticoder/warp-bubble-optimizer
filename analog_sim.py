@@ -218,15 +218,13 @@ class AcousticWarpAnalog:
         times = []
         
         logger.info(f"Running acoustic simulation: {n_steps} steps, {duration:.3f}s")
-        
-        # Initialize progress tracking
+          # Initialize progress tracking
         progress = None
         if PROGRESS_AVAILABLE:
             try:
                 progress = ProgressTracker(
-                    total_iterations=n_steps,
-                    description="Acoustic Warp Analog Simulation",
-                    log_level=logging.INFO
+                    total_steps=n_steps,
+                    description="Acoustic Warp Analog Simulation"
                 )
                 progress.set_stage("acoustic_wave_evolution")
             except Exception as e:
@@ -403,16 +401,13 @@ class ElectromagneticWarpAnalog:
         snapshots = []
         times = []
         
-        logger.info(f"Running EM simulation: {n_steps} steps, {duration:.3f}s")
-        
-        # Initialize progress tracking
+        logger.info(f"Running EM simulation: {n_steps} steps, {duration:.3f}s")        # Initialize progress tracking
         progress = None
         if PROGRESS_AVAILABLE:
             try:
                 progress = ProgressTracker(
-                    total_iterations=n_steps,
-                    description="EM Warp Analog Simulation",
-                    log_level=logging.INFO
+                    total_steps=n_steps,
+                    description="EM Warp Analog Simulation"
                 )
                 progress.set_stage("em_field_evolution")
             except Exception as e:

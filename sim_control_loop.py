@@ -335,17 +335,14 @@ class VirtualWarpController:
         start_time = time.time()
         step_count = 0
         
-        logger.info(f"Starting control loop: {duration}s at {target_rate}Hz")
-        
-        # Initialize progress tracking
+        logger.info(f"Starting control loop: {duration}s at {target_rate}Hz")        # Initialize progress tracking
         total_steps = int(duration * target_rate)
         progress = None
         if PROGRESS_AVAILABLE:
             try:
                 progress = ProgressTracker(
-                    total_iterations=total_steps,
-                    description="Virtual Control Loop",
-                    log_level=logging.INFO
+                    total_steps=total_steps,
+                    description="Virtual Control Loop"
                 )
                 progress.set_stage("control_execution")
             except Exception as e:
@@ -484,3 +481,6 @@ if __name__ == "__main__":
     
     # Run demonstration
     demo_virtual_control()
+
+# Backward compatibility alias
+VirtualControlLoop = VirtualWarpController

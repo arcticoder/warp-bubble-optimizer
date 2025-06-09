@@ -177,7 +177,7 @@ class WarpShapeOptimizer:
         
         # Initialize progress tracker
         if PROGRESS_TRACKER_AVAILABLE:
-            progress = ProgressTracker(max_iter, f"Optimizing {self.ansatz_type} warp shape")
+            progress = ProgressTracker(total_steps=max_iter, description=f"Optimizing {self.ansatz_type} warp shape")
             progress.start({
                 'ansatz_type': self.ansatz_type,
                 'initial_params': str(theta),

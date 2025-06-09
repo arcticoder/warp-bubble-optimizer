@@ -388,7 +388,7 @@ class EnhancedVirtualControlLoop:
         
         # Initialize progress tracking
         if PROGRESS_TRACKER_AVAILABLE:
-            progress = ProgressTracker(n_steps, "Virtual Control Loop Simulation")
+            progress = ProgressTracker(total_steps=n_steps, description="Virtual Control Loop Simulation")
             progress.start({
                 'duration': f"{duration:.2f} seconds",
                 'sampling_rate': f"{self.config.sampling_rate} Hz",

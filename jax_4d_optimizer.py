@@ -344,15 +344,14 @@ class JAX4DWarpOptimizer:
         print(f"Initial exotic energy: {initial_energy:.2e} J")
         
         start_time = time.time()
-        
-        # Initialize progress tracking
+          # Initialize progress tracking
         progress = None
         if PROGRESS_AVAILABLE:
             try:
                 progress = ProgressTracker(
-                    total_iterations=max_iterations,
+                    total_steps=max_iterations,
                     description="4D Warp Bubble Optimization",
-                    log_level=logging.INFO if 'logging' in globals() else None
+                    log_level=None  # Use default
                 )
                 progress.set_stage("parameter_optimization")
                 progress.log_metric("initial_exotic_energy", initial_energy)

@@ -167,7 +167,7 @@ class ComprehensiveWarpEngineDemo:
         self.results = {}
         
         # Initialize progress tracker for subsystem initialization
-        init_progress = ProgressTracker(9, "Initializing Warp Engine Subsystems")
+        init_progress = ProgressTracker(total_steps=9, description="Initializing Warp Engine Subsystems")
         init_progress.start()
         
         # Initialize all subsystems with progress tracking
@@ -245,7 +245,7 @@ class ComprehensiveWarpEngineDemo:
         and remains free of horizons or singularities.
         """
         # Initialize progress tracker for this step
-        step_progress = ProgressTracker(6, "Step 1: Back-Reaction & Einstein Solver Analysis")
+        step_progress = ProgressTracker(total_steps=6, description="Step 1: Back-Reaction & Einstein Solver Analysis")
         step_progress.start()
         
         # 1. Setup parameters
@@ -1006,7 +1006,7 @@ class ComprehensiveWarpEngineDemo:
         Run the complete warp engine demonstration following the full roadmap
         """
         # Initialize progress tracker for complete demonstration (9 total steps including integration)
-        demo_progress = ProgressTracker(9, "Complete Warp Engine Demonstration")
+        demo_progress = ProgressTracker(total_steps=9, description="Complete Warp Engine Demonstration")
         demo_progress.start()
         
         start_time = time.time()
@@ -1253,7 +1253,7 @@ def main():
         
         if args.step in step_names:
             # Create progress tracker for single step
-            single_step_progress = ProgressTracker(1, f"Step {args.step}: {step_names[args.step]}")
+            single_step_progress = ProgressTracker(total_steps=1, description=f"Step {args.step}: {step_names[args.step]}")
             single_step_progress.start()
             
             # Execute the step

@@ -239,6 +239,34 @@ class ProgressTracker:
             print(f"📁 Performance report saved to: {filename}")
         except Exception as e:
             print(f"❌ Failed to save report: {e}")
+    
+    def set_stage(self, stage_name: str):
+        """Set the current processing stage."""
+        if self.enable_detailed_logging:
+            print(f"🔄 Stage: {stage_name}")
+        # Store in performance data
+        self.performance_data.setdefault('stages', []).append({
+            'name': stage_name,
+            'timestamp': time.time()
+        })
+    
+    def log_metric(self, metric_name: str, value: Any):
+        """Log a metric value."""
+        if self.enable_detailed_logging:
+            print(f"📊 {metric_name}: {value}")
+        # Store in performance data
+        self.performance_data.setdefault('metrics', {})[metric_name] = value
+    
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        if exc_type is not None:
+            self.add_error(f"Exception during execution: {exc_val}")
+        # Optionally auto-complete on context exit
+        return False  # Don't suppress exceptions
 
 
 class MultiProcessProgressTracker:
@@ -366,7 +394,7 @@ if __name__ == "__main__":
     print("="*50)
     
     # Simple progress tracking demo
-    tracker = ProgressTracker(5, "Warp Engine Initialization")
+    tracker = ProgressTracker(total_steps=5, description="Warp Engine Initialization")
     tracker.start({'Bubble Radius': '10.0 m', 'Warp Velocity': '5000c'})
     
     for i in range(5):
