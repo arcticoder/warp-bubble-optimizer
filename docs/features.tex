@@ -268,6 +268,36 @@ This document provides a comprehensive reference for all features implemented in
 \item \textbf{Parametric Uncertainty}: Systematic analysis of sensor noise, debris flux, and thermal profiles
 \end{itemize}
 
+\subsection{Optimization and Parametric Sweep Features}
+
+\textbf{End-to-End Optimization Pipeline:}
+\begin{itemize}
+    \item Shape parameter optimization at each fidelity level
+    \item JAX-accelerated bubble parameter (R, δ) optimization
+    \item Convergence detection with configurable thresholds
+    \item Automated stopping when relative energy change < ε
+\end{itemize}
+
+\textbf{Parametric Sweep Capabilities:}
+\begin{itemize}
+    \item Cross-fidelity performance analysis
+    \item Exotic energy and mission success tracking
+    \item Statistical analysis across resolution levels
+    \item Resource optimization recommendations
+\end{itemize}
+
+\textbf{Production Pipeline Commands:}
+\begin{verbatim}
+# Run complete optimization sweep
+python optimize_and_sweep.py
+
+# Custom convergence threshold
+python -c "from optimize_and_sweep import AdaptiveFidelityOptimizer; 
+optimizer = AdaptiveFidelityOptimizer(); 
+optimizer.convergence_threshold = 1e-4; 
+optimizer.run_optimization_sweep()"
+\end{verbatim}
+
 \section{Conclusion}
 
 The Warp Bubble Optimizer Framework provides a comprehensive feature set spanning theoretical quantum field theory through practical spacecraft simulation. The integration of digital-twin hardware interfaces enables complete system validation without physical prototypes, while the multi-scale protection systems address the full spectrum of space environment threats. This feature-complete implementation supports both current research needs and future development toward practical warp bubble technology.
