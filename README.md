@@ -9,6 +9,8 @@ A comprehensive simulation framework for designing and optimizing novel warp bub
 5. **JAX-Accelerated Simulation** - GPU/CPU acceleration with automatic fallback for high-performance computing
 6. **Virtual Control Systems** - Realistic simulation of warp bubble control without hardware dependencies
 7. **🆕 Integrated Impulse-Mode Control** - Complete 6-DOF mission planning and execution system
+8. **🛡️ Atmospheric Constraints Module** - Sub-luminal warp bubble atmospheric physics with thermal/drag management
+9. **🚀 Integrated Space Debris Protection** - Multi-scale threat protection from μm micrometeoroids to km-scale LEO debris
 
 ## 🎯 Core Objective
 
@@ -47,6 +49,36 @@ python integrated_impulse_control.py
 python test_simple_integration.py
 ```
 
+## 🛡️ Integrated Space Debris Protection System
+
+**NEW FEATURE:** Comprehensive multi-scale space debris protection framework with:
+
+- **LEO Collision Avoidance**: S/X-band radar simulation with 80+ km detection range and impulse-mode maneuvering
+- **Micrometeoroid Protection**: Curvature-based deflector shields with >85% efficiency for particles >50μm
+- **Atmospheric Constraints**: Sub-luminal bubble permeability management with thermal/drag limits
+- **Unified Control**: Real-time threat assessment and coordinated protection responses
+
+### Quick Start: Protection System Demo
+
+```bash
+# Complete space debris protection demo
+python demo_full_warp_pipeline.py
+
+# Simulated hardware integration
+python demo_full_warp_simulated_hardware.py
+
+# Individual protection system testing
+python leo_collision_avoidance.py
+python micrometeoroid_protection.py
+python integrated_space_protection.py
+```
+
+### Protection System Documentation
+
+- **`docs/space_debris_protection.tex`** - Complete protection framework documentation
+- **`docs/atmospheric_constraints.tex`** - Sub-luminal atmospheric physics
+- **`docs/recent_discoveries.tex`** - Latest breakthrough discoveries including protection systems
+
 ## 🔬 Core Modules (Copied from warp-bubble-qft)
 
 ### LQG-QI Pipeline Components
@@ -55,6 +87,13 @@ python test_simple_integration.py
 - **`src/warp_qft/backreaction_solver.py`** - Self-consistent Einstein field equations with β_backreaction = 1.9443254780147017
 - **`src/warp_qft/metrics/van_den_broeck_natario.py`** - Revolutionary geometric baseline implementation
 - **`src/warp_qft/enhancement_pipeline.py`** - Systematic parameter space scanning and optimization
+
+### Space Debris Protection Components
+
+- **`leo_collision_avoidance.py`** - LEO debris avoidance with S/X-band radar simulation and impulse maneuvering
+- **`micrometeoroid_protection.py`** - Curvature-based deflector shields with JAX-accelerated optimization
+- **`integrated_space_protection.py`** - Unified multi-scale protection coordination and threat assessment
+- **`atmospheric_constraints.py`** - Sub-luminal bubble atmospheric physics with thermal/drag management
 
 ### Mathematical Framework Documentation
 
