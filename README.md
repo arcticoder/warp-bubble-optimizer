@@ -8,6 +8,7 @@ A comprehensive simulation framework for designing and optimizing novel warp bub
 4. **Van den Broeck-Natário Geometric Enhancement** - Leveraging 10^5-10^6× energy reductions through topology
 5. **JAX-Accelerated Simulation** - GPU/CPU acceleration with automatic fallback for high-performance computing
 6. **Virtual Control Systems** - Realistic simulation of warp bubble control without hardware dependencies
+7. **🆕 Integrated Impulse-Mode Control** - Complete 6-DOF mission planning and execution system
 
 ## 🎯 Core Objective
 
@@ -22,6 +23,29 @@ Starting from scratch with warp bubble design lets you pick a "shape function" o
 ```
 
 This represents the most significant advancement in warp drive feasibility to date.
+
+## 🆕 Integrated Impulse-Mode Warp Engine System
+
+**NEW FEATURE:** Complete impulse-mode warp engine simulation and control system with:
+
+- **Mission Planning**: Multi-waypoint trajectory optimization
+- **6-DOF Control**: Combined translation and rotation maneuvers
+- **Energy Management**: Real-time budget tracking and optimization  
+- **Closed-Loop Feedback**: Virtual control system integration
+- **Performance Analysis**: Comprehensive mission success metrics
+
+### Quick Start: Impulse Engine Mission
+
+```bash
+# Interactive mission planning dashboard
+python impulse_engine_dashboard.py
+
+# Run integrated control system demo
+python integrated_impulse_control.py
+
+# Test complete functionality
+python test_simple_integration.py
+```
 
 ## 🔬 Core Modules (Copied from warp-bubble-qft)
 
