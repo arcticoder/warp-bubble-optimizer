@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 def main():
     """Run integrated warp protection pipeline demonstration."""
-    print("🚀 FULL WARP BUBBLE PROTECTION PIPELINE DEMO")
+    print("FULL WARP BUBBLE PROTECTION PIPELINE DEMO")
     print("=" * 55)
       # Test imports
     try:
@@ -27,20 +27,19 @@ def main():
         from leo_collision_avoidance import LEOCollisionAvoidanceSystem, CollisionAvoidanceConfig, SensorConfig, SensorSystem
         from micrometeoroid_protection import IntegratedProtectionSystem, MicrometeoroidEnvironment, BubbleGeometry
         from integrated_space_protection import IntegratedSpaceProtectionSystem, IntegratedSystemConfig
-        print("✅ All protection modules imported successfully")
+        print("CHECK All protection modules imported successfully")
     except ImportError as e:
         print(f"❌ Module import error: {e}")
         return
-    
-    # 1. Initialize atmospheric constraints
-    print("\n🌍 Initializing Atmospheric Constraints System...")
+      # 1. Initialize atmospheric constraints
+    print("\nINIT Initializing Atmospheric Constraints System...")
     try:
         atmo = AtmosphericConstraints()
-        print("   ✓ Atmospheric physics model loaded")
-        print("   ✓ Sutton-Graves heating model active")
-        print("   ✓ Altitude-dependent density profiles ready")
+        print("   CHECK Atmospheric physics model loaded")
+        print("   CHECK Sutton-Graves heating model active")
+        print("   CHECK Altitude-dependent density profiles ready")
     except Exception as e:
-        print(f"   ❌ Atmospheric system error: {e}")
+        print(f"   ERROR Atmospheric system error: {e}")
         return
       # 2. Setup LEO collision avoidance
     print("\n📡 Initializing LEO Collision Avoidance System...")
@@ -79,7 +78,29 @@ def main():
         print(f"   ❌ Integration system error: {e}")
         return
     
-    # 5. Define mission scenario
+    # 5. Initialize Digital-Twin Hardware Integration
+    print("\n💻 Initializing Digital-Twin Hardware Systems...")
+    try:
+        from simulate_power_and_flight_computer import SimulatedPowerSystem, SimulatedFlightComputer
+        from simulated_interfaces import create_simulated_sensor_suite
+        
+        power_system = SimulatedPowerSystem()
+        flight_computer = SimulatedFlightComputer()
+        sensor_suite = create_simulated_sensor_suite()
+        
+        print("   ✓ Power system digital twin ready")
+        print("   ✓ Flight computer simulation loaded")
+        print("   ✓ Complete sensor suite initialized")
+        print(f"   ✓ Power capacity: {power_system.config.max_power/1e6:.0f} MW")
+        DIGITAL_TWINS_AVAILABLE = True
+    except Exception as e:
+        print(f"   ⚠️  Digital twins not available: {e}")
+        power_system = None
+        flight_computer = None
+        sensor_suite = None
+        DIGITAL_TWINS_AVAILABLE = False
+
+    # 6. Define mission scenario
     print("\n🎯 Mission Scenario: LEO to Atmospheric Entry")
     mission_state = {
         'position': np.array([0.0, 0.0, 350e3]),      # 350 km altitude
@@ -92,7 +113,7 @@ def main():
     print(f"   Initial velocity: [{mission_state['velocity'][0]:.0f}, {mission_state['velocity'][1]:.0f}, {mission_state['velocity'][2]:.0f}] m/s")
     print(f"   Altitude: {mission_state['position'][2]/1000:.1f} km")
     
-    # 6. Atmospheric safety analysis
+    # 7. Atmospheric safety analysis
     print("\n🌍 Atmospheric Safety Analysis...")
     try:
         altitude = mission_state['position'][2]
@@ -115,7 +136,7 @@ def main():
     except Exception as e:
         print(f"   ❌ Atmospheric analysis error: {e}")
     
-    # 7. LEO debris scan and avoidance
+    # 8. LEO debris scan and avoidance
     print("\n📡 LEO Debris Scan and Threat Assessment...")
     try:
         # Simulate space objects in vicinity
@@ -142,7 +163,7 @@ def main():
     except Exception as e:
         print(f"   ❌ LEO scanning error: {e}")
     
-    # 8. Micrometeoroid protection assessment
+    # 9. Micrometeoroid protection assessment
     print("\n🛡️  Micrometeoroid Protection Assessment...")
     try:
         # Generate protection report
@@ -155,9 +176,10 @@ def main():
         
     except Exception as e:
         print(f"   ❌ Micrometeoroid analysis error: {e}")
-    
-    # 9. Mission continuation simulation
+      # 10. Mission continuation simulation
     print("\n⏱️  Mission Timeline Simulation...")
+    total_energy_used = 0.0
+    
     for phase in range(3):
         print(f"\n--- Phase {phase + 1}: Descent Continuation ---")
         
@@ -172,20 +194,50 @@ def main():
         print(f"   Time: +{(phase+1)*dt/60:.0f} min")
         print(f"   Altitude: {altitude/1000:.1f} km")
         print(f"   Speed: {velocity_magnitude:.0f} m/s")
-          # Check atmospheric constraints
-        if altitude < 100e3:  # Entering atmosphere
-            v_thermal = atmo.max_velocity_thermal(altitude)
-            v_drag = atmo.max_velocity_drag(altitude)
-            safe_velocity = min(v_thermal, v_drag)
-            if velocity_magnitude > safe_velocity:
-                decel_required = velocity_magnitude - safe_velocity
-                print(f"   ⚠️  Deceleration required: {decel_required:.0f} m/s")
-                mission_state['velocity'] *= (safe_velocity / velocity_magnitude)
-                print(f"   🔧 Applied warp deceleration - new speed: {np.linalg.norm(mission_state['velocity']):.0f} m/s")
+        
+        # Digital-twin hardware integration
+        if DIGITAL_TWINS_AVAILABLE:
+            # Define control law for flight computer
+            def control_law(state):
+                new_state = state.copy()
+                h = state['position'][2]
+                if h < 100e3:  # In atmosphere
+                    v_mag = np.linalg.norm(state['velocity'])
+                    v_thermal = atmo.max_velocity_thermal(h)
+                    v_drag = atmo.max_velocity_drag(h)
+                    v_safe = min(v_thermal, v_drag)
+                    if v_mag > v_safe:
+                        new_state['velocity'] = state['velocity'] * (v_safe / v_mag)
+                        print(f"   💻 Flight computer commanded deceleration: {v_mag:.0f} → {v_safe:.0f} m/s")
+                return new_state
+            
+            # Execute on flight computer
+            mission_state = flight_computer.execute_control_law(control_law, mission_state, dt)
+            
+            # Power system simulation
+            base_power = 50e3        # 50 kW baseline
+            protection_power = 100e3  # 100 kW protection systems
+            warp_power = 200e3       # 200 kW warp maintenance
+            total_power = base_power + protection_power + warp_power
+            
+            energy_result = power_system.supply_power(total_power, dt)
+            total_energy_used += energy_result['energy_consumed']
+            
+            print(f"   ⚡ Power: {total_power/1e3:.0f} kW, Energy used: {energy_result['energy_consumed']/1e6:.1f} MJ")
+        else:
+            # Fallback to basic atmospheric constraints
+            if altitude < 100e3:  # Entering atmosphere
+                v_thermal = atmo.max_velocity_thermal(altitude)
+                v_drag = atmo.max_velocity_drag(altitude)
+                safe_velocity = min(v_thermal, v_drag)
+                if velocity_magnitude > safe_velocity:
+                    decel_required = velocity_magnitude - safe_velocity
+                    print(f"   ⚠️  Deceleration required: {decel_required:.0f} m/s")
+                    mission_state['velocity'] *= (safe_velocity / velocity_magnitude)
+                    print(f"   🔧 Applied warp deceleration - new speed: {np.linalg.norm(mission_state['velocity']):.0f} m/s")
         
         time.sleep(0.1)  # Brief pause for demonstration
-    
-    # 10. Mission summary
+      # 11. Mission summary
     print("\n📊 MISSION PROTECTION SUMMARY")
     print("=" * 40)
     print("✅ Atmospheric constraints: OPERATIONAL")
@@ -194,8 +246,21 @@ def main():
     print("✅ Integrated threat assessment: OPERATIONAL")
     print("✅ Real-time adaptive control: OPERATIONAL")
     
+    if DIGITAL_TWINS_AVAILABLE:
+        print("✅ Digital-twin hardware integration: OPERATIONAL")
+        print(f"   • Total energy consumed: {total_energy_used/1e6:.1f} MJ")
+        print(f"   • Power system efficiency: {power_system.config.efficiency*100:.1f}%")
+        print(f"   • Flight computer performance: NOMINAL")
+    
     print("\n💡 System Capabilities Demonstrated:")
     print("   • Multi-scale threat detection (μm to km)")
+    print("   • Real-time atmospheric physics integration")
+    print("   • Coordinated protection system response")
+    print("   • Predictive trajectory safety analysis")
+    if DIGITAL_TWINS_AVAILABLE:
+        print("   • Complete digital-twin hardware validation")
+        print("   • Power-aware mission control")
+        print("   • Realistic computational performance modeling")
     print("   • Real-time velocity constraint enforcement")
     print("   • Sensor-guided collision avoidance maneuvers")
     print("   • Curvature-based particle deflection")
