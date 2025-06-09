@@ -1,16 +1,25 @@
-# Atmospheric Constraints Documentation
+# Comprehensive Atmospheric Constraints Documentation
 
 ## Overview
 
 The atmospheric constraints module implements physics-based limitations for warp bubble operations in planetary atmospheres. Below the speed of light (c), warp bubbles remain permeable to atmospheric molecules, requiring careful management of thermal and aerodynamic effects.
 
-## Key Physics
+**For complete technical details, see:** `docs/atmospheric_constraints_comprehensive.tex`
 
-### Bubble Permeability
+## Key Physics Discovery
+
+### Sub-Luminal Bubble Permeability
+The fundamental discovery driving atmospheric constraints is that **sub-luminal bubbles have no event horizon**, making them permeable to atmospheric molecules:
+
 - **Sub-luminal bubbles** have no event horizon → atmosphere passes through
 - **Molecules interact** with bubble boundary hardware → heating and drag
 - **Crew protection** remains intact (no G-forces felt inside bubble)
 - **Hardware vulnerability** to atmospheric effects at bubble boundary
+
+### Permeability Scaling
+```
+Permeability Factor = 1 - v²/c²  (for v < c)
+```
 
 ### Atmospheric Effects
 
@@ -247,6 +256,105 @@ constraints.plot_safe_envelope(
 - `impulse_engine_dashboard.py`: Interactive constraint visualization
 - Mission feasibility analysis with atmospheric considerations
 - Automatic trajectory optimization for atmospheric compliance
+
+## Micrometeoroid Protection Framework
+
+### Challenge Overview
+Even tiny micrometeoroids can damage warp-generator hardware since sub-luminal bubbles are permeable to neutral particles. Traditional detection/avoidance is impossible for μm-mm sized debris.
+
+### Multi-Layer Defense Strategy
+
+#### 1. Enhanced Curvature Deflection
+```python
+# Anisotropic curvature for forward deflection
+f(r,ψ) = 1 - A*exp(-(r/σ)²) * [1 + ε*P(ψ)]
+
+# Where ψ = angle from velocity vector
+# P(ψ) = exp(-ψ²/ψ₀²) provides forward focusing
+```
+
+#### 2. Time-Varying Curvature Pulses
+```python
+# Gravitational shock waves for enhanced scattering
+A(t) = A₀ + A₁*sin(ωt)*exp(-(t-t₀)²/τ²)
+
+# Optimal frequency: ω = v_impact/L_wall ≈ 10³ rad/s
+```
+
+#### 3. Hybrid Protection Systems
+- **Whipple shielding**: Physical bumper plates (1-3 mm aluminum)
+- **Plasma curtain**: EM deflection after ionization
+- **Nested bubble walls**: Multi-shell curvature effects
+
+### Implementation
+```python
+from atmospheric_constraints import MicrometeoroidProtection
+
+protection = MicrometeoroidProtection(
+    deflection_efficiency=0.85,  # >85% for particles >50 μm
+    shield_configuration="whipple+curvature"
+)
+
+# Real-time threat assessment
+threat_level = protection.assess_environment(altitude, velocity)
+```
+
+## LEO Collision Avoidance
+
+### Orbital Debris Environment
+- **Objects >10 cm**: ~34,000 tracked
+- **Objects 1-10 cm**: ~900,000 estimated  
+- **Relative velocities**: 7-15 km/s
+- **Detection challenge**: Need 80+ km range for 10s reaction time
+
+### Sensor-Guided Maneuvering
+
+#### Detection Requirements
+```python
+# For 10-second reaction time at orbital velocities
+detection_range = v_relative * t_reaction
+# = 8 km/s × 10 s = 80 km minimum
+
+sensor_config = {
+    "type": "S/X-band phased array radar",
+    "range": ">100 km",
+    "coverage": "±45° around velocity vector",
+    "update_rate": ">1 Hz"
+}
+```
+
+#### Collision Prediction
+```python
+# Time to closest approach
+t_CPA = -dot(r_vector, v_relative) / norm(v_relative)²
+
+# Required dodge velocity  
+delta_v_dodge = (d_safe - d_miss) / t_CPA
+
+# Typical requirements: 0.1-1.0 m/s (minimal exotic energy)
+```
+
+### Warp Impulse Dodge Implementation
+```python
+from atmospheric_constraints import CollisionAvoidance
+
+avoidance = CollisionAvoidance(
+    sensor_range=100e3,  # 100 km
+    reaction_time=10.0,  # 10 seconds
+    safety_margin=1e3    # 1 km miss distance
+)
+
+# Automated collision avoidance
+if avoidance.detect_threat(current_position, current_velocity):
+    dodge_impulse = avoidance.plan_evasive_maneuver()
+    warp_controller.execute_impulse(dodge_impulse)
+```
+
+### Energy Cost Analysis
+Sub-luminal dodge maneuvers require minimal exotic energy:
+```
+E_dodge/E_warp = (Δv_dodge/c)² ≈ (1 m/s / 3×10⁸ m/s)² ≈ 10⁻¹⁷
+```
 
 ## Future Enhancements
 
