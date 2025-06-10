@@ -203,6 +203,67 @@ The integrated approach provides several advantages:
 \item \textbf{Operational Flexibility**: Seamless switching between propulsion and replication modes
 \end{itemize}
 
+\section{Replicator Extension}
+
+\subsection{Integrated Replicator-Optimizer Framework}
+
+The Warp Bubble Optimizer has been extended to include comprehensive replicator technology optimization, creating a unified framework for both propulsion and matter creation systems. This extension leverages the existing optimization infrastructure to enable:
+
+\begin{itemize}
+\item \textbf{Dual-Purpose Metrics}: Optimization for both warp drive efficiency and replicator matter creation rates
+\item \textbf{Shared Resource Management}: Coordinated exotic matter utilization across propulsion and replication systems
+\item \textbf{Parameter Co-Optimization}: Simultaneous optimization of warp bubble parameters and replicator coupling constants
+\item \textbf{Constraint Synchronization}: Unified constraint handling for both warp drive and replicator operations
+\end{itemize}
+
+\subsection{Replicator-Specific Optimization Objectives}
+
+The framework includes specialized optimization objectives for replicator operations:
+
+\begin{align}
+J_{\text{replicator}} &= w_1 \Delta N - w_2 A - w_3 C - w_4 E \\
+\Delta N &= \int_0^T 2\lambda \sum_i R_i \phi_i \pi_i \, dt \quad \text{(matter creation rate)} \\
+A &= \int_0^T \sum_i |G_{tt,i} - 8\pi T_{\mu\nu,i}| \, dt \quad \text{(constraint violation)} \\
+C &= \int_0^T \sum_i |R_i| \, dt \quad \text{(curvature cost)} \\
+E &= \int_0^T \sum_i T_{tt,i} \, dt \quad \text{(energy requirement)}
+\end{align}
+
+where $w_i$ are adjustable weights enabling flexible optimization strategies.
+
+\subsection{Parameter Space Extension}
+
+The optimizer parameter space has been extended to include replicator-specific parameters:
+
+\begin{align}
+\mathbf{p}_{\text{extended}} &= \{\mathbf{p}_{\text{warp}}, \mathbf{p}_{\text{replicator}}\} \\
+\mathbf{p}_{\text{warp}} &= \{\sigma, \alpha, R_s, \ldots\} \quad \text{(traditional warp parameters)} \\
+\mathbf{p}_{\text{replicator}} &= \{\lambda, \mu, \alpha_{\text{rep}}, R_0\} \quad \text{(replicator parameters)}
+\end{align}
+
+This enables comprehensive optimization across the full parameter space while maintaining compatibility with existing warp bubble optimization routines.
+
+\subsection{Multi-Objective Optimization Strategy}
+
+The replicator extension implements advanced multi-objective optimization strategies:
+
+\begin{enumerate}
+\item \textbf{Pareto Frontier Analysis}: Identification of optimal trade-offs between propulsion efficiency and matter creation rate
+\item \textbf{Constraint Domination}: Prioritization of constraint satisfaction over optimization objectives
+\item \textbf{Adaptive Weighting}: Dynamic adjustment of objective weights based on mission requirements
+\item \textbf{Robust Optimization}: Parameter selection ensuring stable performance across operational variations
+\end{enumerate}
+
+\subsection{Integration with Existing Infrastructure}
+
+The replicator extension seamlessly integrates with existing optimizer infrastructure:
+
+\begin{itemize}
+\item \textbf{Digital-Twin Compatibility}: Replicator hardware twins compatible with existing simulation framework
+\item \textbf{Safety System Integration**: Replicator operations monitored by existing safety systems
+\item \textbf{Mission Control Extension**: Unified control interfaces for both propulsion and replication systems
+\item \textbf{Performance Monitoring**: Replicator metrics integrated into existing performance dashboards
+\end{itemize}
+
 \section{Conclusion}
 
 The Warp Bubble Optimizer Framework represents a comprehensive solution for warp bubble spacecraft development, from theoretical foundations through practical implementation. The integration of digital-twin hardware interfaces enables complete system validation without physical prototypes, while the multi-scale protection systems address the full spectrum of space environment threats. This foundation supports continued research and development toward practical warp bubble technology.
