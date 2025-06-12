@@ -17,6 +17,7 @@ from .bubble_stability import (
     analyze_bubble_stability_theorem, 
     optimize_polymer_parameters
 )
+from .gut_polymer_corrections import GUTPolymerMetricCorrections, ANECIntegralCalculator
 from .warp_bubble_analysis import (
     run_warp_analysis,
     squeezed_vacuum_energy,
