@@ -162,7 +162,7 @@ class WarpBubbleParameterSweep:
         
         # Initialize result arrays
         yield_ratios = np.zeros((len(self.mu_g_grid), len(self.b_grid)))
-        critical_field_ratios = np.zeros((len(self.mu_g_grid), len(self.b_grid)))
+        critical_field_ratios = np.zeros((len(self.mu_gGrid), len(self.b_grid)))
         parameter_combinations = []
         
         # Parallel computation
@@ -356,6 +356,39 @@ class WarpBubbleParameterSweep:
         print(f"   Optimal critical field: {opt_yield['max_critical_field_ratio']:.3f} at (μ_g={opt_yield['optimal_critical_field_params']['mu_g']:.3f}, b={opt_yield['optimal_critical_field_params']['b']:.1f})")
         
         return results
+    
+    def execute_full_sweep(self) -> Dict:
+        """
+        Execute the complete 2D parameter sweep and return results.
+        
+        This is the main interface for running the automated (μ_g, b) optimization.
+        """
+        results = self.run_sequential_sweep()
+        
+        # Add convenient interface results
+        results['yield_min'] = results['statistics']['yield_ratio_range'][0]
+        results['yield_max'] = results['statistics']['yield_ratio_range'][1]
+        results['crit_min'] = results['statistics']['critical_field_ratio_range'][0]
+        results['crit_max'] = results['statistics']['critical_field_ratio_range'][1]
+        results['optimal_mu_g'] = results['optimization']['optimal_yield_params']['mu_g']
+        results['optimal_b'] = results['optimization']['optimal_yield_params']['b']
+        
+        return results
+    
+    def export_results_csv(self, filename: str) -> None:
+        """
+        Export parameter sweep results to CSV file for analysis.
+        """
+        if self.parameter_combinations is None:
+            self.logger.warning("No results to export. Run sweep first.")
+            return
+            
+        import pandas as pd
+        
+        df = pd.DataFrame(self.parameter_combinations, 
+                         columns=['mu_g', 'b', 'yield_ratio', 'critical_field_ratio'])
+        df.to_csv(filename, index=False)
+        self.logger.info(f"Results exported to {filename}")
 
 # Integration function for the main pipeline
 def integrate_parameter_sweep_into_pipeline() -> bool:
