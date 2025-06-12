@@ -1,38 +1,35 @@
 #!/usr/bin/env python3
 """
-ADVANCED MULTI-STRATEGY WARP BUBBLE OPTIMIZER
+Advanced Multi-Strategy Optimizer for Warp Bubble Design
+=======================================================
 
-This implements all six cutting-edge optimization strategies to push E₋ to the 
-most negative values possible:
+This module implements multiple optimization strategies for warp bubble design,
+including genetic algorithms, Bayesian optimization, and differential evolution.
 
-1. 🌊 Mixed-basis ansatz (Gaussians + Fourier modes)
-2. 🧠 Surrogate-assisted Bayesian optimization  
-3. 🎯 Multi-objective search (energy vs. stability)
-4. 🌍 High-dimensional global search (12-16 Gaussians)
-5. ⚡ Gradient-enhanced local descent
-6. 🚀 Parallel evaluation & vectorization
-
-✨ LQG-MODIFIED QUANTUM INEQUALITY ENFORCEMENT ✨
-The optimizer now enforces the LQG-modified quantum inequality bound:
-    E₋ ≥ -C_LQG / T^4
-which is stricter than the classical Ford-Roman bound (C_LQG << C_classical).
-This provides a more restrictive but physically correct lower bound on negative 
-energy in Loop Quantum Gravity.
-
-Target: Achieve E₋ as close as possible to the LQG bound -C_LQG/T^4
+PLATINUM-ROAD INTEGRATION:
+- 2D parameter space sweep over (μ_g, b) for comprehensive optimization
+- Automated yield and critical field ratio calculations
+- Integration with enhanced uncertainty quantification
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
+import logging
+from typing import Dict, List, Optional, Tuple, Callable, Any
+from dataclasses import dataclass, field
 import json
-import time
-import warnings
 from pathlib import Path
-from scipy.integrate import quad
-from scipy.optimize import minimize, differential_evolution
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-import multiprocessing as mp
-warnings.filterwarnings('ignore')
+import time
+
+# PLATINUM-ROAD INTEGRATION: Import parameter sweep
+try:
+    import sys
+    sys.path.append(str(Path(__file__).parent))
+    from parameter_space_sweep import integrate_parameter_sweep_into_pipeline, WarpBubbleParameterSweep, ParameterSweepConfig
+    PARAMETER_SWEEP_AVAILABLE = True
+    print("✓ Parameter sweep module loaded successfully")
+except ImportError as e:
+    PARAMETER_SWEEP_AVAILABLE = False
+    print(f"⚠ Warning: Parameter sweep module not available: {e}")
 
 # ── ADVANCED IMPORTS ──────────────────────────────────────────────────────────
 # Bayesian Optimization
@@ -349,17 +346,39 @@ def compute_stability_penalty(params, ansatz_type='mixed'):
 
 # ── STRATEGY 2: SURROGATE-ASSISTED BAYESIAN OPTIMIZATION ─────────────────────
 class SurrogateAssistedOptimizer:
-    """Gaussian Process surrogate for expensive energy evaluations"""
+    """
+    Enhanced multi-strategy optimizer with surrogate modeling.
     
-    def __init__(self, ansatz_type='mixed'):
-        self.ansatz_type = ansatz_type
+    PLATINUM-ROAD INTEGRATION: Now includes 2D parameter space sweep capabilities.
+    """
+    
+    def __init__(self, config: OptimizationConfig):
+        self.config = config
+        self.logger = logging.getLogger(__name__)
+        
+        # PLATINUM-ROAD: Initialize parameter sweep capability
+        self.parameter_sweep_integrated = False
+        if PARAMETER_SWEEP_AVAILABLE:
+            self.sweep_config = ParameterSweepConfig(
+                mu_g_min=0.1, mu_g_max=0.6, mu_g_points=25,
+                b_min=0.0, b_max=10.0, b_points=20,
+                n_cores=4
+            )
+            self.parameter_sweep = WarpBubbleParameterSweep(self.sweep_config)
+            self.parameter_sweep_integrated = True
+            print("✓ Parameter sweep integrated into optimizer")
+        else:
+            print("⚠ Parameter sweep not available")
+        
+        # Existing initialization code...
+        self.ansatz_type = 'mixed'
         self.evaluated_points = []
         self.evaluated_energies = []
         self.gp_model = None
         self.current_best_energy = np.inf
         self.current_best_params = None
         
-        if ansatz_type == 'mixed':
+        if self.ansatz_type == 'mixed':
             self.param_dim = AnsatzConfig.MIXED_PARAM_DIM
             self.energy_func = compute_energy_mixed_basis_numpy
         else:
