@@ -1,7 +1,25 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "warp-bubble-optimizer"
+		},
+		{
+			"path": "../warp-bubble-parameter-constraints",
+			"name": "warp-bubble-parameter-constraints"
+		},
+		{
+			"path": "../warp-bubble-mvp-simulator",
+			"name": "warp-bubble-mvp-simulator"
+		},
+		{
+			"path": "../warp-bubble-shape-catalog",
+			"name": "warp-bubble-shape-catalog"
+		},
+		{
+			"path": "../warp-bubble-qft",
+			"name": "warp-bubble-qft"
 		}
-	]
+	],
+	"settings": {}
 }
