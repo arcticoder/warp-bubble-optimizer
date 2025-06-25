@@ -1,41 +1,41 @@
 # Warp Bubble Metric Ansatz Optimizer
 
-A comprehensive simulation framework for designing and optimizing novel warp bubble metric ansatzes to minimize negative energy requirements through:
+A simulation framework for studying and optimizing warp bubble metric ansatzes to analyze negative energy requirements through:
 
 1. **Variational Metric Optimization** - Finding optimal shape functions f(r) that extremize negative energy integrals
 2. **Soliton-Like (Lentz) Metrics** - Implementing no-negative-energy warp solutions  
 3. **LQG-QI Constrained Design** - Building quantum inequality bounds into metric ansatz selection
-4. **Van den Broeck-Natário Geometric Enhancement** - Leveraging 10^5-10^6× energy reductions through topology
+4. **Van den Broeck-Natário Geometric Enhancement** - Studying 10^5-10^6× energy reductions through topology
 5. **JAX-Accelerated Simulation** - GPU/CPU acceleration with automatic fallback for high-performance computing
-6. **Virtual Control Systems** - Realistic simulation of warp bubble control without hardware dependencies
-7. **🆕 Integrated Impulse-Mode Control** - Complete 6-DOF mission planning and execution system
-8. **🛡️ Atmospheric Constraints Module** - Sub-luminal warp bubble atmospheric physics with thermal/drag management
-9. **🚀 Integrated Space Debris Protection** - Multi-scale threat protection from μm micrometeoroids to km-scale LEO debris
-10. **🔧 Digital-Twin Hardware Interfaces** - Complete simulated hardware suite enabling full system validation without physical components
+6. **Virtual Control Systems** - Simulation of warp bubble control without hardware dependencies
+7. **Integrated Impulse-Mode Control** - 6-DOF mission planning and execution system
+8. **Atmospheric Constraints Module** - Sub-luminal warp bubble atmospheric physics with thermal/drag modeling
+9. **Space Debris Protection Analysis** - Multi-scale threat protection from μm micrometeoroids to km-scale LEO debris
+10. **Digital-Twin Hardware Interfaces** - Simulated hardware suite enabling system validation without physical components
 
-## 🎯 Core Objective
+## Core Objective
 
-Starting from scratch with warp bubble design lets you pick a "shape function" or metric ansatz that extremizes (minimizes) the negative‐energy integral rather than borrowing Alcubierre's original form.
+Starting from warp bubble design fundamentals enables selection of "shape functions" or metric ansätze that extremize (minimize) the negative‐energy integral rather than using Alcubierre's original form.
 
-### Revolutionary Geometric Baseline: Van den Broeck-Natário Enhancement
+### Geometric Baseline: Van den Broeck-Natário Enhancement
 
-**BREAKTHROUGH:** Pure geometric optimization achieves 100,000 to 1,000,000-fold reduction in negative energy requirements:
+Geometric optimization studies achieve 100,000 to 1,000,000-fold reduction in negative energy requirements:
 
 ```
 ℛ_geometric = 10^-5 to 10^-6
 ```
 
-This represents the most significant advancement in warp drive feasibility to date.
+This represents significant improvement in warp drive feasibility analysis.
 
-## 🆕 Integrated Impulse-Mode Warp Engine System
+## Integrated Impulse-Mode Warp Engine System
 
-**NEW FEATURE:** Complete impulse-mode warp engine simulation and control system with:
+**NEW FEATURE:** Integrated impulse-mode warp engine simulation and control system with:
 
 - **Mission Planning**: Multi-waypoint trajectory optimization
 - **6-DOF Control**: Combined translation and rotation maneuvers
 - **Energy Management**: Real-time budget tracking and optimization  
 - **Closed-Loop Feedback**: Virtual control system integration
-- **Performance Analysis**: Comprehensive mission success metrics
+- **Performance Analysis**: Mission success metrics
 
 ### Quick Start: Impulse Engine Mission
 
@@ -50,9 +50,9 @@ python integrated_impulse_control.py
 python test_simple_integration.py
 ```
 
-## 🛡️ Integrated Space Debris Protection System
+## Integrated Space Debris Protection System
 
-**NEW FEATURE:** Comprehensive multi-scale space debris protection framework with:
+**NEW FEATURE:** Multi-scale space debris protection framework with:
 
 - **LEO Collision Avoidance**: S/X-band radar simulation with 80+ km detection range and impulse-mode maneuvering
 - **Micrometeoroid Protection**: Curvature-based deflector shields with >85% efficiency for particles >50μm
@@ -78,9 +78,9 @@ python integrated_space_protection.py
 
 - **`docs/space_debris_protection.tex`** - Complete protection framework documentation
 - **`docs/atmospheric_constraints.tex`** - Sub-luminal atmospheric physics
-- **`docs/recent_discoveries.tex`** - Latest breakthrough discoveries including protection systems
+- **`docs/recent_discoveries.tex`** - Recent discoveries including protection systems
 
-## 🔧 Digital-Twin Hardware Interface Suite
+## Digital-Twin Hardware Interface Suite
 
 **NEW FEATURE:** Complete digital twin simulation infrastructure with realistic hardware modeling:
 
@@ -115,13 +115,13 @@ python demo_full_warp_simulated_hardware.py
 - **`SPACE_PROTECTION_IMPLEMENTATION_COMPLETE.md`** - Complete integration documentation
 - **`DIGITAL_TWIN_SUMMARY.py`** - Implementation status and completion summary
 
-## 🔬 Core Modules (Copied from warp-bubble-qft)
+## Core Modules (Copied from warp-bubble-qft)
 
 ### LQG-QI Pipeline Components
 
 - **`src/warp_qft/lqg_profiles.py`** - Polymer field quantization with empirical enhancement factors
 - **`src/warp_qft/backreaction_solver.py`** - Self-consistent Einstein field equations with β_backreaction = 1.9443254780147017
-- **`src/warp_qft/metrics/van_den_broeck_natario.py`** - Revolutionary geometric baseline implementation
+- **`src/warp_qft/metrics/van_den_broeck_natario.py`** - Geometric baseline implementation
 - **`src/warp_qft/enhancement_pipeline.py`** - Systematic parameter space scanning and optimization
 
 ### Space Debris Protection Components
@@ -143,11 +143,11 @@ python demo_full_warp_simulated_hardware.py
 - **`docs/polymer_field_algebra.tex`** - Complete polymer field algebra with sinc-factor analysis
 - **`docs/latest_integration_discoveries.tex`** - Van den Broeck-Natário + exact backreaction + corrected sinc integration
 
-## 🚀 Quick Start: New Metric Ansatz Development
+## Quick Start: New Metric Ansatz Development
 
 ### 1. Explore Existing Baselines
 
-Run the Van den Broeck-Natário comprehensive pipeline to see current state-of-the-art:
+Run the Van den Broeck-Natário pipeline to see current results:
 
 ```bash
 python run_vdb_natario_comprehensive_pipeline.py
@@ -204,7 +204,7 @@ python gaussian_optimize_jax.py
 python advanced_multi_strategy_optimizer.py
 ```
 
-## 🔧 Simulation Architecture
+## Simulation Architecture
 
 ### JAX Acceleration Pipeline
 ```
@@ -219,7 +219,7 @@ User Request → JAX Check → GPU/CPU Selection → Tensor Operations → Resul
 - **Optional**: `jax` (GPU acceleration), `progress_tracker` (progress monitoring)
 - **Automatic fallback** when optional dependencies unavailable
 
-## 🎨 Next Steps: Novel Ansatz Development
+## Next Steps: Novel Ansatz Development
 
 ### Natário-Class Variational Optimization
 
@@ -242,7 +242,7 @@ User Request → JAX Check → GPU/CPU Selection → Tensor Operations → Resul
 2. **Optimize against both classical and quantum constraints**
 3. **Target potentially zero negative energy requirements**
 
-## 📊 Current State-of-the-Art Results
+## Current State-of-the-Art Results
 
 From the copied framework, we have:
 
@@ -268,7 +268,7 @@ Over **160 distinct parameter combinations** now achieve feasibility ratios ≥ 
 - N_bubbles = 1
 - **Result**: Feasibility ratio = 5.67
 
-## 🛠️ Installation & Dependencies
+## Installation & Dependencies
 
 ```bash
 # Install dependencies
@@ -290,7 +290,7 @@ The `docs/` directory contains the complete mathematical framework:
 - Corrected sinc definition for LQG
 - Latest integration discoveries
 
-## 🔬 Research Extensions
+## Research Extensions
 
 This repository provides the foundation for:
 
@@ -306,7 +306,7 @@ The goal is to achieve warp drive feasibility through **fundamentally optimized 
 
 *This repository isolates the core LQG-QI pipeline and geometric optimization capabilities for focused metric ansatz research without cluttering the main warp-bubble-qft repository.*
 
-## 🌟 ULTIMATE B-SPLINE BREAKTHROUGH
+## ULTIMATE B-SPLINE BREAKTHROUGH
 
 ### Revolutionary Performance Achievement
 
@@ -315,31 +315,31 @@ The **Ultimate B-Spline Optimizer** represents the most significant breakthrough
 ```
 Baseline (4-Gaussian):        E₋ = -6.30×10⁵⁰ J
 8-Gaussian Breakthrough:      E₋ = -1.48×10⁵³ J  (235× improvement)
-🚀 Ultimate B-Spline Target:   E₋ < -2.0×10⁵⁴ J   (13.5× additional)
-🏆 TOTAL IMPROVEMENT FACTOR:   >3,175×
+Ultimate B-Spline Target:   E₋ < -2.0×10⁵⁴ J   (13.5× additional)
+TOTAL IMPROVEMENT FACTOR:   >3,175×
 ```
 
-### Revolutionary Features
+### Features
 
-#### ✅ Flexible B-Spline Control-Point Ansatz
+#### Flexible B-Spline Control-Point Ansatz
 - **Maximum Flexibility**: Control points create arbitrary smooth profiles
 - **Local Control**: Individual point changes affect only local regions  
 - **Guaranteed Smoothness**: C² continuity ensures physical consistency
 - **Boundary Enforcement**: Natural f(0)=1, f(R)=0 implementation
 
-#### ✅ Joint Parameter Optimization
+#### Joint Parameter Optimization
 - **Unified Optimization**: Simultaneous (μ, G_geo, control_points) optimization
 - **Escape Strategy**: Prevents local minima entrapment in parameter space
 - **Physics-Informed**: Multiple strategic initialization approaches
 - **Robust Convergence**: Multi-start attempts with diverse strategies
 
-#### ✅ Advanced Optimization Pipeline
+#### Optimization Pipeline
 - **Stage 1**: CMA-ES global search (3,000 evaluations)
 - **Stage 2**: JAX-accelerated L-BFGS refinement (800 iterations)
 - **Surrogate-Assisted**: Gaussian Process with Expected Improvement
 - **Hardware Accelerated**: GPU/TPU ready with JAX compilation
 
-#### ✅ Hard Stability Enforcement
+#### Hard Stability Enforcement
 - **3D Integration**: Direct coupling with stability analysis system
 - **Physical Guarantee**: All solutions satisfy linear stability requirements
 - **Configurable Penalties**: Adjustable constraint enforcement
@@ -377,7 +377,7 @@ results = optimizer.optimize(
 )
 ```
 
-### 🚀 New Simulation Features
+### New Simulation Features
 
 #### JAX Acceleration & GPU Computing
 - **GPU-accelerated tensor operations** for Einstein field equations
