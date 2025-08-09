@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Back-Reaction & Full Einstein Solver
 ===================================
@@ -22,17 +23,68 @@ try:
     from jax import jit, device_put, vmap
     JAX_AVAILABLE = True
 except ImportError:
-    import numpy as jnp
+    # Fall back to numpy if available; otherwise provide a tiny shim
     JAX_AVAILABLE = False
+    try:
+        import numpy as jnp  # type: ignore
+    except Exception:
+        # Minimal jnp shim with only attributes we touch in fast paths
+        import math as _math
+        class _JNPShim:
+            pi = _math.pi
+            e = _math.e
+            def array(self, x):
+                return x
+            def diag(self, x):
+                return x
+            def zeros(self, shape):
+                # Very minimal; only used in JAX-only code paths which are disabled
+                return 0.0
+        jnp = _JNPShim()  # type: ignore
+    def jit(x):
+        return x
+    def device_put(x):
+        return x
+    def vmap(f):
+        return lambda *args, **kwargs: f(*args, **kwargs)
 
-import numpy as np  # Keep for non-JAX operations
-import sympy as sp
+try:
+    import numpy as np  # Keep for non-JAX operations
+except Exception:
+    # Provide a very small subset used only by fast approximation paths
+    import math as _math
+    class _NPShim:
+        pi = _math.pi
+        e = _math.e
+        @staticmethod
+        def isfinite(x):
+            try:
+                return _math.isfinite(x)
+            except Exception:
+                return True
+    np = _NPShim()  # type: ignore
+try:
+    import sympy as sp  # type: ignore
+    SYMPY_AVAILABLE = True
+except Exception:
+    sp = None  # shim placeholder
+    SYMPY_AVAILABLE = False
 import time
 from typing import Dict, Tuple, List, Optional, Callable, Any
 from dataclasses import dataclass
 import logging
-from scipy.integrate import solve_ivp
-from scipy.optimize import fsolve, minimize
+try:
+    from scipy.integrate import solve_ivp
+    from scipy.optimize import fsolve, minimize
+    SCIPY_AVAILABLE = True
+except Exception:
+    SCIPY_AVAILABLE = False
+    def solve_ivp(*args, **kwargs):
+        raise ImportError("scipy not available")
+    def fsolve(*args, **kwargs):
+        raise ImportError("scipy not available")
+    def minimize(*args, **kwargs):
+        raise ImportError("scipy not available")
 
 # Import existing components
 import sys
@@ -54,7 +106,7 @@ class EinsteinSolutionResult:
     """Results from Einstein equation solving."""
     success: bool
     max_residual: float  # Maximum |G_{μν} - 8π T_{μν}|
-    metric_components: Dict[Tuple[int, int], sp.Expr]
+    metric_components: Dict[Tuple[int, int], Any]
     curvature_scalars: Dict[str, float]  # Ricci scalar, Kretschmann scalar, etc.
     horizon_detected: bool
     singularity_detected: bool
@@ -102,12 +154,15 @@ class EinsteinSolver:
         self.metric_ansatz = metric_ansatz
         self.perturbation_order = perturbation_order
         
-        # Symbolic coordinates
-        self.t, self.x, self.y, self.z = sp.symbols('t x y z', real=True)
-        self.coords = [self.t, self.x, self.y, self.z]
-        
-        # Initialize metric tensors
-        self._setup_metric_symbols()
+        # Symbolic coordinates (only if sympy is available)
+        if SYMPY_AVAILABLE:
+            self.t, self.x, self.y, self.z = sp.symbols('t x y z', real=True)
+            self.coords = [self.t, self.x, self.y, self.z]
+            # Initialize metric tensors
+            self._setup_metric_symbols()
+        else:
+            self.t = self.x = self.y = self.z = None
+            self.coords = []
         
     def _setup_metric_symbols(self):
         """Setup symbolic metric tensor components."""
@@ -118,13 +173,16 @@ class EinsteinSolver:
         
         # Perturbation components
         self.h = {}  # Metric perturbations h_{μν}
+        if not SYMPY_AVAILABLE:
+            self.h = {}
+            return
         for mu in range(4):
             for nu in range(mu, 4):  # Symmetric tensor
                 self.h[(mu,nu)] = sp.Function(f'h_{mu}{nu}')(*self.coords)
                 if mu != nu:
                     self.h[(nu,mu)] = self.h[(mu,nu)]
     
-    def compute_christoffel_symbols(self, metric: Dict[Tuple[int, int], sp.Expr]) -> Dict[Tuple[int, int, int], sp.Expr]:
+    def compute_christoffel_symbols(self, metric: Dict[Tuple[int, int], Any]) -> Dict[Tuple[int, int, int], Any]:
         """Compute Christoffel symbols Γ^μ_{νρ} from metric."""
         gamma = {}
         
@@ -184,19 +242,19 @@ class EinsteinSolver:
     
     # GPU-accelerated numerical methods
     @staticmethod
-    @jit if JAX_AVAILABLE else lambda x: x
+    @jit
     def _compute_metric_determinant_jax(metric_values):
         """GPU-accelerated metric determinant computation."""
         return jnp.linalg.det(metric_values)
     
     @staticmethod 
-    @jit if JAX_AVAILABLE else lambda x: x
+    @jit
     def _compute_metric_inverse_jax(metric_values):
         """GPU-accelerated metric inverse computation."""
         return jnp.linalg.inv(metric_values)
     
     @staticmethod
-    @jit if JAX_AVAILABLE else lambda x: x 
+    @jit 
     def _compute_christoffel_numerical_jax(metric_values, metric_derivatives):
         """GPU-accelerated numerical Christoffel symbol computation."""
         g_inv = jnp.linalg.inv(metric_values)
@@ -216,7 +274,7 @@ class EinsteinSolver:
         return christoffel
     
     @staticmethod
-    @jit if JAX_AVAILABLE else lambda x: x
+    @jit
     def _compute_riemann_tensor_jax(christoffel, christoffel_derivatives):
         """GPU-accelerated Riemann tensor computation."""
         riemann = jnp.zeros((4, 4, 4, 4))
@@ -234,7 +292,7 @@ class EinsteinSolver:
                         )
         return riemann
     
-    def _compute_metric_inverse(self, metric: Dict[Tuple[int, int], sp.Expr]) -> Dict[Tuple[int, int], sp.Expr]:
+    def _compute_metric_inverse(self, metric: Dict[Tuple[int, int], Any]) -> Dict[Tuple[int, int], Any]:
         """Compute metric inverse using perturbative expansion."""
         g_inv = {}
         
@@ -257,7 +315,7 @@ class EinsteinSolver:
         
         return g_inv
     
-    def compute_riemann_tensor(self, gamma: Dict[Tuple[int, int, int], sp.Expr]) -> Dict[Tuple[int, int, int, int], sp.Expr]:
+    def compute_riemann_tensor(self, gamma: Dict[Tuple[int, int, int], Any]) -> Dict[Tuple[int, int, int, int], Any]:
         """Compute Riemann curvature tensor R^μ_{νρσ}."""
         riemann = {}
         
@@ -309,7 +367,7 @@ class EinsteinSolver:
         
         return riemann_flat.reshape(4, 4, 4, 4)
     
-    def compute_einstein_tensor(self, metric: Dict[Tuple[int, int], sp.Expr]) -> Dict[Tuple[int, int], sp.Expr]:
+    def compute_einstein_tensor(self, metric: Dict[Tuple[int, int], Any]) -> Dict[Tuple[int, int], Any]:
         """Compute Einstein tensor G_{μν} = R_{μν} - (1/2) g_{μν} R."""
         # Compute Christoffel symbols
         gamma = self.compute_christoffel_symbols(metric)

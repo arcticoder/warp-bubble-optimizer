@@ -22,8 +22,33 @@ try:
     from jax import jit, device_put, vmap, lax
     JAX_AVAILABLE = True
 except ImportError:
+    # Fallback shims when JAX isn't available so imports don't fail
     import numpy as jnp
     JAX_AVAILABLE = False
+    def jit(fn):
+        return fn
+    def device_put(x):
+        return x
+    def vmap(f):
+        # Minimal vmap-like wrapper for CPU path; not used in hot paths when JAX is absent
+        def wrapper(*args, **kwargs):
+            # Expect first positional arg to be an array-like to map over
+            arr = args[0]
+            results = [f(*(arg[i] if hasattr(arg, '__getitem__') and len(getattr(arg, 'shape', [])) > 0 else arg
+                           for arg in args), **kwargs) for i in range(len(arr))]
+            return jnp.array(results)
+        return wrapper
+    class _Lax:
+        @staticmethod
+        def scan(step_fn, init, xs, length):
+            state = init
+            ys = []
+            for _ in range(length):
+                state, y = step_fn(state, None)
+                ys.append(y)
+            import numpy as _np
+            return state, _np.stack(ys)
+    lax = _Lax()
 
 import numpy as np  # Keep for non-JAX operations
 import time

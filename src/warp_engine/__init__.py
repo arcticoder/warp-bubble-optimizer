@@ -2,48 +2,18 @@
 Warp Engine: Complete Implementation Framework
 ===========================================
 
-This package implements the complete warp engine concept evolution from 
-validated negative-energy sources to a full operational warp drive system.
+Import-safe package initializer. Heavy submodules (that may require optional
+dependencies like JAX/SymPy) are not imported eagerly to keep test collection
+robust in minimal environments. Import the needed submodules directly, e.g.:
 
-Modules:
---------
-1. backreaction: Einstein field equation solver with full back-reaction
-2. dynamic_sim: Time-dependent dynamic bubble simulation  
-3. tidal_analysis: Crew safety and geodesic deviation analysis
-4. control_loop: Real-time feedback control architecture
-5. analog_prototype: Laboratory analog and table-top prototyping
-6. hardware_loop: Hardware-in-the-loop integration
-7. mission_planner: Mission profiling and energy budgeting
-8. failure_modes: Safety analysis and failure recovery
+    from src.warp_engine.backreaction import EinsteinSolver, BackreactionAnalyzer
+    from src.warp_engine.dynamic_sim import DynamicBubbleSimulator
 
-Usage:
-------
-from warp_engine import WarpEngineOrchestrator
-engine = WarpEngineOrchestrator()
-result = engine.run_full_simulation()
 """
-
-from .backreaction import EinsteinSolver, BackreactionAnalyzer
-from .dynamic_sim import DynamicBubbleSimulator, TrajectoryProfile
-from .tidal_analysis import TidalForceAnalyzer, CrewSafetyAssessment
-from .control_loop import WarpControlLoop, StabilityController, SensorInterface, ActuatorInterface
-from .analog_prototype import AnalogPrototypeManager, WaterTankAnalogue
-from .hardware_loop import HardwareInTheLoopManager, SensorInterface, ActuatorInterface
-from .mission_planner import MissionPlanningManager, WarpTrajectoryOptimizer
-from .failure_modes import FailureModeManager, RecoveryManager
-from .orchestrator import WarpEngineOrchestrator
 
 __version__ = "1.0.0"
 __author__ = "Warp Engine Development Team"
 
-__all__ = [
-    'EinsteinSolver', 'BackreactionAnalyzer',
-    'DynamicBubbleSimulator', 'TrajectoryProfile', 
-    'TidalForceAnalyzer', 'CrewSafetyAssessment',
-    'WarpControlLoop', 'StabilityController', 'MockSensor', 'MockActuator',
-    'AnalogPrototypeManager', 'WaterTankAnalogue',
-    'HardwareInTheLoopManager', 'SensorInterface', 'ActuatorInterface',
-    'MissionPlanningManager', 'WarpTrajectoryOptimizer', 
-    'FailureModeManager', 'RecoveryManager',
-    'WarpEngineOrchestrator'
-]
+# Keep __all__ minimal to avoid triggering imports; submodules should be
+# imported explicitly by consumers. Metadata only.
+__all__ = ['__version__', '__author__']

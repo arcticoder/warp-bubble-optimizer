@@ -19,3 +19,4 @@
 {"date":"2025-08-08","event":"Integrated discharge efficiency vs C-rate proxy into optimize_energy; added feasibility tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py"]}
 {"date":"2025-08-08","event":"Added zero-expansion tolerance vs resolution UQ test","status":"completed","refs":["tests/test_field_and_control.py"]}
 {"date":"2025-08-08","event":"Pinned test dependencies in requirements-test.txt","status":"completed","refs":["requirements-test.txt","docs/roadmap.ndjson:4. Test and Environment Hygiene - status"]}
+{"date":"2025-08-08","event":"Fixed test_backreaction_timeout import chain: added JAX/SymPy/SciPy guards and made package __init__ lazy; test runs and completes under minimal deps","status":"completed","refs":["src/warp_engine/backreaction.py","src/warp_engine/dynamic_sim.py","src/warp_engine/__init__.py","test_backreaction_timeout.py","docs/progress_log.md:test-history"]}
