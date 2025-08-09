@@ -1,18 +1,19 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
-2025-08-08 21:46:11 ./tests/test_field_and_control.py
-2025-08-08 21:46:11 ./src/supraluminal_prototype/warp_generator.py
+2025-08-08 21:53:44 ./tests/test_field_and_control.py
+2025-08-08 21:53:44 ./test_3d_stability.py
+2025-08-08 21:53:44 ./src/supraluminal_prototype/warp_generator.py
+2025-08-08 21:53:44 ./VnV-TODO.ndjson
+2025-08-08 21:53:44 ./UQ-TODO.ndjson
+2025-08-08 21:46:51 ./docs/progress_log.md
 2025-08-08 21:46:11 ./docs/progress_log.ndjson
 2025-08-08 21:45:49 ./docs/roadmap.ndjson
-2025-08-08 21:43:57 ./docs/progress_log.md
 2025-08-08 21:15:04 ./src/supraluminal_prototype/hardware.py
 2025-08-08 21:15:04 ./src/supraluminal_prototype/control.py
 2025-08-08 20:48:56 ./tests/test_power_profile.py
 2025-08-08 20:48:56 ./src/supraluminal_prototype/power.py
 2025-08-08 20:48:56 ./src/supraluminal_prototype/__init__.py
-2025-08-08 20:48:56 ./VnV-TODO.ndjson
-2025-08-08 20:48:56 ./UQ-TODO.ndjson
 2025-08-08 17:28:47 ./docs/UQ-TODO.ndjson
 2025-08-08 17:28:23 ./docs/VnV-TODO.ndjson
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline_automated_clean.py
@@ -40,7 +41,6 @@
 2025-07-31 19:25:46 ./test_gut_import.py
 2025-07-31 19:25:46 ./test_ghost_eft.py
 2025-07-31 19:25:46 ./test_gaussian_accelerated.py
-2025-07-31 19:25:46 ./test_final_integration.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
@@ -109,7 +109,7 @@ drwxrwxrwx 7 4096 Jul 31 19:25 artificial-gravity-field-generator
 platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0
 rootdir: /home/echo_/Code/asciimath/warp-bubble-optimizer
 configfile: pytest.ini
-collected 0 items / 1 error
+collected 1 item / 1 error
 
 ==================================== ERRORS ====================================
 ________________ ERROR collecting test_accelerated_gaussian.py _________________
@@ -125,7 +125,7 @@ E   ModuleNotFoundError: No module named 'gaussian_optimize'
 =========================== short test summary info ============================
 ERROR test_accelerated_gaussian.py
 !!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
-=============================== 1 error in 0.64s ===============================
+=============================== 1 error in 0.69s ===============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

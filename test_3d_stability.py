@@ -497,3 +497,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# Minimal pytest to ensure discovery and basic import health without heavy runtime
+def test_stability_analyzer_instantiates():
+    a = WarpBubble3DStabilityAnalyzer()
+    assert a.nr > 0 and a.r_max > 0

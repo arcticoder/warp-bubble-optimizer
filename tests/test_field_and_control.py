@@ -88,3 +88,14 @@ def test_optimize_energy_stub_outputs():
     assert out['E'] > 0.0
     assert out['best_controls'].shape == (4,)
     assert out['fit_error'] >= 0.0
+
+
+def test_battery_feasibility_flag():
+    gs = GridSpec(nx=8, ny=8, nz=8, extent=1.0)
+    # Compute reference energy and set capacity just above it
+    from supraluminal_prototype.power import compute_smearing_energy
+    E_ref = compute_smearing_energy(25e6, 30.0, 2.56)
+    out_ok = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56, 'battery_capacity_J': E_ref * 1.01})
+    out_bad = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56, 'battery_capacity_J': E_ref * 0.99})
+    assert out_ok['feasible'] is True
+    assert out_bad['feasible'] is False

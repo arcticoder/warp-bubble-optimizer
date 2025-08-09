@@ -200,7 +200,10 @@ def optimize_energy(params: Dict) -> Dict:
     if target_env is None:
         target_env = target_soliton_envelope({'grid': grid, 'r0': 0.0, 'sigma': 0.5 * grid.extent})['envelope']
     best_rc, best_err = tune_ring_amplitudes_uniform(np.zeros(4), {'grid': grid, 'sigma': params.get('sigma', 0.2 * grid.extent)}, target_env, n_steps=17)
-    return {'E': E, 'best_controls': best_rc, 'fit_error': best_err}
+    # Battery feasibility check: compare against capacity if provided (J)
+    E_cap = params.get('battery_capacity_J')
+    feasible = True if E_cap is None else (E <= float(E_cap))
+    return {'E': E, 'best_controls': best_rc, 'fit_error': best_err, 'feasible': feasible}
 
 
 def target_soliton_envelope(params: Dict) -> Dict:
