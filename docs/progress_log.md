@@ -103,8 +103,6 @@ drwxrwxrwx 7 4096 Jul 31 19:25 artificial-gravity-field-generator
 ````
 
 ```test-history
-(base) $ conda deactivate
-~/Code/asciimath/warp-bubble-optimizer$ source .venv/bin/activate
 (.venv) ~/Code/asciimath/warp-bubble-optimizer$ $ python3 -m pytest --maxfail=1
 # PYTEST-RESULTS-BEGIN
 ============================= test session starts ==============================
