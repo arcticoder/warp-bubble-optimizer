@@ -45,3 +45,9 @@ def test_invalid_inputs():
         assert False
     except ValueError:
         pass
+
+def test_triangle_shape_equivalence():
+    # 'linear' accel+decel equals the 'triangle' total by construction
+    E_lin = compute_smearing_energy(25e6, 30.0, 2.56, shape='linear')
+    E_tri = compute_smearing_energy(25e6, 30.0, 2.56, shape='triangle')
+    assert math.isclose(E_lin, E_tri, rel_tol=1e-12)

@@ -95,7 +95,34 @@ def test_battery_feasibility_flag():
     # Compute reference energy and set capacity just above it
     from supraluminal_prototype.power import compute_smearing_energy
     E_ref = compute_smearing_energy(25e6, 30.0, 2.56)
-    out_ok = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56, 'battery_capacity_J': E_ref * 1.01})
-    out_bad = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56, 'battery_capacity_J': E_ref * 0.99})
+    out_ok = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56,
+                              'battery_capacity_J': E_ref * 1.01, 'battery_eta0': 1.0, 'battery_eta_slope': 0.0})
+    out_bad = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56,
+                               'battery_capacity_J': E_ref * 0.99, 'battery_eta0': 1.0, 'battery_eta_slope': 0.0})
     assert out_ok['feasible'] is True
     assert out_bad['feasible'] is False
+
+def test_zero_expansion_tolerance_vs_resolution():
+    # Coarser grids should generally have higher divergence magnitude than finer grids
+    from supraluminal_prototype.warp_generator import build_metric, expansion_scalar, GridSpec
+    theta8 = expansion_scalar(build_metric({'R': 2.5, 'grid': GridSpec(nx=8, ny=8, nz=8, extent=1.0)}))
+    theta16 = expansion_scalar(build_metric({'R': 2.5, 'grid': GridSpec(nx=16, ny=16, nz=16, extent=1.0)}))
+    theta32 = expansion_scalar(build_metric({'R': 2.5, 'grid': GridSpec(nx=32, ny=32, nz=32, extent=1.0)}))
+    m8 = float(np.nanmax(np.abs(theta8)))
+    m16 = float(np.nanmax(np.abs(theta16)))
+    m32 = float(np.nanmax(np.abs(theta32)))
+    assert m8 >= m16 * 0.8  # allow slack
+    assert m16 >= m32 * 0.8
+
+def test_discharge_efficiency_affects_feasibility():
+    gs = GridSpec(nx=8, ny=8, nz=8, extent=1.0)
+    from supraluminal_prototype.power import compute_smearing_energy
+    E_ref = compute_smearing_energy(25e6, 30.0, 2.56)
+    # With high efficiency, capacity just above E_ref should be feasible
+    out_hi = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56,
+                              'battery_capacity_J': E_ref * 1.02, 'battery_eta0': 1.0, 'battery_eta_slope': 0.0})
+    # With lower efficiency and same capacity, should flip to infeasible
+    out_lo = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56,
+                              'battery_capacity_J': E_ref * 1.02, 'battery_eta0': 0.85, 'battery_eta_slope': 0.1})
+    assert out_hi['feasible'] is True
+    assert out_lo['feasible'] is False

@@ -200,10 +200,20 @@ def optimize_energy(params: Dict) -> Dict:
     if target_env is None:
         target_env = target_soliton_envelope({'grid': grid, 'r0': 0.0, 'sigma': 0.5 * grid.extent})['envelope']
     best_rc, best_err = tune_ring_amplitudes_uniform(np.zeros(4), {'grid': grid, 'sigma': params.get('sigma', 0.2 * grid.extent)}, target_env, n_steps=17)
-    # Battery feasibility check: compare against capacity if provided (J)
+    # Simple discharge efficiency model vs C-rate: eta = eta0 - k * C_rate
+    # Estimate C-rate using P_peak and capacity if available; otherwise assume eta0
     E_cap = params.get('battery_capacity_J')
-    feasible = True if E_cap is None else (E <= float(E_cap))
-    return {'E': E, 'best_controls': best_rc, 'fit_error': best_err, 'feasible': feasible}
+    eta0 = float(params.get('battery_eta0', 0.95))
+    k = float(params.get('battery_eta_slope', 0.05))  # efficiency drop per 1C
+    eta = eta0
+    if E_cap is not None and P_peak > 0:
+        # Approximate pack voltage constant; use energy/capacity to estimate effective C-rate over ramp window
+        # Define an equivalent C-rate proxy: C_rate_proxy = (P_peak * t_ramp) / E_cap per ramp
+        C_rate_proxy = (P_peak * max(t_ramp, 1e-6)) / float(E_cap)
+        eta = max(0.5, min(eta0, eta0 - k * C_rate_proxy))
+    E_effective = E / max(eta, 1e-6)
+    feasible = True if E_cap is None else (E_effective <= float(E_cap))
+    return {'E': E, 'E_effective': E_effective, 'best_controls': best_rc, 'fit_error': best_err, 'feasible': feasible, 'eta': eta}
 
 
 def target_soliton_envelope(params: Dict) -> Dict:
