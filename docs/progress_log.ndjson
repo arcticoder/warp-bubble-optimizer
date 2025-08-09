@@ -1,0 +1,6 @@
+{"date":"2025-08-08","event":"Reviewed mission goal and constraints for Warp 1 lunar round-trip prototype","status":"completed","refs":["docs/roadmap.ndjson:Mission Definition and Constraints"]}
+{"date":"2025-08-08","event":"Analyzed temporal smearing trade-offs (30 s vs 120 s vs 300 s); decided to keep 30 s per phase","status":"completed","refs":["docs/roadmap.ndjson:Power Budget and Temporal Smearing Decision"]}
+{"date":"2025-08-08","event":"Created roadmap milestones for field synthesis, rings/coils/lasers integration, battery and control","status":"completed","refs":["docs/roadmap.ndjson"]}
+{"date":"2025-08-08","event":"Selected first implementation task: implement and test compute_smearing_energy analytic model","status":"in_progress","refs":["docs/roadmap.ndjson:1. Power Budget Model"]}
+{"date":"2025-08-08","event":"Added power model module src/supraluminal_prototype/power.py with compute_smearing_energy and unit tests","status":"in_progress","refs":["tests/test_power_profile.py","docs/roadmap.ndjson:1. Power Budget Model"]}
+{"date":"2025-08-08","event":"Power model tests passed (3/3); recorded decision to retain 30 s smearing","status":"completed","refs":["tests/test_power_profile.py","docs/roadmap.ndjson:Power Budget and Temporal Smearing Decision"]}
