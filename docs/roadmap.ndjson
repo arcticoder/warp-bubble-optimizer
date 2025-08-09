@@ -9,4 +9,5 @@
 {"section":"0. Requirements and Budgets","tasks":["Fix geometry and mission timeline","Derive power/energy budgets for 30 s ramps","Document decision against multi-minute smearing"]}
 {"section":"1. Power Budget Model","tasks":["Implement compute_smearing_energy","Unit tests for 30/120/300 s cases","Battery efficiency curve integration"]}
 {"section":"2. Field Synthesis","tasks":["Design build_metric with zero expansion","Map coil/laser controls to soliton envelope","Add fixtures for 5 m bubble target"]}
+{"section":"2. Field Synthesis - status","tasks":["build_metric: stub + zero-expansion test (done)","plasma_density: done","field_synthesis: stub + bounds test (done)","Next: tie envelope to shift amplitude and verify combined behavior","Next: add simple target soliton profile and fit error metric"]}
 {"section":"3. V&V and UQ","tasks":["Re-validate soliton report numbers","Add UQ for metamaterial amplification and laser coherence","Sync V&V with safety abort logic"]}

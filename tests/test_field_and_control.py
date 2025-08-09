@@ -6,6 +6,7 @@ if SRC_DIR not in sys.path:
 
 import numpy as np
 from supraluminal_prototype.warp_generator import build_metric, expansion_scalar, GridSpec
+from supraluminal_prototype.warp_generator import plasma_density, field_synthesis
 from supraluminal_prototype.control import sync_rings
 from supraluminal_prototype.hardware import CoilDriver
 
@@ -29,3 +30,21 @@ def test_coil_driver_linearity():
     diffs = [currents[i]-currents[i-1] for i in range(1, len(currents))]
     # Nearly constant step
     assert max(abs(d - diffs[0]) for d in diffs[1:]) < 1e-6
+
+
+def test_plasma_density_shell_profile():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    res = plasma_density({'grid': gs, 'n0': 3e20, 'R_shell': 0.6, 'width': 0.15})
+    n = res['n']
+    assert n.shape == (16, 16, 16)
+    assert n.max() <= 3e20 + 1e10
+    assert n.min() >= 0.0
+
+
+def test_field_synthesis_envelope_bounds():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    res = field_synthesis([1.0, 0.5, 0.5, 0.2], {'grid': gs, 'sigma': 0.2})
+    env = res['envelope']
+    assert env.shape == (16, 16, 16)
+    assert env.max() <= 1.0 + 1e-9
+    assert env.min() >= 0.0
