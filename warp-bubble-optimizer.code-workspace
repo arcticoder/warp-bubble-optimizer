@@ -19,6 +19,9 @@
 		{
 			"path": "../warp-bubble-qft",
 			"name": "warp-bubble-qft"
+		},
+		{
+			"path": "../negative-energy-generator"
 		}
 	],
 	"settings": {}
