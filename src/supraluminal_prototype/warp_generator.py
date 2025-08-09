@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Tuple
 import numpy as np
+from .power import compute_smearing_energy
 
 
 @dataclass
@@ -143,6 +144,63 @@ def field_synthesis(ring_controls: np.ndarray, params: Dict) -> Dict:
     if env_max > 0:
         env = env / env_max
     return {'grid': (xs, ys, zs), 'envelope': env}
+
+
+def synthesize_shift_with_envelope(params: Dict) -> Dict:
+    """
+    Build a divergence-free shift v' by taking v' = curl( e * A ), where A=(0,0,psi) and e is the synthesized envelope.
+    This preserves ∇·v' = 0 up to numerical error.
+    Required params: {'grid': GridSpec, 'R': float, 'sigma': float, 'ring_controls': array-like of length 4}
+    Returns dict with 'grid' and 'shift'.
+    """
+    grid = params.get('grid', GridSpec())
+    if not isinstance(grid, GridSpec):
+        raise ValueError("grid must be a GridSpec instance")
+    R = float(params.get('R', 2.5))
+    xs, ys, zs = grid.linspaces()
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing='ij')
+    r2 = X**2 + Y**2 + Z**2
+    psi = np.exp(-r2 / (R**2))
+    env = field_synthesis(params.get('ring_controls', [1, 1, 1, 1]), {'grid': grid, 'sigma': params.get('sigma', 0.2 * grid.extent)})['envelope']
+    Bz = env * psi
+    # v' = curl(B) with B=(0,0,Bz)
+    # central differences with reflective boundaries
+    def ddx(a: np.ndarray, h: float) -> np.ndarray:
+        ap = np.pad(a, ((1, 1), (0, 0), (0, 0)), mode='edge')
+        return (ap[2:, :, :] - ap[:-2, :, :]) / (2.0 * h)
+
+    def ddy(a: np.ndarray, h: float) -> np.ndarray:
+        ap = np.pad(a, ((0, 0), (1, 1), (0, 0)), mode='edge')
+        return (ap[:, 2:, :] - ap[:, :-2, :]) / (2.0 * h)
+
+    dx = float(xs[1] - xs[0]) if len(xs) > 1 else 1.0
+    dy = float(ys[1] - ys[0]) if len(ys) > 1 else 1.0
+    vx = ddy(Bz, dy)
+    vy = -ddx(Bz, dx)
+    vz = np.zeros_like(vx)
+    shift = np.stack([vx, vy, vz], axis=-1)
+    return {'grid': (xs, ys, zs), 'shift': shift}
+
+
+def optimize_energy(params: Dict) -> Dict:
+    """
+    Minimal optimization stub: evaluate smearing energy and fit error for uniform ring amplitudes.
+    Inputs: {'grid': GridSpec, 'P_peak': float, 't_ramp': float, 't_cruise': float,
+             'sigma': float, 'target': np.ndarray (optional)}
+    Returns: {'E': float, 'best_controls': np.ndarray, 'fit_error': float}
+    """
+    P_peak = float(params.get('P_peak', 25e6))
+    t_ramp = float(params.get('t_ramp', 30.0))
+    t_cruise = float(params.get('t_cruise', 2.56))
+    E = compute_smearing_energy(P_peak, t_ramp, t_cruise)
+    grid = params.get('grid', GridSpec())
+    if not isinstance(grid, GridSpec):
+        raise ValueError("grid must be a GridSpec instance")
+    target_env = params.get('target')
+    if target_env is None:
+        target_env = target_soliton_envelope({'grid': grid, 'r0': 0.0, 'sigma': 0.5 * grid.extent})['envelope']
+    best_rc, best_err = tune_ring_amplitudes_uniform(np.zeros(4), {'grid': grid, 'sigma': params.get('sigma', 0.2 * grid.extent)}, target_env, n_steps=17)
+    return {'E': E, 'best_controls': best_rc, 'fit_error': best_err}
 
 
 def target_soliton_envelope(params: Dict) -> Dict:

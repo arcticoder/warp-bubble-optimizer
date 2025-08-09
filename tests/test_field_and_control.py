@@ -8,6 +8,7 @@ import numpy as np
 from supraluminal_prototype.warp_generator import build_metric, expansion_scalar, GridSpec
 from supraluminal_prototype.warp_generator import plasma_density, field_synthesis
 from supraluminal_prototype.warp_generator import target_soliton_envelope, compute_envelope_error, tune_ring_amplitudes_uniform
+from supraluminal_prototype.warp_generator import synthesize_shift_with_envelope, optimize_energy
 from supraluminal_prototype.control import sync_rings
 from supraluminal_prototype.hardware import CoilDriver
 
@@ -71,3 +72,19 @@ def test_tune_ring_amplitudes_uniform_returns_best_controls():
     assert rc0.shape == (4,)
     assert 0.0 <= rc0.max() <= 1.0
     assert e0 >= 0.0
+
+
+def test_envelope_to_shift_coupling_divergence_small():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    res = synthesize_shift_with_envelope({'grid': gs, 'R': 2.5, 'sigma': 0.25, 'ring_controls': [1.0, 0.7, 0.7, 0.5]})
+    theta = expansion_scalar(res)
+    assert np.nanmax(np.abs(theta)) < 5e-2
+
+
+def test_optimize_energy_stub_outputs():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    out = optimize_energy({'grid': gs, 'P_peak': 25e6, 't_ramp': 30.0, 't_cruise': 2.56, 'sigma': 0.25})
+    assert 'E' in out and 'best_controls' in out and 'fit_error' in out
+    assert out['E'] > 0.0
+    assert out['best_controls'].shape == (4,)
+    assert out['fit_error'] >= 0.0
