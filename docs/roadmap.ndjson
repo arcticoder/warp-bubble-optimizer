@@ -11,3 +11,4 @@
 {"section":"2. Field Synthesis","tasks":["Design build_metric with zero expansion","Map coil/laser controls to soliton envelope","Add fixtures for 5 m bubble target"]}
 {"section":"2. Field Synthesis - status","tasks":["build_metric: stub + zero-expansion test (done)","plasma_density: done","field_synthesis: stub + bounds test (done)","Next: tie envelope to shift amplitude and verify combined behavior","Next: add simple target soliton profile and fit error metric"]}
 {"section":"3. V&V and UQ","tasks":["Re-validate soliton report numbers","Add UQ for metamaterial amplification and laser coherence","Sync V&V with safety abort logic"]}
+{"section":"4. Test and Environment Hygiene","tasks":["Pin test dependencies in venv (numpy, scipy, matplotlib)","Audit legacy tests for proper pytest discovery and names","Document how to run focused test subsets in README"]}
