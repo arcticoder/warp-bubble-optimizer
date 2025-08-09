@@ -1,11 +1,11 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
-2025-08-08 21:38:52 ./docs/roadmap.ndjson
-2025-08-08 21:38:52 ./docs/progress_log.ndjson
-2025-08-08 21:21:14 ./docs/progress_log.md
-2025-08-08 21:19:10 ./tests/test_field_and_control.py
-2025-08-08 21:19:10 ./src/supraluminal_prototype/warp_generator.py
+2025-08-08 21:43:08 ./tests/test_field_and_control.py
+2025-08-08 21:43:08 ./src/supraluminal_prototype/warp_generator.py
+2025-08-08 21:43:08 ./docs/roadmap.ndjson
+2025-08-08 21:43:08 ./docs/progress_log.ndjson
+2025-08-08 21:40:08 ./docs/progress_log.md
 2025-08-08 21:15:04 ./src/supraluminal_prototype/hardware.py
 2025-08-08 21:15:04 ./src/supraluminal_prototype/control.py
 2025-08-08 20:48:56 ./tests/test_power_profile.py
@@ -125,7 +125,7 @@ E   ModuleNotFoundError: No module named 'gaussian_optimize'
 =========================== short test summary info ============================
 ERROR test_accelerated_gaussian.py
 !!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
-=============================== 1 error in 1.01s ===============================
+=============================== 1 error in 0.94s ===============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

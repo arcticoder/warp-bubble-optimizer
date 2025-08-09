@@ -7,6 +7,7 @@ if SRC_DIR not in sys.path:
 import numpy as np
 from supraluminal_prototype.warp_generator import build_metric, expansion_scalar, GridSpec
 from supraluminal_prototype.warp_generator import plasma_density, field_synthesis
+from supraluminal_prototype.warp_generator import target_soliton_envelope, compute_envelope_error, tune_ring_amplitudes_uniform
 from supraluminal_prototype.control import sync_rings
 from supraluminal_prototype.hardware import CoilDriver
 
@@ -48,3 +49,25 @@ def test_field_synthesis_envelope_bounds():
     assert env.shape == (16, 16, 16)
     assert env.max() <= 1.0 + 1e-9
     assert env.min() >= 0.0
+
+
+def test_envelope_fit_error_monotonicity_uniform():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    params = {'grid': gs, 'sigma': 0.25}
+    target = target_soliton_envelope({'grid': gs, 'r0': 0.0, 'sigma': 0.5}).get('envelope')
+    env_lo = field_synthesis([0.1, 0.1, 0.1, 0.1], params)['envelope']
+    env_hi = field_synthesis([0.9, 0.9, 0.9, 0.9], params)['envelope']
+    err_lo = compute_envelope_error(env_lo, target)
+    err_hi = compute_envelope_error(env_hi, target)
+    # Higher amplitude should generally reduce error relative to a nonzero target profile
+    assert err_hi <= err_lo + 1e-6
+
+
+def test_tune_ring_amplitudes_uniform_returns_best_controls():
+    gs = GridSpec(nx=16, ny=16, nz=16, extent=1.0)
+    params = {'grid': gs, 'sigma': 0.25}
+    target = target_soliton_envelope({'grid': gs, 'r0': 0.0, 'sigma': 0.5}).get('envelope')
+    rc0, e0 = tune_ring_amplitudes_uniform(np.zeros(4), params, target, n_steps=9)
+    assert rc0.shape == (4,)
+    assert 0.0 <= rc0.max() <= 1.0
+    assert e0 >= 0.0

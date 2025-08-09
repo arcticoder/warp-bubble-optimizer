@@ -143,3 +143,62 @@ def field_synthesis(ring_controls: np.ndarray, params: Dict) -> Dict:
     if env_max > 0:
         env = env / env_max
     return {'grid': (xs, ys, zs), 'envelope': env}
+
+
+def target_soliton_envelope(params: Dict) -> Dict:
+    """
+    Build a simple radial soliton-like target envelope using sech^2((r-r0)/sigma).
+    Result normalized to [0,1] for comparison.
+    """
+    grid = params.get('grid', GridSpec())
+    if not isinstance(grid, GridSpec):
+        raise ValueError("grid must be a GridSpec instance")
+    xs, ys, zs = grid.linspaces()
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing='ij')
+    r = np.sqrt(X**2 + Y**2 + Z**2)
+    r0 = float(params.get('r0', 0.0))
+    sigma = float(params.get('sigma', 0.5 * grid.extent))
+    def sech(x: np.ndarray) -> np.ndarray:
+        return 1.0 / np.cosh(x)
+    env = (sech((r - r0) / sigma)) ** 2
+    env_max = np.max(env)
+    if env_max > 0:
+        env = env / env_max
+    return {'grid': (xs, ys, zs), 'envelope': env}
+
+
+def compute_envelope_error(envelope: np.ndarray, target: np.ndarray, norm: str = 'l2') -> float:
+    """
+    Compute error between synthesized envelope and target.
+    - norm='l2': sqrt(mean((a-b)^2))
+    - norm='l1': mean(|a-b|)
+    """
+    a = np.asarray(envelope, dtype=float)
+    b = np.asarray(target, dtype=float)
+    if a.shape != b.shape:
+        raise ValueError("envelope and target must have same shape")
+    if norm == 'l2':
+        return float(np.sqrt(np.mean((a - b) ** 2)))
+    if norm == 'l1':
+        return float(np.mean(np.abs(a - b)))
+    raise ValueError("Unsupported norm")
+
+
+def tune_ring_amplitudes_uniform(ring_controls_init: np.ndarray, params: Dict,
+                                 target_envelope: np.ndarray, n_steps: int = 21) -> Tuple[np.ndarray, float]:
+    """
+    One-dimensional line search over a uniform scale factor s in [0,1] applied to a base vector of ones(4).
+    Returns (best_controls, best_error).
+    """
+    base = np.ones(4, dtype=float)
+    best_err = float('inf')
+    best_controls = np.zeros(4, dtype=float)
+    for i in range(n_steps):
+        s = i / (n_steps - 1)
+        rc = np.clip(s * base, 0.0, 1.0)
+        env = field_synthesis(rc, params)['envelope']
+        err = compute_envelope_error(env, target_envelope, norm='l2')
+        if err < best_err:
+            best_err = err
+            best_controls = rc
+    return best_controls, best_err
