@@ -26,10 +26,10 @@
 {"date":"2025-08-10","event":"Migrated resolved UQ tasks to UQ-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/UQ-TODO-RESOLVED.ndjson"]}
 {"date":"2025-08-10","event":"Migrated resolved V&V tasks to VnV-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/VnV-TODO-RESOLVED.ndjson"]}
 {"date":"2025-08-10","event":"Added at least 5 new progress items and stabilized pytest config for async and site-packages filtering","status":"completed","refs":["pytest.ini","conftest.py"]}
-{"date":"2025-08-10","event":"Add CI job to run tests with venv pinning and site-packages exclusion","status":"planned","refs":[".github/workflows/ (to add)"]}
-{"date":"2025-08-10","event":"Document pytest collection filters and focused runs in README","status":"planned","refs":["README.md (to update)","pytest.ini","conftest.py"]}
-{"date":"2025-08-10","event":"Add V&V test for vector impulse energy scaling vs v_max","status":"planned","refs":["simulate_vector_impulse.py","docs/VnV-TODO.ndjson"]}
-{"date":"2025-08-10","event":"Add trajectory accuracy vs n_steps regression (coarse→fine)","status":"planned","refs":["integrated_impulse_control.py","docs/VnV-TODO.ndjson"]}
+{"date":"2025-08-09","event":"Add CI job to run tests with venv pinning and site-packages exclusion","status":"completed","refs":[".github/workflows/ci.yml","requirements-test.txt","pytest.ini","conftest.py"]}
+{"date":"2025-08-09","event":"Document pytest collection filters and focused runs in README","status":"completed","refs":["README.md","pytest.ini","conftest.py"]}
+{"date":"2025-08-09","event":"Add V&V test for vector impulse energy scaling vs v_max","status":"completed","refs":["tests/test_vnv_vector_impulse.py","simulate_vector_impulse.py"]}
+{"date":"2025-08-09","event":"Add trajectory accuracy vs n_steps regression (coarse→fine)","status":"completed","refs":["tests/test_vnv_vector_impulse.py","integrated_impulse_control.py"]}
 {"date":"2025-08-10","event":"Add JAX vs NumPy benchmark summary to docs using jax_acceleration test","status":"planned","refs":["test_jax_acceleration.py","docs/technical-documentation.md (to update)"]}
 {"date":"2025-08-10","event":"CI workflow added to run tests on GitHub Actions","status":"completed","refs":[".github/workflows/ci.yml","requirements-test.txt"]}
 {"date":"2025-08-10","event":"README updated with pytest filters and focused run guidance","status":"completed","refs":["README.md","pytest.ini","conftest.py"]}
