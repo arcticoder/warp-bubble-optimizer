@@ -59,7 +59,7 @@ def E_negative_gauss_fast(params: Sequence[float]) -> float:
     f = _gaussian_sum(r_grid, params)
     # Toy negative energy functional
     integrand = f**2 * vol_weights
-    E = np.trapz(integrand, r_grid)
+    E = np.trapezoid(integrand, r_grid)
     return float(-float(E))
 
 
@@ -74,8 +74,8 @@ def E_negative_gauss_slow(params: Sequence[float]) -> float:
         b = (i+1)*size if i < chunks-1 else N
         rg = r_grid[a:b]
         f = _gaussian_sum(rg, params)
-        E_chunk = float(np.trapz(f**2 * (4.0*np.pi*rg**2), rg))
-        E -= E_chunk
+    E_chunk = float(np.trapezoid(f**2 * (4.0*np.pi*rg**2), rg))
+    E -= E_chunk
     return float(E)
 
 
@@ -156,7 +156,7 @@ def f_hybrid_prime_vectorized(r: np.ndarray, params: Sequence[float], enable_hyb
 
 def E_negative_hybrid(params: Sequence[float]) -> float:
     f = f_hybrid_vectorized(r_grid, params, enable_hybrid=True)
-    E = float(np.trapz(f**2 * vol_weights, r_grid))
+    E = float(np.trapezoid(f**2 * vol_weights, r_grid))
     return float(-E)
 
 

@@ -1,20 +1,26 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
+2025-08-09 17:59:30 ./test_jax_acceleration.py
+2025-08-09 17:59:30 ./simulate_vector_impulse.py
+2025-08-09 17:59:30 ./pytest.ini
+2025-08-09 17:59:30 ./gaussian_optimize.py
+2025-08-09 17:59:30 ./docs/progress_log.ndjson
+2025-08-09 17:59:30 ./docs/VnV-TODO.ndjson
+2025-08-09 17:59:30 ./docs/VnV-TODO-RESOLVED.ndjson
+2025-08-09 17:59:30 ./docs/UQ-TODO.ndjson
+2025-08-09 17:59:30 ./docs/UQ-TODO-RESOLVED.ndjson
+2025-08-09 17:59:30 ./conftest.py
+2025-08-09 17:25:31 ./docs/progress_log.md
 2025-08-09 17:25:11 ./ultimate_bspline_optimizer.py
 2025-08-09 17:25:11 ./src/optimization/ultimate_bspline_optimizer.py
 2025-08-09 17:25:11 ./docs/roadmap.ndjson
-2025-08-09 17:25:11 ./docs/progress_log.ndjson
-2025-08-09 17:25:11 ./docs/VnV-TODO.ndjson
-2025-08-09 17:25:11 ./docs/UQ-TODO.ndjson
-2025-08-08 22:33:12 ./docs/progress_log.md
 2025-08-08 22:24:10 ./src/warp_engine/dynamic_sim.py
 2025-08-08 22:24:10 ./src/warp_engine/backreaction.py
 2025-08-08 22:24:10 ./src/warp_engine/__init__.py
 2025-08-08 22:06:27 ./tests/test_power_profile.py
 2025-08-08 22:06:27 ./tests/test_field_and_control.py
 2025-08-08 22:06:27 ./src/supraluminal_prototype/warp_generator.py
-2025-08-08 22:06:27 ./gaussian_optimize.py
 2025-08-08 21:53:44 ./test_3d_stability.py
 2025-08-08 21:53:44 ./VnV-TODO.ndjson
 2025-08-08 21:53:44 ./UQ-TODO.ndjson
@@ -35,18 +41,12 @@
 2025-07-31 19:25:46 ./test_soliton_3d_stability.py
 2025-07-31 19:25:46 ./test_simple_integration.py
 2025-07-31 19:25:46 ./test_setup.py
-2025-07-31 19:25:46 ./test_repository.py
-2025-07-31 19:25:46 ./test_pipeline.py
-2025-07-31 19:25:46 ./test_mvp_integration.py
-2025-07-31 19:25:46 ./test_lqg_bounds_focused.py
-2025-07-31 19:25:46 ./test_jax_gpu.py
-2025-07-31 19:25:46 ./test_jax_cpu.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
 # REPO-LIST-BEGIN
 total 252     
-drwxrwxrwx 30 12288 Aug 8 22:36 warp-bubble-optimizer
+drwxrwxrwx 30 12288 Aug 9 17:56 warp-bubble-optimizer
 drwxrwxrwx 15 12288 Aug 8 07:57 negative-energy-generator
 drwxrwxrwx 19 4096 Aug 8 07:02 energy
 drwxrwxrwx 8 4096 Aug 1 20:49 casimir-nanopositioning-platform
@@ -106,133 +106,87 @@ drwxrwxrwx 7 4096 Jul 31 19:25 artificial-gravity-field-generator
 (.venv) ~/Code/asciimath/warp-bubble-optimizer$ $ python3 -m pytest --maxfail=1
 # PYTEST-RESULTS-BEGIN
 ============================= test session starts ==============================
-platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0
+platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0 -- /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/bin/python
+cachedir: .pytest_cache
 rootdir: /home/echo_/Code/asciimath/warp-bubble-optimizer
 configfile: pytest.ini
-collected 77 items
+testpaths: .
+plugins: asyncio-1.1.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 70 items
 
-test_3d_stability.py .                                                   [  1%]
-test_accelerated_gaussian.py ......                                      [  9%]
-test_all_protection_systems.py .                                         [ 10%]
-test_backreaction_timeout.py .                                           [ 11%]
-test_digital_twins.py .                                                  [ 12%]
-test_final_integration.py ...E
+test_3d_stability.py::test_stability_analyzer_instantiates PASSED        [  1%]
+test_accelerated_gaussian.py::test_vectorized_integration PASSED         [  2%]
+test_accelerated_gaussian.py::test_parallel_vs_sequential PASSED         [  4%]
+test_accelerated_gaussian.py::test_ansatz_comparison PASSED              [  5%]
+test_accelerated_gaussian.py::test_hybrid_ansatz PASSED                  [  7%]
+test_accelerated_gaussian.py::test_cma_es_availability PASSED            [  8%]
+test_accelerated_gaussian.py::test_physics_constraints PASSED            [ 10%]
+test_all_protection_systems.py::test_all_systems PASSED                  [ 11%]
+test_backreaction_timeout.py::test_backreaction_timeout PASSED           [ 12%]
+test_digital_twins.py::test_digital_twins PASSED                         [ 14%]
+test_final_integration.py::test_imports PASSED                           [ 15%]
+test_final_integration.py::test_basic_functionality PASSED               [ 17%]
+test_final_integration.py::test_mission_planning PASSED                  [ 18%]
+test_final_integration.py::test_mission_execution PASSED                 [ 20%]
+test_final_integration.py::test_mission_reporting PASSED                 [ 21%]
+test_imports.py::test_imports PASSED                                     [ 22%]
+test_integration.py::test_progress_imports PASSED                        [ 24%]
+test_integration.py::test_jax_fallback PASSED                            [ 25%]
+test_integration.py::test_virtual_control_loop PASSED                    [ 27%]
+test_integration.py::test_analog_simulation PASSED                       [ 28%]
+test_integration.py::test_jax_optimization PASSED                        [ 30%]
+test_integration.py::test_progress_tracker_direct PASSED                 [ 31%]
+test_integration.py::test_impulse_engine_simulation PASSED               [ 32%]
+test_integration.py::test_vector_impulse_simulation PASSED               [ 34%]
+test_integration.py::test_rotation_simulation PASSED                     [ 35%]
+test_integration.py::test_integrated_control_system PASSED               [ 37%]
+test_integration.py::test_simulation_integration PASSED                  [ 38%]
+test_jax_acceleration.py::test_einstein_tensor_computation PASSED        [ 40%]
+test_jax_acceleration.py::test_trajectory_simulation PASSED              [ 41%]
+test_jax_acceleration.py::test_stress_energy_computation PASSED          [ 42%]
+test_jax_gpu.py::test_jax_gpu PASSED                                     [ 44%]
+test_mvp_integration.py::test_mvp_components PASSED                      [ 45%]
+test_repository.py::TestBasicImports::test_core_module_import PASSED     [ 47%]
+test_repository.py::TestBasicImports::test_field_algebra_import PASSED   [ 48%]
+test_repository.py::TestBasicImports::test_metrics_import PASSED         [ 50%]
+test_repository.py::TestBasicImports::test_optimization_imports PASSED   [ 51%]
+test_repository.py::TestNumericalCalculations::test_van_den_broeck_calculation PASSED [ 52%]
+test_repository.py::TestNumericalCalculations::test_basic_numpy_operations PASSED [ 54%]
+test_repository.py::TestOptimizationTools::test_simple_optimization PASSED [ 55%]
+test_repository.py::TestOptimizationTools::test_ansatz_optimizer_creation PASSED [ 57%]
+test_repository.py::TestIntegrationUtilities::test_basic_integration PASSED [ 58%]
+test_repository.py::TestIntegrationUtilities::test_energy_integration PASSED [ 60%]
+test_repository.py::TestAnsatzDevelopment::test_ansatz_builder PASSED    [ 61%]
+test_repository.py::TestAnsatzDevelopment::test_novel_ansatz_creation PASSED [ 62%]
+test_repository.py::TestDemoScripts::test_demo_metric_optimization_syntax PASSED [ 64%]
+test_repository.py::TestDemoScripts::test_advanced_demo_syntax PASSED    [ 65%]
+test_repository.py::TestRepositoryStructure::test_src_directory_structure PASSED [ 67%]
+test_repository.py::TestRepositoryStructure::test_docs_directory PASSED  [ 68%]
+test_repository.py::TestRepositoryStructure::test_essential_files PASSED [ 70%]
+test_repository.py::TestRepositoryStructure::test_demo_scripts_exist PASSED [ 71%]
+test_repository.py::test_integration_workflow PASSED                     [ 72%]
+test_setup.py::test_basic_imports PASSED                                 [ 74%]
+test_setup.py::test_basic_functionality PASSED                           [ 75%]
+test_simple_integration.py::test_simple PASSED                           [ 77%]
+tests/test_field_and_control.py::test_zero_expansion_metric PASSED       [ 78%]
+tests/test_field_and_control.py::test_ring_sync_tolerance PASSED         [ 80%]
+tests/test_field_and_control.py::test_coil_driver_linearity PASSED       [ 81%]
+tests/test_field_and_control.py::test_plasma_density_shell_profile PASSED [ 82%]
+tests/test_field_and_control.py::test_field_synthesis_envelope_bounds PASSED [ 84%]
+tests/test_field_and_control.py::test_envelope_fit_error_monotonicity_uniform PASSED [ 85%]
+tests/test_field_and_control.py::test_tune_ring_amplitudes_uniform_returns_best_controls PASSED [ 87%]
+tests/test_field_and_control.py::test_envelope_to_shift_coupling_divergence_small PASSED [ 88%]
+tests/test_field_and_control.py::test_optimize_energy_stub_outputs PASSED [ 90%]
+tests/test_field_and_control.py::test_battery_feasibility_flag PASSED    [ 91%]
+tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution PASSED [ 92%]
+tests/test_field_and_control.py::test_discharge_efficiency_affects_feasibility PASSED [ 94%]
+tests/test_power_profile.py::test_energy_increases_with_ramp_duration PASSED [ 95%]
+tests/test_power_profile.py::test_numerical_values_match_analysis PASSED [ 97%]
+tests/test_power_profile.py::test_invalid_inputs PASSED                  [ 98%]
+tests/test_power_profile.py::test_triangle_shape_equivalence PASSED      [100%]
 
-==================================== ERRORS ====================================
-___________________ ERROR at setup of test_mission_execution ___________________
-file /home/echo_/Code/asciimath/warp-bubble-optimizer/test_final_integration.py, line 111
-  async def test_mission_execution(trajectory_plan):
-      """Test mission execution."""
-      print("\n🔍 Testing mission execution...")
-
-      try:
-          from integrated_impulse_control import IntegratedImpulseController, ImpulseEngineConfig
-
-          config = ImpulseEngineConfig(energy_budget=1e12)
-          controller = IntegratedImpulseController(config)
-
-          # Execute mission (open-loop mode for testing)
-          mission_results = await controller.execute_impulse_mission(
-              trajectory_plan, enable_feedback=False
-          )
-
-          metrics = mission_results['performance_metrics']
-          print(f"   Mission success: {mission_results['mission_success']}")
-          print(f"   Success rate: {metrics['overall_success_rate']*100:.1f}%")
-          print(f"   Energy used: {metrics['total_energy_used']/1e9:.2f} GJ")
-          print(f"   Mission time: {metrics['mission_duration_hours']:.2f} hours")
-
-          print("✅ Mission execution test passed")
-          return True, mission_results
-
-      except Exception as e:
-          print(f"❌ Mission execution failed: {e}")
-          traceback.print_exc()
-          return False, None
-E       fixture 'trajectory_plan' not found
->       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
->       use 'pytest --fixtures [testpath]' for help on them.
-
-/home/echo_/Code/asciimath/warp-bubble-optimizer/test_final_integration.py:111
-=============================== warnings summary ===============================
-test_accelerated_gaussian.py: 656 warnings
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:62: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
-    E = np.trapz(integrand, r_grid)
-
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-test_accelerated_gaussian.py::test_vectorized_integration
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:77: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
-    E_chunk = float(np.trapz(f**2 * (4.0*np.pi*rg**2), rg))
-
-test_accelerated_gaussian.py::test_vectorized_integration
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_vectorized_integration returned <class 'dict'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_accelerated_gaussian.py::test_parallel_vs_sequential
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_parallel_vs_sequential returned <class 'tuple'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_accelerated_gaussian.py::test_ansatz_comparison
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_ansatz_comparison returned <class 'dict'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_accelerated_gaussian.py::test_hybrid_ansatz
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:159: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
-    E = float(np.trapz(f**2 * vol_weights, r_grid))
-
-test_accelerated_gaussian.py::test_hybrid_ansatz
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_hybrid_ansatz returned <class 'float'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_accelerated_gaussian.py::test_cma_es_availability
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_cma_es_availability returned <class 'tuple'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_digital_twins.py::test_digital_twins
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_digital_twins.py::test_digital_twins returned <class 'bool'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_final_integration.py::test_imports
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_imports returned <class 'bool'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_final_integration.py::test_basic_functionality
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_basic_functionality returned <class 'bool'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
-test_final_integration.py::test_mission_planning
-  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_mission_planning returned <class 'tuple'>.
-  Did you mean to use `assert` instead of `return`?
-  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
-    warnings.warn(
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-ERROR test_final_integration.py::test_mission_execution
-!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
-================== 13 passed, 674 warnings, 1 error in 7.03s ===================
+============================== 70 passed in 8.09s ==============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

@@ -15,6 +15,7 @@ try:
     import jax
     import jax.numpy as jnp
     from jax import jit, device_put, vmap
+    from functools import partial
     
     print(f"JAX devices: {jax.devices()}")
     JAX_AVAILABLE = True
@@ -128,8 +129,8 @@ def test_trajectory_simulation():
             
             return jnp.array([t_next, R_next, v_next, E_next])
         
-        @jit
-        def jax_full_trajectory(initial_state, dt, n_steps):
+    @partial(jit, static_argnums=(2,))
+    def jax_full_trajectory(initial_state, dt, n_steps):
             """Full trajectory using JAX scan."""
             def step_fn(state, _):
                 next_state = jax_trajectory_step(state, dt)

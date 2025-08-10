@@ -22,3 +22,7 @@
 {"date":"2025-08-08","event":"Added zero-expansion tolerance vs resolution UQ test","status":"completed","refs":["tests/test_field_and_control.py"]}
 {"date":"2025-08-08","event":"Pinned test dependencies in requirements-test.txt","status":"completed","refs":["requirements-test.txt","docs/roadmap.ndjson:4. Test and Environment Hygiene - status"]}
 {"date":"2025-08-08","event":"Fixed test_backreaction_timeout import chain: added JAX/SymPy/SciPy guards and made package __init__ lazy; test runs and completes under minimal deps","status":"completed","refs":["src/warp_engine/backreaction.py","src/warp_engine/dynamic_sim.py","src/warp_engine/__init__.py","test_backreaction_timeout.py","docs/progress_log.md:test-history"]}
+{"date":"2025-08-10","event":"Made vector velocity profile JAX-safe with branch-free scalar profile; fixed energy integration and colormap access","status":"completed","refs":["simulate_vector_impulse.py"]}
+{"date":"2025-08-10","event":"Migrated resolved UQ tasks to UQ-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/UQ-TODO-RESOLVED.ndjson"]}
+{"date":"2025-08-10","event":"Migrated resolved V&V tasks to VnV-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/VnV-TODO-RESOLVED.ndjson"]}
+{"date":"2025-08-10","event":"Added at least 5 new progress items and stabilized pytest config for async and site-packages filtering","status":"completed","refs":["pytest.ini","conftest.py"]}

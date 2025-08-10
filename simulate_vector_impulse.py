@@ -12,6 +12,7 @@ import numpy as np
 import time
 import logging
 from typing import Dict, List, Tuple, Optional, Any, Union
+from functools import partial
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from dataclasses import dataclass
@@ -27,7 +28,11 @@ except ImportError:
     JAX_AVAILABLE = False
     print("⚠️  JAX not available - using NumPy fallback")
     # Fallback decorators
-    def jit(func): return func
+    def jit(func=None, **kwargs):
+        # Support decorator usage with or without params
+        if func is None:
+            return lambda f: f
+        return func
     def vmap(func, in_axes=None): 
         def vectorized(*args):
             return np.array([func(*[arg[i] if isinstance(arg, np.ndarray) else arg 
@@ -130,48 +135,39 @@ class WarpBubbleVector:
         if self.orientation is None:
             self.orientation = Vector3D(1.0, 0.0, 0.0)
 
+def scalar_velocity_profile(t: Union[float, "jnp.ndarray"], v_max: float,
+                            t_up: float, t_hold: float, t_down: float):
+    """
+    Branch-free trapezoidal velocity magnitude profile compatible with JAX tracing.
+    v(t) = v_max * (clip(t/t_up,0,1) - clip((t - t_up - t_hold)/t_down,0,1))
+    """
+    # Use jnp for branch-free behavior (works with numpy fallback too)
+    clip = jnp.clip
+    ramp_up = clip(t / (t_up + 1e-12), 0.0, 1.0)
+    ramp_down = clip((t - t_up - t_hold) / (t_down + 1e-12), 0.0, 1.0)
+    return v_max * (ramp_up - ramp_down)
+
 def vector_velocity_profile(t: float, direction: Vector3D, v_max: float, 
                            t_up: float, t_hold: float, t_down: float) -> Vector3D:
     """
     Compute 3D velocity vector at time t for vectorized impulse profile.
-    
-    Args:
-        t: Time coordinate
-        direction: Unit direction vector
-        v_max: Maximum velocity magnitude
-        t_up: Ramp-up duration
-        t_hold: Hold duration  
-        t_down: Ramp-down duration
-        
-    Returns:
-        3D velocity vector at time t
+    Returns a Vector3D for non-JAX uses; JAX vmapped path returns raw arrays.
     """
-    # Scalar velocity profile (same as before)
-    if t < 0:
-        v_scalar = 0.0
-    elif t < t_up:
-        v_scalar = v_max * (t / t_up)
-    elif t < t_up + t_hold:
-        v_scalar = v_max
-    elif t < t_up + t_hold + t_down:
-        v_scalar = v_max * (1.0 - (t - t_up - t_hold) / t_down)
-    else:
-        v_scalar = 0.0
-    
-    # Apply direction
+    v_scalar = scalar_velocity_profile(t, v_max, t_up, t_hold, t_down)
     return direction * v_scalar
 
 # Vectorize over time arrays
 if JAX_AVAILABLE:
     def v_vector_batch(ts, direction, v_max, t_up, t_hold, t_down):
+        # Return raw arrays to avoid dataclass construction during tracing
         def single_time(t):
-            return vector_velocity_profile(t, direction, v_max, t_up, t_hold, t_down).vec
+            s = scalar_velocity_profile(t, v_max, t_up, t_hold, t_down)
+            return direction.vec * s
         return vmap(single_time)(ts)
 else:
     def v_vector_batch(ts, direction, v_max, t_up, t_hold, t_down):
         return np.array([vector_velocity_profile(t, direction, v_max, t_up, t_hold, t_down).vec for t in ts])
 
-@jit
 def neg_energy_density_vector(r: jnp.ndarray, direction: jnp.ndarray, 
                              warp_params: WarpBubbleVector, velocity_mag: float) -> jnp.ndarray:
     """
@@ -188,10 +184,7 @@ def neg_energy_density_vector(r: jnp.ndarray, direction: jnp.ndarray,
     Returns:
         Energy density T00(r,θ,φ)
     """
-    if velocity_mag == 0.0:
-        return jnp.zeros_like(r)
-    
-    # Base energy density (v² scaling)
+    # Base energy density (v² scaling); 0 when velocity is 0 (no explicit branching)
     base_density = -1e15 * velocity_mag**2
     
     # Spatial profile centered at bubble wall
@@ -213,7 +206,6 @@ def neg_energy_density_vector(r: jnp.ndarray, direction: jnp.ndarray,
     
     return base_density * spatial_profile
 
-@jit
 def compute_vector_energy_integral(velocity_vec: jnp.ndarray, warp_params: WarpBubbleVector) -> float:
     """
     Compute total negative energy for vectorized warp bubble.
@@ -226,17 +218,18 @@ def compute_vector_energy_integral(velocity_vec: jnp.ndarray, warp_params: WarpB
         Total negative energy (J)
     """
     velocity_mag = jnp.linalg.norm(velocity_vec)
-    if velocity_mag < 1e-12:
-        return 0.0
-    
-    direction = velocity_vec / velocity_mag
+    # Safe direction handling without Python branching
+    eps = 1e-12
+    direction = jnp.where(velocity_mag > eps, velocity_vec / (velocity_mag + 1e-30), jnp.zeros_like(velocity_vec))
     
     rs = jnp.linspace(0.0, warp_params.R_max, warp_params.n_r)
     densities = neg_energy_density_vector(rs, direction, warp_params, velocity_mag)
     
     # Integrate over spherical volume
     integrand = 4 * jnp.pi * rs**2 * jnp.abs(densities)
-    return jnp.trapz(integrand, rs)
+    # Manual trapezoidal integration to avoid API differences
+    dr = rs[1:] - rs[:-1]
+    return jnp.sum(0.5 * (integrand[:-1] + integrand[1:]) * dr)
 
 def simulate_vector_impulse_maneuver(profile: VectorImpulseProfile, 
                                    warp_params: WarpBubbleVector,
@@ -313,22 +306,23 @@ def simulate_vector_impulse_maneuver(profile: VectorImpulseProfile,
         total_distance = jnp.sum(jnp.linalg.norm(jnp.diff(positions, axis=0), axis=1))
         final_position = positions[-1]
         trajectory_error = jnp.linalg.norm(final_position - profile.target_displacement.vec)
-        
+
         # Energy analysis
-        E_total = jnp.trapz(E_ts, ts)
+        dt = ts[1:] - ts[:-1]
+        E_total = jnp.sum(0.5 * (E_ts[:-1] + E_ts[1:]) * dt)
         E_peak = jnp.max(E_ts)
-        
+
         # Hold phase analysis
         hold_start_idx = jnp.argmin(jnp.abs(ts - profile.t_up))
         hold_end_idx = jnp.argmin(jnp.abs(ts - (profile.t_up + profile.t_hold)))
         E_hold_avg = jnp.mean(E_ts[hold_start_idx:hold_end_idx])
-        
-        if progress: 
+
+        if progress:
             progress.update("Finalizing vector simulation", step_number=6)
             progress.log_metric("total_energy", float(E_total))
             progress.log_metric("trajectory_error", float(trajectory_error))
             progress.log_metric("total_distance", float(total_distance))
-        
+
         results = {
             'time_grid': np.array(ts),
             'velocity_profile_3d': np.array(vs_3d),
@@ -520,7 +514,8 @@ def visualize_vector_trajectory(results: Dict[str, Any], save_plots: bool = True
     
     # Color trajectory by velocity magnitude
     velocities = results['velocity_magnitudes']
-    colors = plt.cm.viridis(velocities / np.max(velocities))
+    cmap = plt.get_cmap('viridis')
+    colors = cmap(velocities / np.max(velocities))
     
     for i in range(len(positions)-1):
         ax1.plot([positions[i,0], positions[i+1,0]], 
