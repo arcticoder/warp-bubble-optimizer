@@ -724,3 +724,12 @@ def optimize_integrated_system():
 ---
 
 *This enhanced optimizer represents a significant advancement in multi-field warp system optimization, enabling unprecedented control over complex overlapping field configurations while maintaining physical consistency and operational efficiency.*
+
+## Testing and CI
+
+- Local quick run: use the lightweight tests and filters already configured in `pytest.ini` and `conftest.py`.
+  - Site-packages and heavy script-style tests are excluded from collection.
+  - Focused runs: `pytest -k vector_impulse -q` or `pytest tests/test_vnv_vector_impulse.py -q`.
+  - Markers: use `-m "not slow"` to skip slow tests.
+- Dependencies: install `requirements-test.txt` for a consistent environment.
+- CI: GitHub Actions workflow runs the test suite on Ubuntu with Python 3.11 using the pinned test requirements.

@@ -1,10 +1,13 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
+2025-08-09 18:37:16 ./docs/progress_log.ndjson
+2025-08-09 18:37:10 ./tests/test_vnv_vector_impulse.py
+2025-08-09 18:36:54 ./README.md
+2025-08-09 18:36:03 ./.github/workflows/ci.yml
+2025-08-09 18:22:30 ./docs/progress_log.md
 2025-08-09 18:17:13 ./docs/roadmap.ndjson
-2025-08-09 18:17:13 ./docs/progress_log.ndjson
 2025-08-09 18:17:13 ./docs/VnV-TODO.ndjson
-2025-08-09 18:00:04 ./docs/progress_log.md
 2025-08-09 17:59:30 ./test_jax_acceleration.py
 2025-08-09 17:59:30 ./simulate_vector_impulse.py
 2025-08-09 17:59:30 ./pytest.ini
@@ -38,9 +41,6 @@
 2025-07-31 19:25:46 ./time_dependent_optimizer.py
 2025-07-31 19:25:46 ./test_ultimate_bspline.py
 2025-07-31 19:25:46 ./test_solver_debug.py
-2025-07-31 19:25:46 ./test_soliton_3d_stability.py
-2025-07-31 19:25:46 ./test_simple_integration.py
-2025-07-31 19:25:46 ./test_setup.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
@@ -113,80 +113,82 @@ configfile: pytest.ini
 testpaths: .
 plugins: asyncio-1.1.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 70 items
+collecting ... collected 72 items
 
 test_3d_stability.py::test_stability_analyzer_instantiates PASSED        [  1%]
 test_accelerated_gaussian.py::test_vectorized_integration PASSED         [  2%]
 test_accelerated_gaussian.py::test_parallel_vs_sequential PASSED         [  4%]
 test_accelerated_gaussian.py::test_ansatz_comparison PASSED              [  5%]
-test_accelerated_gaussian.py::test_hybrid_ansatz PASSED                  [  7%]
+test_accelerated_gaussian.py::test_hybrid_ansatz PASSED                  [  6%]
 test_accelerated_gaussian.py::test_cma_es_availability PASSED            [  8%]
-test_accelerated_gaussian.py::test_physics_constraints PASSED            [ 10%]
+test_accelerated_gaussian.py::test_physics_constraints PASSED            [  9%]
 test_all_protection_systems.py::test_all_systems PASSED                  [ 11%]
 test_backreaction_timeout.py::test_backreaction_timeout PASSED           [ 12%]
-test_digital_twins.py::test_digital_twins PASSED                         [ 14%]
+test_digital_twins.py::test_digital_twins PASSED                         [ 13%]
 test_final_integration.py::test_imports PASSED                           [ 15%]
-test_final_integration.py::test_basic_functionality PASSED               [ 17%]
+test_final_integration.py::test_basic_functionality PASSED               [ 16%]
 test_final_integration.py::test_mission_planning PASSED                  [ 18%]
-test_final_integration.py::test_mission_execution PASSED                 [ 20%]
-test_final_integration.py::test_mission_reporting PASSED                 [ 21%]
+test_final_integration.py::test_mission_execution PASSED                 [ 19%]
+test_final_integration.py::test_mission_reporting PASSED                 [ 20%]
 test_imports.py::test_imports PASSED                                     [ 22%]
-test_integration.py::test_progress_imports PASSED                        [ 24%]
+test_integration.py::test_progress_imports PASSED                        [ 23%]
 test_integration.py::test_jax_fallback PASSED                            [ 25%]
-test_integration.py::test_virtual_control_loop PASSED                    [ 27%]
-test_integration.py::test_analog_simulation PASSED                       [ 28%]
-test_integration.py::test_jax_optimization PASSED                        [ 30%]
-test_integration.py::test_progress_tracker_direct PASSED                 [ 31%]
-test_integration.py::test_impulse_engine_simulation PASSED               [ 32%]
-test_integration.py::test_vector_impulse_simulation PASSED               [ 34%]
-test_integration.py::test_rotation_simulation PASSED                     [ 35%]
-test_integration.py::test_integrated_control_system PASSED               [ 37%]
-test_integration.py::test_simulation_integration PASSED                  [ 38%]
-test_jax_acceleration.py::test_einstein_tensor_computation PASSED        [ 40%]
-test_jax_acceleration.py::test_trajectory_simulation PASSED              [ 41%]
-test_jax_acceleration.py::test_stress_energy_computation PASSED          [ 42%]
-test_jax_gpu.py::test_jax_gpu PASSED                                     [ 44%]
-test_mvp_integration.py::test_mvp_components PASSED                      [ 45%]
-test_repository.py::TestBasicImports::test_core_module_import PASSED     [ 47%]
-test_repository.py::TestBasicImports::test_field_algebra_import PASSED   [ 48%]
-test_repository.py::TestBasicImports::test_metrics_import PASSED         [ 50%]
-test_repository.py::TestBasicImports::test_optimization_imports PASSED   [ 51%]
-test_repository.py::TestNumericalCalculations::test_van_den_broeck_calculation PASSED [ 52%]
-test_repository.py::TestNumericalCalculations::test_basic_numpy_operations PASSED [ 54%]
-test_repository.py::TestOptimizationTools::test_simple_optimization PASSED [ 55%]
-test_repository.py::TestOptimizationTools::test_ansatz_optimizer_creation PASSED [ 57%]
-test_repository.py::TestIntegrationUtilities::test_basic_integration PASSED [ 58%]
-test_repository.py::TestIntegrationUtilities::test_energy_integration PASSED [ 60%]
-test_repository.py::TestAnsatzDevelopment::test_ansatz_builder PASSED    [ 61%]
-test_repository.py::TestAnsatzDevelopment::test_novel_ansatz_creation PASSED [ 62%]
-test_repository.py::TestDemoScripts::test_demo_metric_optimization_syntax PASSED [ 64%]
-test_repository.py::TestDemoScripts::test_advanced_demo_syntax PASSED    [ 65%]
-test_repository.py::TestRepositoryStructure::test_src_directory_structure PASSED [ 67%]
-test_repository.py::TestRepositoryStructure::test_docs_directory PASSED  [ 68%]
-test_repository.py::TestRepositoryStructure::test_essential_files PASSED [ 70%]
-test_repository.py::TestRepositoryStructure::test_demo_scripts_exist PASSED [ 71%]
-test_repository.py::test_integration_workflow PASSED                     [ 72%]
-test_setup.py::test_basic_imports PASSED                                 [ 74%]
-test_setup.py::test_basic_functionality PASSED                           [ 75%]
-test_simple_integration.py::test_simple PASSED                           [ 77%]
-tests/test_field_and_control.py::test_zero_expansion_metric PASSED       [ 78%]
-tests/test_field_and_control.py::test_ring_sync_tolerance PASSED         [ 80%]
-tests/test_field_and_control.py::test_coil_driver_linearity PASSED       [ 81%]
-tests/test_field_and_control.py::test_plasma_density_shell_profile PASSED [ 82%]
-tests/test_field_and_control.py::test_field_synthesis_envelope_bounds PASSED [ 84%]
-tests/test_field_and_control.py::test_envelope_fit_error_monotonicity_uniform PASSED [ 85%]
-tests/test_field_and_control.py::test_tune_ring_amplitudes_uniform_returns_best_controls PASSED [ 87%]
-tests/test_field_and_control.py::test_envelope_to_shift_coupling_divergence_small PASSED [ 88%]
-tests/test_field_and_control.py::test_optimize_energy_stub_outputs PASSED [ 90%]
-tests/test_field_and_control.py::test_battery_feasibility_flag PASSED    [ 91%]
-tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution PASSED [ 92%]
-tests/test_field_and_control.py::test_discharge_efficiency_affects_feasibility PASSED [ 94%]
-tests/test_power_profile.py::test_energy_increases_with_ramp_duration PASSED [ 95%]
-tests/test_power_profile.py::test_numerical_values_match_analysis PASSED [ 97%]
-tests/test_power_profile.py::test_invalid_inputs PASSED                  [ 98%]
-tests/test_power_profile.py::test_triangle_shape_equivalence PASSED      [100%]
+test_integration.py::test_virtual_control_loop PASSED                    [ 26%]
+test_integration.py::test_analog_simulation PASSED                       [ 27%]
+test_integration.py::test_jax_optimization PASSED                        [ 29%]
+test_integration.py::test_progress_tracker_direct PASSED                 [ 30%]
+test_integration.py::test_impulse_engine_simulation PASSED               [ 31%]
+test_integration.py::test_vector_impulse_simulation PASSED               [ 33%]
+test_integration.py::test_rotation_simulation PASSED                     [ 34%]
+test_integration.py::test_integrated_control_system PASSED               [ 36%]
+test_integration.py::test_simulation_integration PASSED                  [ 37%]
+test_jax_acceleration.py::test_einstein_tensor_computation PASSED        [ 38%]
+test_jax_acceleration.py::test_trajectory_simulation PASSED              [ 40%]
+test_jax_acceleration.py::test_stress_energy_computation PASSED          [ 41%]
+test_jax_gpu.py::test_jax_gpu PASSED                                     [ 43%]
+test_mvp_integration.py::test_mvp_components PASSED                      [ 44%]
+test_repository.py::TestBasicImports::test_core_module_import PASSED     [ 45%]
+test_repository.py::TestBasicImports::test_field_algebra_import PASSED   [ 47%]
+test_repository.py::TestBasicImports::test_metrics_import PASSED         [ 48%]
+test_repository.py::TestBasicImports::test_optimization_imports PASSED   [ 50%]
+test_repository.py::TestNumericalCalculations::test_van_den_broeck_calculation PASSED [ 51%]
+test_repository.py::TestNumericalCalculations::test_basic_numpy_operations PASSED [ 52%]
+test_repository.py::TestOptimizationTools::test_simple_optimization PASSED [ 54%]
+test_repository.py::TestOptimizationTools::test_ansatz_optimizer_creation PASSED [ 55%]
+test_repository.py::TestIntegrationUtilities::test_basic_integration PASSED [ 56%]
+test_repository.py::TestIntegrationUtilities::test_energy_integration PASSED [ 58%]
+test_repository.py::TestAnsatzDevelopment::test_ansatz_builder PASSED    [ 59%]
+test_repository.py::TestAnsatzDevelopment::test_novel_ansatz_creation PASSED [ 61%]
+test_repository.py::TestDemoScripts::test_demo_metric_optimization_syntax PASSED [ 62%]
+test_repository.py::TestDemoScripts::test_advanced_demo_syntax PASSED    [ 63%]
+test_repository.py::TestRepositoryStructure::test_src_directory_structure PASSED [ 65%]
+test_repository.py::TestRepositoryStructure::test_docs_directory PASSED  [ 66%]
+test_repository.py::TestRepositoryStructure::test_essential_files PASSED [ 68%]
+test_repository.py::TestRepositoryStructure::test_demo_scripts_exist PASSED [ 69%]
+test_repository.py::test_integration_workflow PASSED                     [ 70%]
+test_setup.py::test_basic_imports PASSED                                 [ 72%]
+test_setup.py::test_basic_functionality PASSED                           [ 73%]
+test_simple_integration.py::test_simple PASSED                           [ 75%]
+tests/test_field_and_control.py::test_zero_expansion_metric PASSED       [ 76%]
+tests/test_field_and_control.py::test_ring_sync_tolerance PASSED         [ 77%]
+tests/test_field_and_control.py::test_coil_driver_linearity PASSED       [ 79%]
+tests/test_field_and_control.py::test_plasma_density_shell_profile PASSED [ 80%]
+tests/test_field_and_control.py::test_field_synthesis_envelope_bounds PASSED [ 81%]
+tests/test_field_and_control.py::test_envelope_fit_error_monotonicity_uniform PASSED [ 83%]
+tests/test_field_and_control.py::test_tune_ring_amplitudes_uniform_returns_best_controls PASSED [ 84%]
+tests/test_field_and_control.py::test_envelope_to_shift_coupling_divergence_small PASSED [ 86%]
+tests/test_field_and_control.py::test_optimize_energy_stub_outputs PASSED [ 87%]
+tests/test_field_and_control.py::test_battery_feasibility_flag PASSED    [ 88%]
+tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution PASSED [ 90%]
+tests/test_field_and_control.py::test_discharge_efficiency_affects_feasibility PASSED [ 91%]
+tests/test_power_profile.py::test_energy_increases_with_ramp_duration PASSED [ 93%]
+tests/test_power_profile.py::test_numerical_values_match_analysis PASSED [ 94%]
+tests/test_power_profile.py::test_invalid_inputs PASSED                  [ 95%]
+tests/test_power_profile.py::test_triangle_shape_equivalence PASSED      [ 97%]
+tests/test_vnv_vector_impulse.py::test_vector_impulse_energy_scales_quadratic PASSED [ 98%]
+tests/test_vnv_vector_impulse.py::test_trajectory_accuracy_improves_with_steps PASSED [100%]
 
-============================== 70 passed in 8.82s ==============================
+============================= 72 passed in 10.93s ==============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

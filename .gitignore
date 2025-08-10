@@ -75,7 +75,5 @@ temp/
 
 .github/instructions/copilot-instructions.md
 
-.github/
-
 # ignore symlinks
 tools/progress_log_processor.py

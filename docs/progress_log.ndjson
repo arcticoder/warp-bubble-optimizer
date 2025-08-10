@@ -31,3 +31,6 @@
 {"date":"2025-08-10","event":"Add V&V test for vector impulse energy scaling vs v_max","status":"planned","refs":["simulate_vector_impulse.py","docs/VnV-TODO.ndjson"]}
 {"date":"2025-08-10","event":"Add trajectory accuracy vs n_steps regression (coarse→fine)","status":"planned","refs":["integrated_impulse_control.py","docs/VnV-TODO.ndjson"]}
 {"date":"2025-08-10","event":"Add JAX vs NumPy benchmark summary to docs using jax_acceleration test","status":"planned","refs":["test_jax_acceleration.py","docs/technical-documentation.md (to update)"]}
+{"date":"2025-08-10","event":"CI workflow added to run tests on GitHub Actions","status":"completed","refs":[".github/workflows/ci.yml","requirements-test.txt"]}
+{"date":"2025-08-10","event":"README updated with pytest filters and focused run guidance","status":"completed","refs":["README.md","pytest.ini","conftest.py"]}
+{"date":"2025-08-10","event":"Added V&V tests: vector energy ~ v_max^2 and trajectory accuracy improves with n_steps","status":"completed","refs":["tests/test_vnv_vector_impulse.py","simulate_vector_impulse.py"]}
