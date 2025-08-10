@@ -1,16 +1,20 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
-2025-08-08 22:24:32 ./docs/progress_log.md
+2025-08-09 17:25:11 ./ultimate_bspline_optimizer.py
+2025-08-09 17:25:11 ./src/optimization/ultimate_bspline_optimizer.py
+2025-08-09 17:25:11 ./docs/roadmap.ndjson
+2025-08-09 17:25:11 ./docs/progress_log.ndjson
+2025-08-09 17:25:11 ./docs/VnV-TODO.ndjson
+2025-08-09 17:25:11 ./docs/UQ-TODO.ndjson
+2025-08-08 22:33:12 ./docs/progress_log.md
 2025-08-08 22:24:10 ./src/warp_engine/dynamic_sim.py
 2025-08-08 22:24:10 ./src/warp_engine/backreaction.py
 2025-08-08 22:24:10 ./src/warp_engine/__init__.py
-2025-08-08 22:24:10 ./docs/progress_log.ndjson
 2025-08-08 22:06:27 ./tests/test_power_profile.py
 2025-08-08 22:06:27 ./tests/test_field_and_control.py
 2025-08-08 22:06:27 ./src/supraluminal_prototype/warp_generator.py
 2025-08-08 22:06:27 ./gaussian_optimize.py
-2025-08-08 22:06:27 ./docs/roadmap.ndjson
 2025-08-08 21:53:44 ./test_3d_stability.py
 2025-08-08 21:53:44 ./VnV-TODO.ndjson
 2025-08-08 21:53:44 ./UQ-TODO.ndjson
@@ -18,8 +22,6 @@
 2025-08-08 21:15:04 ./src/supraluminal_prototype/control.py
 2025-08-08 20:48:56 ./src/supraluminal_prototype/power.py
 2025-08-08 20:48:56 ./src/supraluminal_prototype/__init__.py
-2025-08-08 17:28:47 ./docs/UQ-TODO.ndjson
-2025-08-08 17:28:23 ./docs/VnV-TODO.ndjson
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline_automated_clean.py
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline_automated.py
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline.py
@@ -39,14 +41,12 @@
 2025-07-31 19:25:46 ./test_lqg_bounds_focused.py
 2025-07-31 19:25:46 ./test_jax_gpu.py
 2025-07-31 19:25:46 ./test_jax_cpu.py
-2025-07-31 19:25:46 ./test_jax_acceleration.py
-2025-07-31 19:25:46 ./test_integration.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
 # REPO-LIST-BEGIN
 total 252     
-drwxrwxrwx 30 12288 Aug 8 22:04 warp-bubble-optimizer
+drwxrwxrwx 30 12288 Aug 8 22:36 warp-bubble-optimizer
 drwxrwxrwx 15 12288 Aug 8 07:57 negative-energy-generator
 drwxrwxrwx 19 4096 Aug 8 07:02 energy
 drwxrwxrwx 8 4096 Aug 1 20:49 casimir-nanopositioning-platform
@@ -105,147 +105,134 @@ drwxrwxrwx 7 4096 Jul 31 19:25 artificial-gravity-field-generator
 ```test-history
 (.venv) ~/Code/asciimath/warp-bubble-optimizer$ $ python3 -m pytest --maxfail=1
 # PYTEST-RESULTS-BEGIN
-🧪 Testing Ultimate B-Spline Optimizer Import
-==================================================
-1. Testing basic imports...
-   ✅ NumPy imported successfully
-   ✅ Matplotlib imported successfully
-   ✅ JAX imported successfully
-   ❌ CMA-ES not available
-
-2. Testing ultimate_bspline_optimizer import...
-
-❌ ERROR: No module named 'ultimate_bspline_optimizer'
 ============================= test session starts ==============================
 platform linux -- Python 3.13.2, pytest-8.4.1, pluggy-1.6.0
 rootdir: /home/echo_/Code/asciimath/warp-bubble-optimizer
 configfile: pytest.ini
-collected 61 items
-INTERNALERROR> Traceback (most recent call last):
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/test_ultimate_bspline.py", line 33, in <module>
-INTERNALERROR>     from ultimate_bspline_optimizer import UltimateBSplineOptimizer
-INTERNALERROR> ModuleNotFoundError: No module named 'ultimate_bspline_optimizer'
-INTERNALERROR> 
-INTERNALERROR> During handling of the above exception, another exception occurred:
-INTERNALERROR> 
-INTERNALERROR> Traceback (most recent call last):
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 289, in wrap_session
-INTERNALERROR>     session.exitstatus = doit(config, session) or 0
-INTERNALERROR>                          ~~~~^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 342, in _main
-INTERNALERROR>     config.hook.pytest_collection(session=session)
-INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512, in __call__
-INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
-INTERNALERROR>            ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120, in _hookexec
-INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
-INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 167, in _multicall
-INTERNALERROR>     raise exception
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 139, in _multicall
-INTERNALERROR>     teardown.throw(exception)
-INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/logging.py", line 788, in pytest_collection
-INTERNALERROR>     return (yield)
-INTERNALERROR>             ^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 139, in _multicall
-INTERNALERROR>     teardown.throw(exception)
-INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/warnings.py", line 99, in pytest_collection
-INTERNALERROR>     return (yield)
-INTERNALERROR>             ^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 139, in _multicall
-INTERNALERROR>     teardown.throw(exception)
-INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/config/__init__.py", line 1450, in pytest_collection
-INTERNALERROR>     return (yield)
-INTERNALERROR>             ^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121, in _multicall
-INTERNALERROR>     res = hook_impl.function(*args)
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 353, in pytest_collection
-INTERNALERROR>     session.perform_collect()
-INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 813, in perform_collect
-INTERNALERROR>     self.items.extend(self.genitems(node))
-INTERNALERROR>     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 979, in genitems
-INTERNALERROR>     yield from self.genitems(subnode)
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 974, in genitems
-INTERNALERROR>     rep, duplicate = self._collect_one_node(node, handle_dupes)
-INTERNALERROR>                      ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/main.py", line 839, in _collect_one_node
-INTERNALERROR>     rep = collect_one_node(node)
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 567, in collect_one_node
-INTERNALERROR>     rep: CollectReport = ihook.pytest_make_collect_report(collector=collector)
-INTERNALERROR>                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_hooks.py", line 512, in __call__
-INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
-INTERNALERROR>            ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_manager.py", line 120, in _hookexec
-INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
-INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 167, in _multicall
-INTERNALERROR>     raise exception
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 139, in _multicall
-INTERNALERROR>     teardown.throw(exception)
-INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/capture.py", line 880, in pytest_make_collect_report
-INTERNALERROR>     rep = yield
-INTERNALERROR>           ^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/pluggy/_callers.py", line 121, in _multicall
-INTERNALERROR>     res = hook_impl.function(*args)
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 391, in pytest_make_collect_report
-INTERNALERROR>     call = CallInfo.from_call(
-INTERNALERROR>         collect, "collect", reraise=(KeyboardInterrupt, SystemExit)
-INTERNALERROR>     )
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 344, in from_call
-INTERNALERROR>     result: TResult | None = func()
-INTERNALERROR>                              ~~~~^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/runner.py", line 389, in collect
-INTERNALERROR>     return list(collector.collect())
-INTERNALERROR>                 ~~~~~~~~~~~~~~~~~^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 554, in collect
-INTERNALERROR>     self._register_setup_module_fixture()
-INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 567, in _register_setup_module_fixture
-INTERNALERROR>     self.obj, ("setUpModule", "setup_module")
-INTERNALERROR>     ^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 280, in obj
-INTERNALERROR>     self._obj = obj = self._getobj()
-INTERNALERROR>                       ~~~~~~~~~~~~^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 551, in _getobj
-INTERNALERROR>     return importtestmodule(self.path, self.config)
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py", line 498, in importtestmodule
-INTERNALERROR>     mod = import_path(
-INTERNALERROR>         path,
-INTERNALERROR>     ...<2 lines>...
-INTERNALERROR>         consider_namespace_packages=config.getini("consider_namespace_packages"),
-INTERNALERROR>     )
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/pathlib.py", line 587, in import_path
-INTERNALERROR>     importlib.import_module(module_name)
-INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/miniconda3/lib/python3.13/importlib/__init__.py", line 88, in import_module
-INTERNALERROR>     return _bootstrap._gcd_import(name[level:], package, level)
-INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-INTERNALERROR>   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-INTERNALERROR>   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/assertion/rewrite.py", line 186, in exec_module
-INTERNALERROR>     exec(co, module.__dict__)
-INTERNALERROR>     ~~~~^^^^^^^^^^^^^^^^^^^^^
-INTERNALERROR>   File "/home/echo_/Code/asciimath/warp-bubble-optimizer/test_ultimate_bspline.py", line 66, in <module>
-INTERNALERROR>     sys.exit(1)
-INTERNALERROR>     ~~~~~~~~^^^
-INTERNALERROR> SystemExit: 1
+collected 77 items
 
-============================ no tests ran in 2.33s =============================
-Traceback (most recent call last):
-  File "/home/echo_/Code/asciimath/warp-bubble-optimizer/test_ultimate_bspline.py", line 33, in <module>
-    from ultimate_bspline_optimizer import UltimateBSplineOptimizer
-ModuleNotFoundError: No module named 'ultimate_bspline_optimizer'
-mainloop: caught unexpected SystemExit!
+test_3d_stability.py .                                                   [  1%]
+test_accelerated_gaussian.py ......                                      [  9%]
+test_all_protection_systems.py .                                         [ 10%]
+test_backreaction_timeout.py .                                           [ 11%]
+test_digital_twins.py .                                                  [ 12%]
+test_final_integration.py ...E
+
+==================================== ERRORS ====================================
+___________________ ERROR at setup of test_mission_execution ___________________
+file /home/echo_/Code/asciimath/warp-bubble-optimizer/test_final_integration.py, line 111
+  async def test_mission_execution(trajectory_plan):
+      """Test mission execution."""
+      print("\n🔍 Testing mission execution...")
+
+      try:
+          from integrated_impulse_control import IntegratedImpulseController, ImpulseEngineConfig
+
+          config = ImpulseEngineConfig(energy_budget=1e12)
+          controller = IntegratedImpulseController(config)
+
+          # Execute mission (open-loop mode for testing)
+          mission_results = await controller.execute_impulse_mission(
+              trajectory_plan, enable_feedback=False
+          )
+
+          metrics = mission_results['performance_metrics']
+          print(f"   Mission success: {mission_results['mission_success']}")
+          print(f"   Success rate: {metrics['overall_success_rate']*100:.1f}%")
+          print(f"   Energy used: {metrics['total_energy_used']/1e9:.2f} GJ")
+          print(f"   Mission time: {metrics['mission_duration_hours']:.2f} hours")
+
+          print("✅ Mission execution test passed")
+          return True, mission_results
+
+      except Exception as e:
+          print(f"❌ Mission execution failed: {e}")
+          traceback.print_exc()
+          return False, None
+E       fixture 'trajectory_plan' not found
+>       available fixtures: cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, doctest_namespace, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/home/echo_/Code/asciimath/warp-bubble-optimizer/test_final_integration.py:111
+=============================== warnings summary ===============================
+test_accelerated_gaussian.py: 656 warnings
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:62: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    E = np.trapz(integrand, r_grid)
+
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+test_accelerated_gaussian.py::test_vectorized_integration
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:77: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    E_chunk = float(np.trapz(f**2 * (4.0*np.pi*rg**2), rg))
+
+test_accelerated_gaussian.py::test_vectorized_integration
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_vectorized_integration returned <class 'dict'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_accelerated_gaussian.py::test_parallel_vs_sequential
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_parallel_vs_sequential returned <class 'tuple'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_accelerated_gaussian.py::test_ansatz_comparison
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_ansatz_comparison returned <class 'dict'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_accelerated_gaussian.py::test_hybrid_ansatz
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/gaussian_optimize.py:159: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    E = float(np.trapz(f**2 * vol_weights, r_grid))
+
+test_accelerated_gaussian.py::test_hybrid_ansatz
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_hybrid_ansatz returned <class 'float'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_accelerated_gaussian.py::test_cma_es_availability
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_accelerated_gaussian.py::test_cma_es_availability returned <class 'tuple'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_digital_twins.py::test_digital_twins
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_digital_twins.py::test_digital_twins returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_final_integration.py::test_imports
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_imports returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_final_integration.py::test_basic_functionality
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_basic_functionality returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+test_final_integration.py::test_mission_planning
+  /home/echo_/Code/asciimath/warp-bubble-optimizer/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but test_final_integration.py::test_mission_planning returned <class 'tuple'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR test_final_integration.py::test_mission_execution
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+================== 13 passed, 674 warnings, 1 error in 7.03s ===================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

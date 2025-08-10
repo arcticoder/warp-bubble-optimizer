@@ -17,3 +17,4 @@
 {"section":"4. Test and Environment Hygiene","tasks":["Pin test dependencies in venv (numpy, scipy, matplotlib)","Audit legacy tests for proper pytest discovery and names","Document how to run focused test subsets in README"]}
 {"section":"4. Test and Environment Hygiene - status","tasks":["Provide gaussian_optimize shim to satisfy test_accelerated_gaussian import (in_progress)","Pin test deps via requirements.txt (planned)","Add README snippet for running focused tests (planned)"]}
 {"section":"4. Test and Environment Hygiene - updates","tasks":["gaussian_optimize shim added; accelerated Gaussian tests passing (done)","requirements-test.txt added (done)"]}
+{"section":"4. Test and Environment Hygiene - status (update)","tasks":["gaussian_optimize shim (done)","CMA-ES available in venv (done)","Top-level import shim for UltimateBSplineOptimizer (done)"]}

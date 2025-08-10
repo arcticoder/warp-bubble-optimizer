@@ -20,6 +20,7 @@ Version: 1.0
 """
 
 import numpy as np
+from functools import partial
 import matplotlib.pyplot as plt
 import json
 import time
@@ -121,7 +122,7 @@ class UltimateBSplineOptimizer:
             print(f"   Stability penalty: {stability_penalty_weight:.1e}")
             print(f"   Surrogate assisted: {self.surrogate_assisted}")
     
-    @jit
+    @partial(jit, static_argnums=(0,))
     def bspline_interpolate(self, t, control_points):
         """
         JAX-compatible linear B-spline interpolation
@@ -140,7 +141,7 @@ class UltimateBSplineOptimizer:
         t = jnp.clip(t, 0.0, 1.0)
         return jnp.interp(t, self.knots, control_points)
     
-    @jit 
+    @partial(jit, static_argnums=(0,)) 
     def shape_function(self, r, params):
         """
         JAX-compatible shape function using B-spline interpolation
@@ -173,7 +174,7 @@ class UltimateBSplineOptimizer:
         
         return f_vals
     
-    @jit
+    @partial(jit, static_argnums=(0,))
     def energy_functional_E_minus(self, params):
         """
         JAX-compatible negative energy functional E_-
@@ -297,7 +298,7 @@ class UltimateBSplineOptimizer:
                 if self.verbose:                    print(f"⚠️  Stability analysis failed: {e}")
                 return self.stability_penalty_weight * 5.0  # Medium penalty for errors
     
-    @jit
+    @partial(jit, static_argnums=(0,))
     def objective_function_core(self, params):
         """
         Core objective function (JAX-compiled): E_- + constraints (no stability penalty)
@@ -313,35 +314,33 @@ class UltimateBSplineOptimizer:
         """
         # Primary objective: negative energy
         E_minus = self.energy_functional_E_minus(params)
-        
+
         # Constraint penalties
         mu, G_geo = params[0], params[1]
         control_points = params[2:]
-        
-        constraint_penalty = 0.0
-        
+
+        # Use JAX array for accumulator to avoid Python floats inside jit
+        constraint_penalty = jnp.array(0.0)
+
         # Boundary condition penalties
         r_boundary = jnp.array([1e-6, self.R_bubble])
         f_boundary = self.shape_function(r_boundary, params)
-        
+
         # f(0) ≈ 1 penalty
-        constraint_penalty += 1000.0 * (f_boundary[0] - 1.0)**2
-        
-        # f(R) ≈ 0 penalty  
-        constraint_penalty += 1000.0 * f_boundary[1]**2
-        
-        # Parameter bound penalties
-        if mu < 0.1 or mu > 10.0:
-            constraint_penalty += 10000.0 * (mu - jnp.clip(mu, 0.1, 10.0))**2
-            
-        if G_geo < 1e-12 or G_geo > 1e-10:
-            constraint_penalty += 10000.0 * (G_geo - jnp.clip(G_geo, 1e-12, 1e-10))**2
-        
-        # Control point smoothness penalty
-        if len(control_points) > 1:
-            smoothness_penalty = jnp.sum((control_points[1:] - control_points[:-1])**2)
-            constraint_penalty += 10.0 * smoothness_penalty
-        
+        constraint_penalty = constraint_penalty + 1000.0 * (f_boundary[0] - 1.0) ** 2
+
+        # f(R) ≈ 0 penalty
+        constraint_penalty = constraint_penalty + 1000.0 * f_boundary[1] ** 2
+
+        # Parameter bound penalties (branch-free for JAX)
+        # Penalize squared distance from clipped range, zero when in-bounds
+        constraint_penalty = constraint_penalty + 10000.0 * (mu - jnp.clip(mu, 0.1, 10.0)) ** 2
+        constraint_penalty = constraint_penalty + 10000.0 * (G_geo - jnp.clip(G_geo, 1e-12, 1e-10)) ** 2
+
+        # Control point smoothness penalty (safe even if length < 2)
+        smoothness_penalty = jnp.sum((control_points[1:] - control_points[:-1]) ** 2)
+        constraint_penalty = constraint_penalty + 10.0 * smoothness_penalty
+
         return E_minus + constraint_penalty
     
     def objective_function(self, params):
