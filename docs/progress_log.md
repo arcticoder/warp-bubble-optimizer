@@ -1,20 +1,20 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
+2025-08-09 18:17:13 ./docs/roadmap.ndjson
+2025-08-09 18:17:13 ./docs/progress_log.ndjson
+2025-08-09 18:17:13 ./docs/VnV-TODO.ndjson
+2025-08-09 18:00:04 ./docs/progress_log.md
 2025-08-09 17:59:30 ./test_jax_acceleration.py
 2025-08-09 17:59:30 ./simulate_vector_impulse.py
 2025-08-09 17:59:30 ./pytest.ini
 2025-08-09 17:59:30 ./gaussian_optimize.py
-2025-08-09 17:59:30 ./docs/progress_log.ndjson
-2025-08-09 17:59:30 ./docs/VnV-TODO.ndjson
 2025-08-09 17:59:30 ./docs/VnV-TODO-RESOLVED.ndjson
 2025-08-09 17:59:30 ./docs/UQ-TODO.ndjson
 2025-08-09 17:59:30 ./docs/UQ-TODO-RESOLVED.ndjson
 2025-08-09 17:59:30 ./conftest.py
-2025-08-09 17:25:31 ./docs/progress_log.md
 2025-08-09 17:25:11 ./ultimate_bspline_optimizer.py
 2025-08-09 17:25:11 ./src/optimization/ultimate_bspline_optimizer.py
-2025-08-09 17:25:11 ./docs/roadmap.ndjson
 2025-08-08 22:24:10 ./src/warp_engine/dynamic_sim.py
 2025-08-08 22:24:10 ./src/warp_engine/backreaction.py
 2025-08-08 22:24:10 ./src/warp_engine/__init__.py
@@ -186,7 +186,7 @@ tests/test_power_profile.py::test_numerical_values_match_analysis PASSED [ 97%]
 tests/test_power_profile.py::test_invalid_inputs PASSED                  [ 98%]
 tests/test_power_profile.py::test_triangle_shape_equivalence PASSED      [100%]
 
-============================== 70 passed in 8.09s ==============================
+============================== 70 passed in 8.82s ==============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

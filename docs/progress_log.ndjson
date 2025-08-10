@@ -11,11 +11,11 @@
 {"date":"2025-08-08","event":"Fixed test import dependencies for legacy tests by installing matplotlib and scipy in project venv; triaged test_3d_stability.py (no tests discovered)","status":"completed","refs":["docs/progress_log.md:test-history","test_3d_stability.py"]}
 {"date":"2025-08-08","event":"Added envelope fit utilities (target_soliton_envelope, compute_envelope_error, tune_ring_amplitudes_uniform) with tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py","docs/roadmap.ndjson:2. Field Synthesis - status"]}
 {"date":"2025-08-08","event":"Coupled envelope to shift via curl(e*A) and added optimize_energy stub; tests passing (9/9)","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py","docs/roadmap.ndjson:2. Field Synthesis - next"]}
-{"date":"2025-08-08","event":"Planned: Fix accelerated Gaussian test import by providing shim module gaussian_optimize.py","status":"completed","refs":["gaussian_optimize.py","test_accelerated_gaussian.py"]}
-{"date":"2025-08-08","event":"Planned: Integrate discharge efficiency vs C-rate into optimize_energy and add tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py"]}
-{"date":"2025-08-08","event":"Planned: Add power model test for shape='triangle' equivalence","status":"planned","refs":["src/supraluminal_prototype/power.py","tests/test_power_profile.py"]}
-{"date":"2025-08-08","event":"Planned: Add requirements.txt to pin test dependencies (numpy, scipy, matplotlib, pytest)","status":"planned","refs":["docs/roadmap.ndjson:4. Test and Environment Hygiene"]}
-{"date":"2025-08-08","event":"Planned: Add UQ test for zero-expansion tolerance vs grid resolution (8/16/32)","status":"planned","refs":["docs/UQ-TODO.ndjson:Zero-Expansion Numerical Tolerance","src/supraluminal_prototype/warp_generator.py"]}
+{"date":"2025-08-08","event":" Fix accelerated Gaussian test import by providing shim module gaussian_optimize.py","status":"completed","refs":["gaussian_optimize.py","test_accelerated_gaussian.py"]}
+{"date":"2025-08-08","event":" Integrate discharge efficiency vs C-rate into optimize_energy and add tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py"]}
+{"date":"2025-08-08","event":"Add power model test for shape='triangle' equivalence","status":"completed","refs":["tests/test_power_profile.py"]}
+{"date":"2025-08-08","event":"Add requirements.txt to pin test dependencies (numpy, scipy, matplotlib, pytest)","status":"completed","refs":["requirements-test.txt","docs/roadmap.ndjson:4. Test and Environment Hygiene - updates"]}
+{"date":"2025-08-08","event":"Add UQ test for zero-expansion tolerance vs grid resolution (8/16/32)","status":"completed","refs":["tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution"]}
 {"date":"2025-08-08","event":"Implemented gaussian_optimize shim; accelerated Gaussian tests run and pass","status":"completed","refs":["gaussian_optimize.py","test_accelerated_gaussian.py"]}
 {"date":"2025-08-08","event":"Added triangle shape equivalence test for power model","status":"completed","refs":["tests/test_power_profile.py"]}
 {"date":"2025-08-08","event":"Integrated discharge efficiency vs C-rate proxy into optimize_energy; added feasibility tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py"]}
@@ -26,3 +26,8 @@
 {"date":"2025-08-10","event":"Migrated resolved UQ tasks to UQ-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/UQ-TODO-RESOLVED.ndjson"]}
 {"date":"2025-08-10","event":"Migrated resolved V&V tasks to VnV-TODO-RESOLVED.ndjson","status":"completed","refs":["docs/VnV-TODO-RESOLVED.ndjson"]}
 {"date":"2025-08-10","event":"Added at least 5 new progress items and stabilized pytest config for async and site-packages filtering","status":"completed","refs":["pytest.ini","conftest.py"]}
+{"date":"2025-08-10","event":"Add CI job to run tests with venv pinning and site-packages exclusion","status":"planned","refs":[".github/workflows/ (to add)"]}
+{"date":"2025-08-10","event":"Document pytest collection filters and focused runs in README","status":"planned","refs":["README.md (to update)","pytest.ini","conftest.py"]}
+{"date":"2025-08-10","event":"Add V&V test for vector impulse energy scaling vs v_max","status":"planned","refs":["simulate_vector_impulse.py","docs/VnV-TODO.ndjson"]}
+{"date":"2025-08-10","event":"Add trajectory accuracy vs n_steps regression (coarse→fine)","status":"planned","refs":["integrated_impulse_control.py","docs/VnV-TODO.ndjson"]}
+{"date":"2025-08-10","event":"Add JAX vs NumPy benchmark summary to docs using jax_acceleration test","status":"planned","refs":["test_jax_acceleration.py","docs/technical-documentation.md (to update)"]}
