@@ -30,7 +30,7 @@
 {"event":"Document pytest collection filters and focused runs in README","status":"completed","refs":["README.md","pytest.ini","conftest.py"]}
 {"event":"Add V&V test for vector impulse energy scaling vs v_max","status":"completed","refs":["tests/test_vnv_vector_impulse.py","simulate_vector_impulse.py"]}
 {"event":"Add trajectory accuracy vs n_steps regression (coarse→fine)","status":"completed","refs":["tests/test_vnv_vector_impulse.py","integrated_impulse_control.py"]}
-{"event":"Add JAX vs NumPy benchmark summary to docs using jax_acceleration test","status":"planned","refs":["test_jax_acceleration.py","docs/technical-documentation.md (to update)"]}
+{"event":"Add JAX vs NumPy benchmark summary to docs using jax_acceleration test","status":"completed","refs":["test_jax_acceleration.py","docs/technical-documentation.md"]}
 {"event":"Draft mission requirements spec (geometry, sensors, safety)","status":"planned","refs":["docs/roadmap.ndjson:Mission Definition and Constraints"]}
 {"event":"Populate risk register for soliton and EM-plasma control","status":"planned","refs":["docs/roadmap.ndjson:Mission Definition and Constraints"]}
 {"event":"Power budget numeric reconciliation","status":"planned","refs":["docs/roadmap.ndjson:Mission Definition and Constraints","docs/roadmap.ndjson:Power Budget and Temporal Smearing Decision"]}

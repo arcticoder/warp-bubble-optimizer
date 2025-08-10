@@ -1,3 +1,18 @@
+## JAX vs NumPy benchmark summary
+
+This project includes a small benchmark script (`test_jax_acceleration.py`) comparing NumPy and JAX implementations on representative kernels:
+
+- Einstein-like tensor algebra (matrix inverse + symmetric tensor ops)
+- Trajectory integration using a JAX `lax.scan` vs a Python loop
+- Batch stress-energy tensor construction vectorized with `vmap`
+
+Observations (CPU environment):
+- JAX provides speedups after JIT warmup, especially for long loops (trajectory, batch ops).
+- Results agree within numerical precision where applicable.
+- With GPU, expected speedups would be larger; the code is structured to benefit from `jit`/`vmap` when available.
+
+How to run locally (optional): run the script and review printed timings. On first run, the JIT warmup phase increases latency, then steady-state calls are faster.
+
 # Technical Documentation: Warp Bubble Optimizer
 
 ## ⭐ Revolutionary 1041.7× Energy Optimization Complete
