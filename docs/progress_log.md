@@ -1,21 +1,21 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
+2025-08-09 21:08:00 ./docs/roadmap.ndjson
+2025-08-09 21:08:00 ./docs/progress_log.ndjson
+2025-08-09 20:00:30 ./VnV-TODO-RESOLVED.ndjson
+2025-08-09 20:00:20 ./VnV-TODO.ndjson
+2025-08-09 19:45:53 ./UQ-TODO.ndjson
+2025-08-09 19:45:47 ./UQ-TODO-RESOLVED.ndjson
+2025-08-09 19:31:55 ./docs/progress_log.md
 2025-08-09 19:31:25 ./tests/test_vnv_natario_build_metric.py
-2025-08-09 19:31:25 ./docs/progress_log.ndjson
-2025-08-09 19:31:25 ./docs/VnV-TODO.ndjson
-2025-08-09 19:31:25 ./docs/VnV-TODO-RESOLVED.ndjson
-2025-08-09 19:11:46 ./docs/progress_log.md
 2025-08-09 19:11:44 ./tests/test_vnv_vector_impulse.py
 2025-08-09 19:11:44 ./README.md
 2025-08-09 19:11:44 ./.github/workflows/ci.yml
-2025-08-09 18:17:13 ./docs/roadmap.ndjson
 2025-08-09 17:59:30 ./test_jax_acceleration.py
 2025-08-09 17:59:30 ./simulate_vector_impulse.py
 2025-08-09 17:59:30 ./pytest.ini
 2025-08-09 17:59:30 ./gaussian_optimize.py
-2025-08-09 17:59:30 ./docs/UQ-TODO.ndjson
-2025-08-09 17:59:30 ./docs/UQ-TODO-RESOLVED.ndjson
 2025-08-09 17:59:30 ./conftest.py
 2025-08-09 17:25:11 ./ultimate_bspline_optimizer.py
 2025-08-09 17:25:11 ./src/optimization/ultimate_bspline_optimizer.py
@@ -26,8 +26,6 @@
 2025-08-08 22:06:27 ./tests/test_field_and_control.py
 2025-08-08 22:06:27 ./src/supraluminal_prototype/warp_generator.py
 2025-08-08 21:53:44 ./test_3d_stability.py
-2025-08-08 21:53:44 ./VnV-TODO.ndjson
-2025-08-08 21:53:44 ./UQ-TODO.ndjson
 2025-08-08 21:15:04 ./src/supraluminal_prototype/hardware.py
 2025-08-08 21:15:04 ./src/supraluminal_prototype/control.py
 2025-08-08 20:48:56 ./src/supraluminal_prototype/power.py
@@ -41,12 +39,14 @@
 2025-07-31 19:25:46 ./ultimate_benchmark_suite.py
 2025-07-31 19:25:46 ./time_dependent_optimizer.py
 2025-07-31 19:25:46 ./test_ultimate_bspline.py
+2025-07-31 19:25:46 ./test_solver_debug.py
+2025-07-31 19:25:46 ./test_soliton_3d_stability.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
 # REPO-LIST-BEGIN
 total 252     
-drwxrwxrwx 30 12288 Aug 9 17:56 warp-bubble-optimizer
+drwxrwxrwx 30 12288 Aug 9 19:40 warp-bubble-optimizer
 drwxrwxrwx 15 12288 Aug 8 07:57 negative-energy-generator
 drwxrwxrwx 19 4096 Aug 8 07:02 energy
 drwxrwxrwx 8 4096 Aug 1 20:49 casimir-nanopositioning-platform
@@ -190,7 +190,7 @@ tests/test_vnv_natario_build_metric.py::test_envelope_coupled_shift_remains_near
 tests/test_vnv_vector_impulse.py::test_vector_impulse_energy_scales_quadratic PASSED [ 98%]
 tests/test_vnv_vector_impulse.py::test_trajectory_accuracy_improves_with_steps PASSED [100%]
 
-============================= 74 passed in 11.40s ==============================
+============================= 74 passed in 11.33s ==============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l
