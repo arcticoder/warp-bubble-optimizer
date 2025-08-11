@@ -1,3 +1,6 @@
+{"event":"Draft mission requirements spec (geometry, sensors, safety)","status":"completed","refs":["docs/requirements.md","docs/roadmap.ndjson:Mission Definition and Constraints"]}
+{"event":"Populate risk register for soliton and EM-plasma control","status":"completed","refs":["docs/risk_register.md","docs/roadmap.ndjson:Mission Definition and Constraints"]}
+{"event":"Power budget numeric reconciliation","status":"completed","refs":["docs/power_budget_reconciliation.md","docs/roadmap.ndjson:Mission Definition and Constraints","docs/roadmap.ndjson:Power Budget and Temporal Smearing Decision"]}
 {"event":"Ensured CMA-ES availability; added cma to test requirements","status":"completed","refs":["requirements-test.txt","test_ultimate_bspline.py"]}
 {"event":"Fixed 'No module named ultimate_bspline_optimizer' via top-level shim and JAX branch-free objective; ultimate optimizer script runs","status":"completed","refs":["ultimate_bspline_optimizer.py","src/optimization/ultimate_bspline_optimizer.py","test_ultimate_bspline.py"]}
 {"event":"Reviewed mission goal and constraints for Warp 1 lunar round-trip prototype","status":"completed","refs":["docs/roadmap.ndjson:Mission Definition and Constraints"]}

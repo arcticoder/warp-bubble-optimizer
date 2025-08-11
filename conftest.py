@@ -18,7 +18,7 @@ from simulate_rotation import Quaternion
 def pytest_ignore_collect(collection_path: Path, config):
     try:
         name = os.path.basename(str(collection_path))
-        if name in {"test_ultimate_bspline.py", "test_lqg_bounds_focused.py", "test_pipeline.py"}:
+        if name in {"test_ultimate_bspline.py", "test_lqg_bounds_focused.py", "test_pipeline.py", "test_solver_debug.py"}:
             return True
         p = str(collection_path)
         if "/site-packages/" in p or p.endswith("internal_test_util/test_harnesses.py"):

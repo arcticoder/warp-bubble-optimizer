@@ -1,25 +1,29 @@
 ```file-history
 ~/Code/asciimath/warp-bubble-optimizer$ find . -path "./.venv" -prune -o -type f -regex '.*\.\(ps1\|py\|sh\|ndjson\|json\|md\|yml\|toml\|h5\|ini\)$' -print | while read file; do stat -c '%Y %n' "$file"; done | sort -nr | while read timestamp file; do echo "$(date -d @$timestamp '+%Y-%m-%d %H:%M:%S') $file"; done | head -n 40
 # LATEST-FILES-LIST-BEGIN
-2025-08-09 21:53:32 ./tests/test_vnv_field_and_plasma.py
-2025-08-09 21:53:20 ./tests/test_vnv_coil_driver.py
-2025-08-09 21:52:51 ./docs/progress_log.ndjson
-2025-08-09 21:52:46 ./docs/technical-documentation.md
-2025-08-09 21:52:40 ./UQ-TODO.ndjson
-2025-08-09 21:52:33 ./VnV-TODO.ndjson
-2025-08-09 21:23:23 ./docs/roadmap.ndjson
-2025-08-09 21:08:26 ./docs/progress_log.md
+2025-08-10 12:49:58 ./docs/roadmap.ndjson
+2025-08-10 12:49:58 ./docs/risk_register.md
+2025-08-10 12:49:58 ./docs/requirements.md
+2025-08-10 12:49:58 ./docs/progress_log.ndjson
+2025-08-10 12:49:58 ./docs/progress_log-completed.ndjson
+2025-08-10 12:49:58 ./docs/power_budget_reconciliation.md
+2025-08-10 12:49:58 ./conftest.py
+2025-08-10 12:49:58 ./VnV-TODO.ndjson
+2025-08-10 12:49:58 ./UQ-TODO.ndjson
+2025-08-10 12:49:58 ./.github/workflows/ci.yml
+2025-08-09 22:07:43 ./tests/test_vnv_field_and_plasma.py
+2025-08-09 22:07:43 ./tests/test_vnv_coil_driver.py
+2025-08-09 22:07:43 ./docs/technical-documentation.md
+2025-08-09 22:06:58 ./docs/progress_log.md
 2025-08-09 20:00:30 ./VnV-TODO-RESOLVED.ndjson
 2025-08-09 19:45:47 ./UQ-TODO-RESOLVED.ndjson
 2025-08-09 19:31:25 ./tests/test_vnv_natario_build_metric.py
 2025-08-09 19:11:44 ./tests/test_vnv_vector_impulse.py
 2025-08-09 19:11:44 ./README.md
-2025-08-09 19:11:44 ./.github/workflows/ci.yml
 2025-08-09 17:59:30 ./test_jax_acceleration.py
 2025-08-09 17:59:30 ./simulate_vector_impulse.py
 2025-08-09 17:59:30 ./pytest.ini
 2025-08-09 17:59:30 ./gaussian_optimize.py
-2025-08-09 17:59:30 ./conftest.py
 2025-08-09 17:25:11 ./ultimate_bspline_optimizer.py
 2025-08-09 17:25:11 ./src/optimization/ultimate_bspline_optimizer.py
 2025-08-08 22:24:10 ./src/warp_engine/dynamic_sim.py
@@ -37,16 +41,12 @@
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline_automated.py
 2025-07-31 19:25:46 ./warp_bubble_power_pipeline.py
 2025-07-31 19:25:46 ./visualize_bubble.py
-2025-07-31 19:25:46 ./verify_lqg_enforcement_simple.py
-2025-07-31 19:25:46 ./verify_lqg_bound_enforcement.py
-2025-07-31 19:25:46 ./ultimate_benchmark_suite.py
-2025-07-31 19:25:46 ./time_dependent_optimizer.py
 # LATEST-FILES-LIST-END
 
 ~/Code/asciimath/warp-bubble-optimizer$ ls .. -lt | awk '{print $1, $2, $5, $6, $7, $8, $9}'
 # REPO-LIST-BEGIN
 total 252     
-drwxrwxrwx 30 12288 Aug 9 19:40 warp-bubble-optimizer
+drwxrwxrwx 30 12288 Aug 10 12:36 warp-bubble-optimizer
 drwxrwxrwx 15 12288 Aug 8 07:57 negative-energy-generator
 drwxrwxrwx 19 4096 Aug 8 07:02 energy
 drwxrwxrwx 8 4096 Aug 1 20:49 casimir-nanopositioning-platform
@@ -113,88 +113,23 @@ configfile: pytest.ini
 testpaths: .
 plugins: asyncio-1.1.0
 asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 78 items
+collecting ... collected 30 items / 1 error
 
-test_3d_stability.py::test_stability_analyzer_instantiates PASSED        [  1%]
-test_accelerated_gaussian.py::test_vectorized_integration PASSED         [  2%]
-test_accelerated_gaussian.py::test_parallel_vs_sequential PASSED         [  3%]
-test_accelerated_gaussian.py::test_ansatz_comparison PASSED              [  5%]
-test_accelerated_gaussian.py::test_hybrid_ansatz PASSED                  [  6%]
-test_accelerated_gaussian.py::test_cma_es_availability PASSED            [  7%]
-test_accelerated_gaussian.py::test_physics_constraints PASSED            [  8%]
-test_all_protection_systems.py::test_all_systems PASSED                  [ 10%]
-test_backreaction_timeout.py::test_backreaction_timeout PASSED           [ 11%]
-test_digital_twins.py::test_digital_twins PASSED                         [ 12%]
-test_final_integration.py::test_imports PASSED                           [ 14%]
-test_final_integration.py::test_basic_functionality PASSED               [ 15%]
-test_final_integration.py::test_mission_planning PASSED                  [ 16%]
-test_final_integration.py::test_mission_execution PASSED                 [ 17%]
-test_final_integration.py::test_mission_reporting PASSED                 [ 19%]
-test_imports.py::test_imports PASSED                                     [ 20%]
-test_integration.py::test_progress_imports PASSED                        [ 21%]
-test_integration.py::test_jax_fallback PASSED                            [ 23%]
-test_integration.py::test_virtual_control_loop PASSED                    [ 24%]
-test_integration.py::test_analog_simulation PASSED                       [ 25%]
-test_integration.py::test_jax_optimization PASSED                        [ 26%]
-test_integration.py::test_progress_tracker_direct PASSED                 [ 28%]
-test_integration.py::test_impulse_engine_simulation PASSED               [ 29%]
-test_integration.py::test_vector_impulse_simulation PASSED               [ 30%]
-test_integration.py::test_rotation_simulation PASSED                     [ 32%]
-test_integration.py::test_integrated_control_system PASSED               [ 33%]
-test_integration.py::test_simulation_integration PASSED                  [ 34%]
-test_jax_acceleration.py::test_einstein_tensor_computation PASSED        [ 35%]
-test_jax_acceleration.py::test_trajectory_simulation PASSED              [ 37%]
-test_jax_acceleration.py::test_stress_energy_computation PASSED          [ 38%]
-test_jax_gpu.py::test_jax_gpu PASSED                                     [ 39%]
-test_mvp_integration.py::test_mvp_components PASSED                      [ 41%]
-test_repository.py::TestBasicImports::test_core_module_import PASSED     [ 42%]
-test_repository.py::TestBasicImports::test_field_algebra_import PASSED   [ 43%]
-test_repository.py::TestBasicImports::test_metrics_import PASSED         [ 44%]
-test_repository.py::TestBasicImports::test_optimization_imports PASSED   [ 46%]
-test_repository.py::TestNumericalCalculations::test_van_den_broeck_calculation PASSED [ 47%]
-test_repository.py::TestNumericalCalculations::test_basic_numpy_operations PASSED [ 48%]
-test_repository.py::TestOptimizationTools::test_simple_optimization PASSED [ 50%]
-test_repository.py::TestOptimizationTools::test_ansatz_optimizer_creation PASSED [ 51%]
-test_repository.py::TestIntegrationUtilities::test_basic_integration PASSED [ 52%]
-test_repository.py::TestIntegrationUtilities::test_energy_integration PASSED [ 53%]
-test_repository.py::TestAnsatzDevelopment::test_ansatz_builder PASSED    [ 55%]
-test_repository.py::TestAnsatzDevelopment::test_novel_ansatz_creation PASSED [ 56%]
-test_repository.py::TestDemoScripts::test_demo_metric_optimization_syntax PASSED [ 57%]
-test_repository.py::TestDemoScripts::test_advanced_demo_syntax PASSED    [ 58%]
-test_repository.py::TestRepositoryStructure::test_src_directory_structure PASSED [ 60%]
-test_repository.py::TestRepositoryStructure::test_docs_directory PASSED  [ 61%]
-test_repository.py::TestRepositoryStructure::test_essential_files PASSED [ 62%]
-test_repository.py::TestRepositoryStructure::test_demo_scripts_exist PASSED [ 64%]
-test_repository.py::test_integration_workflow PASSED                     [ 65%]
-test_setup.py::test_basic_imports PASSED                                 [ 66%]
-test_setup.py::test_basic_functionality PASSED                           [ 67%]
-test_simple_integration.py::test_simple PASSED                           [ 69%]
-tests/test_field_and_control.py::test_zero_expansion_metric PASSED       [ 70%]
-tests/test_field_and_control.py::test_ring_sync_tolerance PASSED         [ 71%]
-tests/test_field_and_control.py::test_coil_driver_linearity PASSED       [ 73%]
-tests/test_field_and_control.py::test_plasma_density_shell_profile PASSED [ 74%]
-tests/test_field_and_control.py::test_field_synthesis_envelope_bounds PASSED [ 75%]
-tests/test_field_and_control.py::test_envelope_fit_error_monotonicity_uniform PASSED [ 76%]
-tests/test_field_and_control.py::test_tune_ring_amplitudes_uniform_returns_best_controls PASSED [ 78%]
-tests/test_field_and_control.py::test_envelope_to_shift_coupling_divergence_small PASSED [ 79%]
-tests/test_field_and_control.py::test_optimize_energy_stub_outputs PASSED [ 80%]
-tests/test_field_and_control.py::test_battery_feasibility_flag PASSED    [ 82%]
-tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution PASSED [ 83%]
-tests/test_field_and_control.py::test_discharge_efficiency_affects_feasibility PASSED [ 84%]
-tests/test_power_profile.py::test_energy_increases_with_ramp_duration PASSED [ 85%]
-tests/test_power_profile.py::test_numerical_values_match_analysis PASSED [ 87%]
-tests/test_power_profile.py::test_invalid_inputs PASSED                  [ 88%]
-tests/test_power_profile.py::test_triangle_shape_equivalence PASSED      [ 89%]
-tests/test_vnv_coil_driver.py::test_coil_driver_near_linear_no_hysteresis PASSED [ 91%]
-tests/test_vnv_coil_driver.py::test_coil_driver_hysteresis_reduces_gain PASSED [ 92%]
-tests/test_vnv_field_and_plasma.py::test_plasma_density_bounds_and_units PASSED [ 93%]
-tests/test_vnv_field_and_plasma.py::test_field_synthesis_bench_against_simplified_target PASSED [ 94%]
-tests/test_vnv_natario_build_metric.py::test_build_metric_divergence_free PASSED [ 96%]
-tests/test_vnv_natario_build_metric.py::test_envelope_coupled_shift_remains_near_div_free PASSED [ 97%]
-tests/test_vnv_vector_impulse.py::test_vector_impulse_energy_scales_quadratic PASSED [ 98%]
-tests/test_vnv_vector_impulse.py::test_trajectory_accuracy_improves_with_steps PASSED [100%]
-
-============================= 78 passed in 11.24s ==============================
+==================================== ERRORS ====================================
+_______________________ ERROR collecting test_jax_cpu.py _______________________
+ImportError while importing test module '/home/echo_/Code/asciimath/warp-bubble-optimizer/test_jax_cpu.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../miniconda3/lib/python3.13/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test_jax_cpu.py:7: in <module>
+    import jax.numpy as jnp
+E   ModuleNotFoundError: No module named 'jax.numpy'
+=========================== short test summary info ============================
+ERROR test_jax_cpu.py
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 1.53s ===============================
 # PYTEST-RESULTS-END
 # Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l

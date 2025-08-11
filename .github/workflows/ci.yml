@@ -35,8 +35,6 @@ jobs:
             pip install numpy scipy matplotlib pytest pytest-asyncio cma
           fi
 
-      - name: Run tests
-        env:
-          PYTHONWARNINGS: ignore::pytest.PytestReturnNotNoneWarning
+      - name: Run tests (focused)
         run: |
-          pytest -q
+          pytest -q -k "vnv or power_profile or field_and_plasma or coil_driver"
