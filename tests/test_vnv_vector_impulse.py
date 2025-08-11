@@ -7,7 +7,7 @@ V&V tests for vectorized impulse engine:
 import numpy as np
 import pytest
 
-from simulate_vector_impulse import (
+from src.simulation.simulate_vector_impulse import (
     Vector3D,
     VectorImpulseProfile,
     WarpBubbleVector,

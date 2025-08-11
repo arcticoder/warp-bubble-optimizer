@@ -37,3 +37,5 @@
 {"event":"CI workflow added to run tests on GitHub Actions","status":"completed","refs":[".github/workflows/ci.yml","requirements-test.txt"]}
 {"event":"README updated with pytest filters and focused run guidance","status":"completed","refs":["README.md","pytest.ini","conftest.py"]}
 {"event":"Added V&V tests: vector energy ~ v_max^2 and trajectory accuracy improves with n_steps","status":"completed","refs":["tests/test_vnv_vector_impulse.py","simulate_vector_impulse.py"]}
+{"event":"Laser coherence injection-locking plan draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/technical-documentation.md:Coherence Control Plan (draft)"]}
+{"event":"CI hygiene: tests-only discovery and optional JAX demo skip","status":"completed","refs":["pytest.ini:testpaths","tests/test_jax_acceleration.py"]}

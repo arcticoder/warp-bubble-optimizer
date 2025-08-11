@@ -19,8 +19,8 @@ import logging
 from simulate_impulse_engine import (
     ImpulseProfile, WarpParameters, simulate_impulse_maneuver
 )
-from simulate_vector_impulse import (
-    VectorImpulseProfile, WarpBubbleVector, Vector3D, 
+from src.simulation.simulate_vector_impulse import (
+    VectorImpulseProfile, WarpBubbleVector, Vector3D,
     simulate_vector_impulse_maneuver
 )
 from simulate_rotation import (
