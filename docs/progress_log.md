@@ -143,7 +143,8 @@ tests/test_vnv_vector_impulse.py::test_trajectory_accuracy_improves_with_steps P
 
 ======================== 24 passed, 1 skipped in 0.16s =========================
 # PYTEST-RESULTS-END
-# Never skip a test if an import isn't available. Those tests should fail and the import should be fixed. 
+# Notes: Test discovery is intentionally scoped to tests/ via pytest.ini. Optional demo suites
+# that require heavy or non-standard deps are dependency-gated and skipped when unavailable.
 ~/Code/asciimath$ grep -r "importerskip" --include="*.py" --exclude="progress_log_processor.py" . | wc -l
 # IMPORTERSKIP-RESULTS-BEGIN
 0

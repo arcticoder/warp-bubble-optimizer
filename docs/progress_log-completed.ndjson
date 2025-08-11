@@ -39,3 +39,4 @@
 {"event":"Added V&V tests: vector energy ~ v_max^2 and trajectory accuracy improves with n_steps","status":"completed","refs":["tests/test_vnv_vector_impulse.py","simulate_vector_impulse.py"]}
 {"event":"Laser coherence injection-locking plan draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/technical-documentation.md:Coherence Control Plan (draft)"]}
 {"event":"CI hygiene: tests-only discovery and optional JAX demo skip","status":"completed","refs":["pytest.ini:testpaths","tests/test_jax_acceleration.py"]}
+{"event":"Ring CAD parameter file initial draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/technical-documentation.md:Ring CAD parameters (draft)"]}
