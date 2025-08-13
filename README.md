@@ -94,6 +94,22 @@ python integrated_impulse_control.py
 python test_simple_integration.py
 ```
 
+### Traceability & Coverage
+
+End-to-end verification links roadmap tasks → tests → execution artifacts.
+
+Flow:
+1. Roadmap task identifiers (e.g. `V&V: impulse mission energy accounting within 5% of planned`) appear in `docs/roadmap.ndjson`.
+2. Tests referencing those tasks live in `test_impulse_vnv.py` and related files (search by the phrase after `V&V:` or `UQ:`).
+3. Run the traceability checker to ensure every roadmap V&V/UQ item has at least one test reference:
+
+```bash
+python traceability_check.py --fail-on-missing
+```
+
+If any items are missing coverage the script exits non‑zero (ideal for CI). Add new tests or mark tasks as done/removed to resolve gaps.
+
+
 ## Integrated Space Debris Protection System
 
 **NEW FEATURE:** Multi-scale space debris protection framework with:
