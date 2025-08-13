@@ -7,9 +7,14 @@ import os
 from pathlib import Path
 import pytest
 
-from integrated_impulse_control import (
-    IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig
-)
+try:
+    from impulse import (
+        IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig
+    )
+except ImportError:  # fallback for path issues
+    from src.impulse.integrated_impulse_control import (
+        IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig
+    )
 from src.simulation.simulate_vector_impulse import Vector3D
 from simulate_rotation import Quaternion
 
