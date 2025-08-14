@@ -1,0 +1,61 @@
+name: Mission JSON Validate
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'schemas/**'
+      - '.github/workflows/mission-validate.yml'
+  pull_request:
+
+jobs:
+  mission-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements.txt jsonschema
+      - name: Run tiny mission and export JSON + perf CSV
+        run: |
+          python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
+      - name: Validate mission.json against schema
+        run: |
+          python bin/validate_mission_json.py mission.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mission-export
+          path: |
+            mission.json
+            perf.csv
+
+  perf-aggregate:
+    needs: mission-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements.txt
+      - name: Download perf.csv artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mission-export
+          path: ./artifacts
+      - name: Plot perf summary
+        run: |
+          python bin/plot_perf_csv.py --csv ./artifacts/perf.csv --out perf_summary.png
+      - name: Upload perf summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-summary
+          path: perf_summary.png

@@ -40,6 +40,30 @@ def _waypoints_from_profile(dists: List[float], dwell: float, v_approach: float)
     return wps
 
 
+def _load_distance_profile(path: Optional[str]) -> Optional[List[float]]:
+    if not path:
+        return None
+    p = Path(path)
+    if not p.exists():
+        return None
+    # Try JSON first
+    try:
+        data = json.loads(p.read_text())
+        if isinstance(data, list):
+            return [float(x) for x in data]
+        if isinstance(data, dict) and 'distances' in data:
+            return [float(x) for x in data['distances']]
+    except Exception:
+        pass
+    # Fallback CSV: one value per line or comma-separated
+    try:
+        text = p.read_text().strip()
+        parts = [s.strip() for line in text.splitlines() for s in line.split(',') if s.strip()]
+        return [float(x) for x in parts]
+    except Exception:
+        return None
+
+
 def run_impulse_uq(cfg: ImpulseUQConfig) -> Dict[str, Any]:
     if cfg.seed is not None:
         random.seed(cfg.seed)
@@ -91,9 +115,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument('--out', type=str, default=None, help='Optional JSON output path')
     ap.add_argument('--hybrid', type=str, default='simulate-first')
     ap.add_argument('--seed', type=int, default=123)
+    ap.add_argument('--jsonl-out', type=str, default=None, help='Optional JSONLines output path for per-sample records')
+    ap.add_argument('--dist-profile', type=str, default=None, help='Path to CSV/JSON of distances to use for all samples')
     args = ap.parse_args(argv)
-    cfg = ImpulseUQConfig(samples=args.samples, seed=args.seed, hybrid_mode=args.hybrid)
+    dist_profile = _load_distance_profile(args.dist_profile)
+    cfg = ImpulseUQConfig(samples=args.samples, seed=args.seed, hybrid_mode=args.hybrid, distance_profile=dist_profile)
     summary = run_impulse_uq(cfg)
+    if args.jsonl_out:
+        with open(args.jsonl_out, 'w') as fh:
+            for rec in summary.get('records', []):
+                fh.write(json.dumps(rec) + "\n")
     if args.out:
         Path(args.out).write_text(json.dumps(summary, indent=2))
         print(f"Wrote UQ summary to {args.out}")

@@ -1,0 +1,29 @@
+name: UQ Runner Smoke
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - '.github/workflows/uq-runner.yml'
+  pull_request:
+
+jobs:
+  uq-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          python -m pip install -r requirements.txt
+      - name: Run UQ runner (20 samples)
+        run: |
+          python -m src.uq_validation.impulse_uq_runner --samples 20 --seed 123 --out uq_summary.json
+      - name: Upload UQ summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: uq-summary
+          path: uq_summary.json
