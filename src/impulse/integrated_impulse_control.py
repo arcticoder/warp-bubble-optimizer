@@ -162,7 +162,9 @@ class IntegratedImpulseController:
         self._segment_sim_cache = {}
 
     def plan_impulse_trajectory(self, waypoints: List[MissionWaypoint], optimize_energy: bool = True,
-                                hybrid_mode: bool = True) -> Dict[str, Any]:
+                                hybrid_mode: Any = True,
+                                estimate_first_threshold: float = 0.3,
+                                raise_on_infeasible: bool = False) -> Dict[str, Any]:
         """Generate a trajectory plan.
 
         Notes for V&V cross-links:
@@ -177,6 +179,12 @@ class IntegratedImpulseController:
         total_time_estimate = 0.0
         current_pos = waypoints[0].position
         current_orient = waypoints[0].orientation
+        # Normalize hybrid mode
+        # True => 'simulate-first'; False => 'off'; string supported: 'simulate-first'|'estimate-first'|'off'
+        if isinstance(hybrid_mode, bool):
+            hybrid_mode_norm = 'simulate-first' if hybrid_mode else 'off'
+        else:
+            hybrid_mode_norm = str(hybrid_mode).lower()
         for idx, target_wp in enumerate(waypoints[1:], start=0):
             displacement = target_wp.position - current_pos
             # Orientation delta
@@ -193,7 +201,7 @@ class IntegratedImpulseController:
                     t_down=5.0,
                     n_steps=300
                 )
-                if hybrid_mode:
+                if hybrid_mode_norm == 'simulate-first':
                     try:
                         rot_params = self.config.rotation_params or WarpBubbleRotational()
                         sim_rot = simulate_rotation_maneuver(rot_profile, rot_params, enable_progress=False)
@@ -226,7 +234,7 @@ class IntegratedImpulseController:
                 n_steps=int((2 * t_ramp + t_hold) * 20)
             )
             if displacement.magnitude > 0:
-                if hybrid_mode:
+                if hybrid_mode_norm == 'simulate-first':
                     # Use simulation-based energy estimate for high fidelity planning (ensures V&V within 5%)
                     try:
                         vec_params = self.config.vector_params or WarpBubbleVector()
@@ -252,6 +260,46 @@ class IntegratedImpulseController:
             total_time_estimate += segment_time
             current_pos = target_wp.position
             current_orient = target_wp.orientation
+        # If estimate-first, refine by simulating around threshold
+        if hybrid_mode_norm == 'estimate-first' and self.config.energy_budget > 0:
+            budget = self.config.energy_budget
+            threshold = max(0.0, min(1.0, float(estimate_first_threshold)))
+            # Simulate segments starting from the largest estimated energy until we cover threshold fraction of budget
+            # Build a list of (idx, est_energy, kind)
+            est_list: List[Tuple[int, float]] = []
+            for sidx, seg in enumerate(segments):
+                est_list.append((sidx, float(seg['estimated_energy'])))
+            # Sort by descending energy
+            est_list.sort(key=lambda x: x[1], reverse=True)
+            cumulative = 0.0
+            for sidx, _e in est_list:
+                if cumulative >= threshold * budget:
+                    break
+                seg = segments[sidx]
+                # Recompute using simulation and update cache
+                tp = seg['translation_profile']
+                rp = seg['rotation_profile']
+                refined_energy = 0.0
+                try:
+                    vec_params = self.config.vector_params or WarpBubbleVector()
+                    sim_est = simulate_vector_impulse_maneuver(tp, vec_params, enable_progress=False)
+                    self._segment_sim_cache[(sidx, 0)] = sim_est
+                    refined_energy += float(sim_est['total_energy']) if tp.target_displacement.magnitude > 0 else 0.0
+                except Exception:
+                    refined_energy += self._translate_energy(tp)
+                if rp is not None:
+                    try:
+                        rot_params = self.config.rotation_params or WarpBubbleRotational()
+                        sim_rot = simulate_rotation_maneuver(rp, rot_params, enable_progress=False)
+                        self._segment_sim_cache[(sidx, 1)] = sim_rot
+                        refined_energy += float(sim_rot['total_energy'])
+                    except Exception:
+                        refined_energy += self._rotate_energy(rp)
+                # Update totals
+                total_energy_estimate += (refined_energy - float(seg['estimated_energy']))
+                seg['estimated_energy'] = refined_energy
+                cumulative += refined_energy
+
         feasible = total_energy_estimate <= self.config.energy_budget and \
             total_energy_estimate * (1 + self.config.safety_margin) <= self.config.energy_budget
         plan = {
@@ -261,16 +309,22 @@ class IntegratedImpulseController:
             'total_time_estimate': total_time_estimate,
             'energy_efficiency': total_energy_estimate / (total_time_estimate + 1e-12),
             'feasible': feasible,
-            'safety_margin': self.config.safety_margin
+            'safety_margin': self.config.safety_margin,
+            'hybrid_mode': hybrid_mode_norm,
+            'estimate_first_threshold': float(estimate_first_threshold)
         }
         if not feasible:
+            if raise_on_infeasible:
+                raise InfeasiblePlanError("Planned mission is infeasible given energy budget and safety margin")
             # Still return plan object but mark infeasible; callers can choose to error
-            pass
         return plan
 
     async def execute_impulse_mission(self, trajectory_plan: Dict[str, Any], enable_feedback: bool = True,
                                       abort_on_budget: bool = True,
-                                      json_export_path: Optional[str] = None) -> Dict[str, Any]:
+                                      raise_on_abort: bool = False,
+                                      json_export_path: Optional[str] = None,
+                                      verbose_export: bool = False,
+                                      export_cache: bool = False) -> Dict[str, Any]:
         """Execute a pre-planned mission trajectory.
 
         V&V References (see roadmap & tests):
@@ -326,6 +380,8 @@ class IntegratedImpulseController:
                     'segment_success': False,
                     'abort_reason': 'energy_budget_exceeded'
                 })
+                if raise_on_abort:
+                    raise BudgetAbortError("Energy budget exceeded during mission execution")
                 break
             mission_results['segment_results'].append({
                 'segment_index': i,
@@ -377,13 +433,27 @@ class IntegratedImpulseController:
                                 tr_export['peak_velocity'] = float(_np.max(vm))
                         except Exception:
                             pass
+                rot_export = {}
+                rr = seg.get('rotation_results')
+                if rr:
+                    for key in ['total_energy', 'peak_energy', 'maneuver_duration',
+                                'rotation_error', 'rotation_accuracy', 'total_rotation_angle']:
+                        if key in rr:
+                            rot_export[key] = float(rr[key]) if isinstance(rr[key], (int, float)) else rr[key]
                 sanitized_segments.append({
                     'segment_index': seg.get('segment_index'),
                     'segment_energy': float(seg.get('segment_energy', 0.0)),
                     'segment_time': float(seg.get('segment_time', 0.0)),
                     'segment_success': bool(seg.get('segment_success', False)),
                     **({'abort_reason': seg['abort_reason']} if 'abort_reason' in seg else {}),
-                    'translation_summary': tr_export
+                    'translation_summary': tr_export,
+                    'rotation_summary': rot_export,
+                    'kinds': [
+                        *(['translation'] if (seg.get('translation_results') and (
+                            ('total_distance' in tr_export and tr_export.get('total_distance', 0.0) > 0) or True
+                        )) else []),
+                        *(['rotation'] if rr else [])
+                    ]
                 })
             sanitized_results = {
                 'segment_results': sanitized_segments,
@@ -391,11 +461,36 @@ class IntegratedImpulseController:
                                         for k, v in mission_results.get('performance_metrics', {}).items()},
                 'mission_success': bool(mission_results.get('mission_success', False))
             }
+            if export_cache:
+                # Persist a compact view of the planning-time simulation cache
+                cache_out = []
+                for (sidx, kind), sim in sorted(self._segment_sim_cache.items(), key=lambda x: (x[0][0], x[0][1])):
+                    entry = {'segment_index': int(sidx), 'kind': 'rotation' if kind == 1 else 'translation'}
+                    try:
+                        if kind == 0 and sim:
+                            # translation
+                            entry.update({
+                                'total_energy': float(sim.get('total_energy', 0.0)),
+                                'maneuver_duration': float(sim.get('maneuver_duration', 0.0)),
+                                'total_distance': float(sim.get('total_distance', 0.0)),
+                            })
+                        elif kind == 1 and sim:
+                            entry.update({
+                                'total_energy': float(sim.get('total_energy', 0.0)),
+                                'maneuver_duration': float(sim.get('maneuver_duration', 0.0)),
+                                'total_rotation_angle': float(sim.get('total_rotation_angle', 0.0)),
+                            })
+                    except Exception:
+                        pass
+                    cache_out.append(entry)
+                sanitized_results['planning_cache'] = cache_out
             export = {
                 'plan': {
                     'total_energy_estimate': float(trajectory_plan['total_energy_estimate']),
                     'total_time_estimate': float(trajectory_plan['total_time_estimate']),
                     'safety_margin': float(trajectory_plan.get('safety_margin', 0.0)),
+                    'hybrid_mode': trajectory_plan.get('hybrid_mode'),
+                    'estimate_first_threshold': float(trajectory_plan.get('estimate_first_threshold', 0.0)),
                 },
                 'results': sanitized_results,
                 'schema': {
@@ -403,6 +498,17 @@ class IntegratedImpulseController:
                     'version': 1
                 }
             }
+            if verbose_export:
+                # Add a minimal verbose section for debugging
+                export['meta'] = {
+                    'controller_overrides': bool(self.control_config is not None),
+                    'config': {
+                        'max_velocity': float(self.config.max_velocity),
+                        'max_angular_velocity': float(self.config.max_angular_velocity),
+                        'energy_budget': float(self.config.energy_budget),
+                        'safety_margin': float(self.config.safety_margin)
+                    }
+                }
             try:
                 with open(json_export_path, 'w') as f:
                     json.dump(export, f, indent=2)

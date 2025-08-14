@@ -39,26 +39,37 @@ def load_waypoints(path: str, dwell: float | None = None):
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument('--waypoints', required=True)
-    ap.add_argument('--export', required=False)
-    ap.add_argument('--budget', type=float, default=1e13)
-    ap.add_argument('--vmax', type=float, default=5e-5)
-    ap.add_argument('--hybrid', action='store_true')
-    args = ap.parse_args()
+  ap = argparse.ArgumentParser()
+  ap.add_argument('--waypoints', required=True)
+  ap.add_argument('--export', required=False)
+  ap.add_argument('--budget', type=float, default=1e13)
+  ap.add_argument('--vmax', type=float, default=5e-5)
+  ap.add_argument('--hybrid', nargs='?', const='simulate-first', default='off', choices=['off','simulate-first','estimate-first'], help='Hybrid planning mode')
+  ap.add_argument('--threshold', type=float, default=0.3, help='Estimate-first threshold fraction of budget')
+  ap.add_argument('--raise-on-infeasible', action='store_true')
+  ap.add_argument('--raise-on-abort', action='store_true')
+  ap.add_argument('--verbose-export', action='store_true')
+  ap.add_argument('--export-cache', action='store_true')
+  args = ap.parse_args()
 
-    cfg = ImpulseEngineConfig(energy_budget=args.budget, max_velocity=args.vmax)
-    ctrl = IntegratedImpulseController(cfg)
-    wps = load_waypoints(args.waypoints)
-    plan = ctrl.plan_impulse_trajectory(wps, hybrid_mode=args.hybrid)
-    import asyncio
-    res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(plan, json_export_path=args.export))
-    print(json.dumps({
-        'planned_GJ': plan['total_energy_estimate']/1e9,
-        'actual_GJ': res['performance_metrics']['total_energy_used']/1e9,
-        'success': res['mission_success'],
-        'segments': len(res['segment_results'])
-    }, indent=2))
+  cfg = ImpulseEngineConfig(energy_budget=args.budget, max_velocity=args.vmax)
+  ctrl = IntegratedImpulseController(cfg)
+  wps = load_waypoints(args.waypoints)
+  plan = ctrl.plan_impulse_trajectory(wps, hybrid_mode=args.hybrid, estimate_first_threshold=args.threshold, raise_on_infeasible=args.raise_on_infeasible)
+  import asyncio
+  res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(
+    plan,
+    json_export_path=args.export,
+    raise_on_abort=args.raise_on_abort,
+    verbose_export=args.verbose_export,
+    export_cache=args.export_cache
+  ))
+  print(json.dumps({
+    'planned_GJ': plan['total_energy_estimate']/1e9,
+    'actual_GJ': res['performance_metrics']['total_energy_used']/1e9,
+    'success': res['mission_success'],
+    'segments': len(res['segment_results'])
+  }, indent=2))
 
 
 if __name__ == '__main__':

@@ -19,8 +19,8 @@ from dataclasses import dataclass
 
 # JAX imports with fallback
 try:
-    import jax.numpy as jnp
-    from jax import jit, vmap, grad
+    import jax.numpy as jnp  # type: ignore
+    from jax import jit, vmap, grad  # type: ignore
     JAX_AVAILABLE = True
     print("🚀 JAX acceleration enabled for rotation simulation")
 except ImportError:
@@ -42,11 +42,11 @@ except ImportError:
 
 # ProgressTracker import with fallback
 try:
-    from progress_tracker import ProgressTracker
+    from progress_tracker import ProgressTracker as _ProgressTracker  # type: ignore
     PROGRESS_AVAILABLE = True
 except ImportError:
     PROGRESS_AVAILABLE = False
-    class ProgressTracker:
+    class _ProgressTracker:
         def __init__(self, *args, **kwargs): pass
         def update(self, *args, **kwargs): pass
         def set_stage(self, *args, **kwargs): pass
@@ -54,6 +54,7 @@ except ImportError:
         def log_metric(self, *args, **kwargs): pass
         def __enter__(self): return self
         def __exit__(self, *args): pass
+ProgressTracker = _ProgressTracker
 
 @dataclass
 class Quaternion:
@@ -177,7 +178,7 @@ class Quaternion:
 @dataclass
 class RotationProfile:
     """Configuration for rotation maneuver."""
-    target_orientation: Quaternion = None     # Target orientation
+    target_orientation: Optional[Quaternion] = None     # Target orientation
     omega_max: float = 0.1                    # Maximum angular velocity (rad/s)
     t_up: float = 5.0                         # Ramp-up time
     t_hold: float = 10.0                      # Hold time (fine pointing)
@@ -264,7 +265,7 @@ def compute_rotation_trajectory(profile: RotationProfile) -> Dict[str, Any]:
     
     # Compute rotation axis (fixed for this implementation)
     initial_q = Quaternion(1.0, 0.0, 0.0, 0.0)  # Identity
-    target_q = profile.target_orientation
+    target_q = profile.target_orientation if profile.target_orientation is not None else initial_q
     
     # Find rotation axis using quaternion logarithm
     relative_q = initial_q.conjugate().multiply(target_q)
@@ -362,12 +363,14 @@ def compute_rotational_energy_integral(omega: float, warp_params: WarpBubbleRota
     
     # Volume integral
     integrand = 4 * jnp.pi * rs**2 * jnp.abs(densities)
-    energy_field = jnp.trapz(integrand, rs)
+    # Use trapezoid integration to avoid deprecation warnings
+    _trap = getattr(jnp, 'trapezoid', None)
+    energy_field = (_trap or jnp.trapz)(integrand, rs)
     
     # Add classical rotational kinetic energy
     classical_energy = 0.5 * warp_params.moment_of_inertia * omega**2
     
-    return energy_field + classical_energy
+    return float(energy_field) + float(classical_energy)
 
 def simulate_rotation_maneuver(profile: RotationProfile, warp_params: WarpBubbleRotational,
                              enable_progress: bool = True) -> Dict[str, Any]:
@@ -419,36 +422,37 @@ def simulate_rotation_maneuver(profile: RotationProfile, warp_params: WarpBubble
             E_ts = np.array([compute_rotational_energy_integral(omega, warp_params) for omega in omega_mags])
         
         if progress: progress.update("Analyzing rotation performance", step_number=3)
-        
+
         # Performance metrics
         ts = trajectory['time_grid']
-        E_total = jnp.trapz(E_ts, ts)
+        _trap = getattr(jnp, 'trapezoid', None)
+        E_total = (_trap or jnp.trapz)(E_ts, ts)
         E_peak = jnp.max(E_ts)
-        
+
         # Rotation accuracy
         final_q = trajectory['final_orientation']
-        target_q = profile.target_orientation
-        
+        target_q = profile.target_orientation if profile.target_orientation is not None else final_q
+
         # Quaternion distance as accuracy metric
         q_error = final_q.conjugate().multiply(target_q)
         rotation_error = 2.0 * jnp.arccos(jnp.clip(jnp.abs(q_error.w), 0.0, 1.0))
         rotation_accuracy = 1.0 - rotation_error / (2.0 * jnp.pi)
-        
+
         if progress: progress.update("Computing attitude control metrics", step_number=4)
-        
+
         # Angular acceleration analysis
         omega_dot = jnp.gradient(omega_mags, ts[1] - ts[0] if len(ts) > 1 else 1.0)
         max_angular_accel = jnp.max(jnp.abs(omega_dot))
-        
+
         # Stability metrics
         omega_variance = jnp.var(omega_mags)
         control_smoothness = 1.0 / (1.0 + max_angular_accel)
-        
-        if progress: 
+
+        if progress:
             progress.update("Finalizing rotation results", step_number=5)
             progress.log_metric("total_energy", float(E_total))
             progress.log_metric("rotation_accuracy", float(rotation_accuracy))
-        
+
         results = {
             'time_grid': np.array(ts),
             'angular_velocity_profile': np.array(omega_mags),
@@ -469,14 +473,14 @@ def simulate_rotation_maneuver(profile: RotationProfile, warp_params: WarpBubble
             'profile': profile,
             'warp_params': warp_params
         }
-        
+
         if progress:
             progress.complete({
-                'total_energy_MJ': E_total/1e6,
+                'total_energy_MJ': float(E_total)/1e6,
                 'accuracy_percent': rotation_accuracy*100,
                 'rotation_degrees': np.degrees(trajectory['total_angle'])
             })
-        
+
         return results
 
 def combined_translation_rotation(translation_target: jnp.ndarray, 

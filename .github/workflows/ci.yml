@@ -32,9 +32,17 @@ jobs:
           if [ -f requirements-test.txt ]; then
             pip install -r requirements-test.txt
           else
-            pip install numpy scipy matplotlib pytest pytest-asyncio cma
+            pip install numpy scipy matplotlib pytest pytest-asyncio pytest-cov cma
           fi
+          # Ensure coverage plugin is available even if not in requirements file
+          pip install --upgrade pytest-cov
 
-      - name: Run tests (focused)
+      - name: Run tests with coverage
         run: |
-          pytest -q -k "vnv or power_profile or field_and_plasma or coil_driver"
+          pytest -q --cov=src --cov-report=xml
+
+      - name: Traceability with coverage
+        run: |
+          python traceability_check.py --coverage-xml coverage.xml --json-out traceability.json --fail-on-missing
+
+  # Optional: upload artifacts step omitted to keep workflow self-contained
