@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=66", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warp-bubble-optimizer"
+version = "0.1.0-dev0"
+description = "Impulse mission planner and simulator for warp bubble experiments"
+authors = [{ name = "arcticoder" }]
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["warp", "impulse", "simulation", "planning"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "coverage"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.bumpversion]
+current_version = "0.1.0-dev0"
+commit = false
+tag = false
+
+[tool.bumpversion.files]
+"src/version.py" = {}

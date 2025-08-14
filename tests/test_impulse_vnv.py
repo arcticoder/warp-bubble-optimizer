@@ -17,6 +17,7 @@ from impulse import (  # type: ignore
 	IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig
 )
 from src.simulation.simulate_vector_impulse import Vector3D
+from simulate_rotation import Quaternion
 
 
 def run(coro):
@@ -72,6 +73,23 @@ def test_velocity_caps_enforced():
 	assert np.max(vel_mags) <= max_v * 1.05
 
 
+def test_angular_velocity_caps_enforced():
+	max_omega = 0.2
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5, max_angular_velocity=max_omega)
+	ctrl = IntegratedImpulseController(config)
+	# Two waypoints with pure rotation change at same position
+	wp0 = MissionWaypoint(position=Vector3D(0, 0, 0), orientation=Quaternion(1, 0, 0, 0))
+	target_q = Quaternion.from_euler(0.0, 0.0, 0.5)  # 0.5 rad yaw
+	wp1 = MissionWaypoint(position=Vector3D(0, 0, 0), orientation=target_q, dwell_time=2.0)
+	plan = ctrl.plan_impulse_trajectory([wp0, wp1])
+	results = run(ctrl.execute_impulse_mission(plan))
+	seg = results['segment_results'][0]
+	rot = seg.get('rotation_results')
+	assert rot is not None, "Rotation results missing"
+	omegas = rot['angular_velocity_profile']
+	assert float(np.max(omegas)) <= max_omega * 1.05
+
+
 def test_budget_depletion_aborts():
 	config = ImpulseEngineConfig(energy_budget=1e9, max_velocity=5e-5)
 	ctrl = IntegratedImpulseController(config)
@@ -119,3 +137,34 @@ def test_controller_config_injection_and_safety_margin():
 	assert ctrl.control_config['controller'].kp == 1.2  # type: ignore
 	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([40.0]))
 	assert plan['feasible'] == (plan['total_energy_estimate'] * (1 + config.safety_margin) <= config.energy_budget)
+
+
+def test_safety_margin_infeasible_even_if_raw_estimate_fits():
+	# Choose budget to be between raw estimate and margin-adjusted estimate
+	cfg = ImpulseEngineConfig(energy_budget=2.0e11, max_velocity=5e-5, safety_margin=0.5)
+	ctrl = IntegratedImpulseController(cfg)
+	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([30.0]))
+	assert plan['total_energy_estimate'] <= cfg.energy_budget
+	assert plan['total_energy_estimate'] * (1 + cfg.safety_margin) > cfg.energy_budget
+	assert plan['feasible'] is False
+
+
+def test_mission_json_schema_version(tmp_path):
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+	ctrl = IntegratedImpulseController(config)
+	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([10.0]))
+	json_path = tmp_path / "mission.json"
+	run(ctrl.execute_impulse_mission(plan, json_export_path=str(json_path)))
+	data = json.loads(json_path.read_text())
+	assert 'schema' in data and data['schema']['id'] == 'impulse.mission.v1'
+	assert int(data['schema']['version']) == 1
+
+
+def test_deprecation_import_warning_root_shim():
+	import warnings, importlib
+	with warnings.catch_warnings(record=True) as w:
+		warnings.simplefilter('always', DeprecationWarning)
+		importlib.invalidate_caches()
+		mod = importlib.import_module('integrated_impulse_control')
+		assert any(issubclass(rec.category, DeprecationWarning) for rec in w)
+		assert hasattr(mod, 'IntegratedImpulseController')

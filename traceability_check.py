@@ -65,6 +65,7 @@ def scan_tests(tasks):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--fail-on-missing", action="store_true", help="Return code 1 if any tasks lack coverage")
+    ap.add_argument("--json-out", type=str, default=None, help="Optional path to write JSON report of coverage")
     args = ap.parse_args()
     tasks = load_tasks()
     coverage = scan_tests(tasks)
@@ -76,6 +77,17 @@ def main():
             print(f"  - {m}")
     else:
         print("All tasks covered ✅")
+    if args.json_out:
+        out = {
+            "total_tasks": len(tasks),
+            "covered": [t for t, ok in coverage.items() if ok],
+            "missing": missing,
+        }
+        try:
+            Path(args.json_out).write_text(json.dumps(out, indent=2))
+            print(f"Wrote JSON report to {args.json_out}")
+        except Exception as e:
+            print(f"Failed to write JSON report: {e}")
     if missing and args.fail_on_missing:
         sys.exit(1)
 

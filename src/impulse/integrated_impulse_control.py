@@ -22,7 +22,7 @@ Additions in this release (see docs/DEPRECATIONS.md):
 import asyncio
 import json
 import numpy as np
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional, Callable, Tuple
 from dataclasses import dataclass
 import time
 
@@ -99,6 +99,7 @@ class ImpulseEngineConfig:
 class IntegratedImpulseController:
     def __init__(self, config: ImpulseEngineConfig,
                  translation_energy_strategy: Optional[Callable[[VectorImpulseProfile], float]] = None,
+                 rotation_energy_strategy: Optional[Callable[[RotationProfile], float]] = None,
                  controller_overrides: Optional[Dict[str, Any]] = None):
         self.config = config
         # Enforce non-None params after dataclass init for static type checkers
@@ -126,7 +127,7 @@ class IntegratedImpulseController:
         self.mission_log = []
         self.total_energy_used = 0.0
         self.total_mission_time = 0.0
-        # Strategy injection
+        # Strategy injection (translation)
         if translation_energy_strategy is None:
             try:
                 from .energy_strategies import DEFAULT_STRATEGY  # type: ignore
@@ -135,8 +136,23 @@ class IntegratedImpulseController:
                 self._translate_energy = self._estimate_translation_energy  # fallback
         else:
             self._translate_energy = translation_energy_strategy
+        # Strategy injection (rotation)
+        if rotation_energy_strategy is None:
+            try:
+                from .energy_strategies import DEFAULT_ROTATION_STRATEGY  # type: ignore
+                self._rotate_energy = lambda p: DEFAULT_ROTATION_STRATEGY.estimate(p)
+            except Exception:
+                self._rotate_energy = self._estimate_rotation_energy  # type: ignore
+        else:
+            self._rotate_energy = rotation_energy_strategy
 
-    def plan_impulse_trajectory(self, waypoints: List[MissionWaypoint], optimize_energy: bool = True) -> Dict[str, Any]:
+        # Cache to reuse simulated segment results between planning and execution
+        # Key: (segment_index, kind) where kind 0=translation, 1=rotation
+        # segment_sim_cache maps (segment_index, kind) -> simulated results
+        self._segment_sim_cache = {}
+
+    def plan_impulse_trajectory(self, waypoints: List[MissionWaypoint], optimize_energy: bool = True,
+                                hybrid_mode: bool = True) -> Dict[str, Any]:
         """Generate a trajectory plan.
 
         Notes for V&V cross-links:
@@ -151,8 +167,33 @@ class IntegratedImpulseController:
         total_time_estimate = 0.0
         current_pos = waypoints[0].position
         current_orient = waypoints[0].orientation
-        for target_wp in waypoints[1:]:
+        for idx, target_wp in enumerate(waypoints[1:], start=0):
             displacement = target_wp.position - current_pos
+            # Orientation delta
+            rot_profile = None
+            rot_energy = 0.0
+            if target_wp.orientation is not None and current_orient is not None:
+                # Build rotation profile aiming to reach target orientation
+                omega_max = min(self.config.max_angular_velocity, 0.5)
+                rot_profile = RotationProfile(
+                    target_orientation=target_wp.orientation,
+                    omega_max=omega_max,
+                    t_up=5.0,
+                    t_hold=target_wp.dwell_time,
+                    t_down=5.0,
+                    n_steps=300
+                )
+                if hybrid_mode:
+                    try:
+                        rot_params = self.config.rotation_params or WarpBubbleRotational()
+                        sim_rot = simulate_rotation_maneuver(rot_profile, rot_params, enable_progress=False)
+                        rot_energy = float(sim_rot['total_energy'])
+                        # Cache using segment index + 'rot'
+                        self._segment_sim_cache[(idx, 1)] = sim_rot
+                    except Exception:
+                        rot_energy = self._rotate_energy(rot_profile)
+                else:
+                    rot_energy = self._rotate_energy(rot_profile)
             if optimize_energy:
                 dmag = displacement.magnitude
                 v_max = min(self.config.max_velocity, target_wp.approach_speed, dmag / 60.0) if dmag > 0 else 0.0
@@ -175,24 +216,29 @@ class IntegratedImpulseController:
                 n_steps=int((2 * t_ramp + t_hold) * 20)
             )
             if displacement.magnitude > 0:
-                # Use simulation-based energy estimate for high fidelity planning (ensures V&V within 5%)
-                try:
-                    vec_params = self.config.vector_params or WarpBubbleVector()
-                    sim_est = simulate_vector_impulse_maneuver(translation_profile, vec_params, enable_progress=False)
-                    displacement_energy = float(sim_est['total_energy'])
-                except Exception:
+                if hybrid_mode:
+                    # Use simulation-based energy estimate for high fidelity planning (ensures V&V within 5%)
+                    try:
+                        vec_params = self.config.vector_params or WarpBubbleVector()
+                        sim_est = simulate_vector_impulse_maneuver(translation_profile, vec_params, enable_progress=False)
+                        displacement_energy = float(sim_est['total_energy'])
+                        # Cache using segment index + 'trans'
+                        self._segment_sim_cache[(idx, 0)] = sim_est
+                    except Exception:
+                        displacement_energy = self._translate_energy(translation_profile)
+                else:
                     displacement_energy = self._translate_energy(translation_profile)
             else:
                 displacement_energy = 0.0
-            segment_time = 2 * t_ramp + t_hold
+            segment_time = 2 * t_ramp + t_hold + (rot_profile.t_up + rot_profile.t_hold + rot_profile.t_down if rot_profile else 0.0)
             segments.append({
                 'translation_profile': translation_profile,
-                'rotation_profile': None,
-                'estimated_energy': displacement_energy,
+                'rotation_profile': rot_profile,
+                'estimated_energy': displacement_energy + rot_energy,
                 'estimated_time': segment_time,
                 'target_waypoint': target_wp
             })
-            total_energy_estimate += displacement_energy
+            total_energy_estimate += displacement_energy + rot_energy
             total_time_estimate += segment_time
             current_pos = target_wp.position
             current_orient = target_wp.orientation
@@ -235,10 +281,24 @@ class IntegratedImpulseController:
             trans_profile = segment['translation_profile']
             vec_params = self.config.vector_params  # type: ignore[assignment]
             assert vec_params is not None
-            trans_results = simulate_vector_impulse_maneuver(trans_profile, vec_params, enable_progress=False)
+            # Attempt to reuse planning cache
+            trans_results = self._segment_sim_cache.get((i, 0))
+            if not trans_results:
+                trans_results = simulate_vector_impulse_maneuver(trans_profile, vec_params, enable_progress=False)
             self.current_position = Vector3D(*trans_results['final_position'])
-            segment_energy = trans_results['total_energy']
-            segment_time = trans_results['maneuver_duration']
+            segment_energy = float(trans_results['total_energy'])
+            segment_time = float(trans_results['maneuver_duration'])
+
+            # Rotation execution if present
+            rot_results = None
+            if segment.get('rotation_profile') is not None:
+                rot_profile: RotationProfile = segment['rotation_profile']
+                rot_params = self.config.rotation_params or WarpBubbleRotational()
+                rot_results = self._segment_sim_cache.get((i, 1))
+                if not rot_results:
+                    rot_results = simulate_rotation_maneuver(rot_profile, rot_params, enable_progress=False)
+                segment_energy += float(rot_results['total_energy'])
+                segment_time += float(rot_results['maneuver_duration'])
             cumulative_energy += segment_energy
             cumulative_time += segment_time
             if abort_on_budget and cumulative_energy > self.config.energy_budget:
@@ -246,6 +306,7 @@ class IntegratedImpulseController:
                 mission_results['segment_results'].append({
                     'segment_index': i,
                     'translation_results': trans_results,
+                    'rotation_results': rot_results,
                     'segment_energy': segment_energy,
                     'segment_time': segment_time,
                     'segment_success': False,
@@ -255,6 +316,7 @@ class IntegratedImpulseController:
             mission_results['segment_results'].append({
                 'segment_index': i,
                 'translation_results': trans_results,
+                'rotation_results': rot_results,
                 'segment_energy': segment_energy,
                 'segment_time': segment_time,
                 'segment_success': True
@@ -321,7 +383,11 @@ class IntegratedImpulseController:
                     'total_time_estimate': float(trajectory_plan['total_time_estimate']),
                     'safety_margin': float(trajectory_plan.get('safety_margin', 0.0)),
                 },
-                'results': sanitized_results
+                'results': sanitized_results,
+                'schema': {
+                    'id': 'impulse.mission.v1',
+                    'version': 1
+                }
             }
             try:
                 with open(json_export_path, 'w') as f:
@@ -341,6 +407,10 @@ class IntegratedImpulseController:
         base_density_mag = 1e15 * (v_avg ** 2)
         energy_rate = base_density_mag * shell_area * thickness * 27.5
         return float(energy_rate * t_total)
+
+    def _estimate_rotation_energy(self, profile: RotationProfile) -> float:  # fallback heuristic
+        t_total = profile.t_up + profile.t_hold + profile.t_down
+        return float(5e11 * (profile.omega_max ** 2) * max(t_total, 0.0))
 
     def generate_mission_report(self, mission_results: Dict[str, Any]) -> str:
         m = mission_results['performance_metrics']
