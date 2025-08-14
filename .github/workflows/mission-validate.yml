@@ -20,6 +20,8 @@ jobs:
         run: |
           python -m pip install -U pip
           python -m pip install -r requirements.txt jsonschema
+      - name: FTL analysis timestamp
+        run: echo "FTL analysis timestamp: 2025-08-14 15:14 PDT"
       - name: Run tiny mission and export JSON + perf CSV
         run: |
           python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
@@ -59,10 +61,9 @@ jobs:
           # Simulate multiple runs if only one CSV is present
           cp ./artifacts/perf.csv ./artifacts/perf_run2.csv
           python bin/aggregate_perf_csv.py ./artifacts/perf.csv ./artifacts/perf_run2.csv --out perf_aggregate.json
-    - name: 40 Eridani A UQ + analysis (100 samples)
+      - name: 40 Eridani A UQ + analysis (100 samples)
         run: |
-      python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
-          python bin/aggregate_perf_csv.py ./artifacts/perf.csv --out perf_aggregate.json
+          python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
           # Generate plots from notebook logic with plain Python (no execution needed beyond plotting utilities already used)
           python - << 'PY'
 import json
@@ -99,9 +100,9 @@ if feas:
     plt.tight_layout()
     plt.savefig('40eridani_feasibility.png', dpi=150)
 PY
-    - name: Generate extended 40 Eridani plots
-    run: |
-      python - << 'PY'
+      - name: Generate extended 40 Eridani plots
+        run: |
+          python - << 'PY'
 import json
 from pathlib import Path
 import matplotlib
@@ -110,31 +111,76 @@ import matplotlib.pyplot as plt
 import numpy as np
 records = []
 if Path('uq_records.jsonl').exists():
-  for line in Path('uq_records.jsonl').read_text().splitlines():
-    if line.strip():
-      records.append(json.loads(line))
+    for line in Path('uq_records.jsonl').read_text().splitlines():
+      if line.strip():
+        records.append(json.loads(line))
 energies = [r.get('planned_energy', 0) for r in records]
 if energies:
-  plt.figure(figsize=(6,4))
-  plt.hist(energies, bins=30, color='#4C78A8', edgecolor='white')
-  plt.title('Planned Energy Distribution (Extended)')
-  plt.xlabel('Energy (J)')
-  plt.ylabel('Count')
-  plt.tight_layout()
-  plt.savefig('40eridani_energy_extended.png', dpi=150)
+    plt.figure(figsize=(6,4))
+    plt.hist(energies, bins=30, color='#4C78A8', edgecolor='white')
+    plt.title('Planned Energy Distribution (Extended)')
+    plt.xlabel('Energy (J)')
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.savefig('40eridani_energy_extended.png', dpi=150)
 feas = [1 if r.get('feasible') else 0 for r in records]
 if feas:
-  n = len(feas)
-  win = max(1, n//5)
-  roll = np.convolve(feas, np.ones(win)/win, mode='same')
-  plt.figure(figsize=(6,4))
-  plt.plot(roll, color='#F58518')
-  plt.ylim(0,1)
-  plt.title('Feasible Fraction (rolling, Extended)')
-  plt.xlabel('Sample Index')
-  plt.ylabel('Feasible Fraction')
-  plt.tight_layout()
-  plt.savefig('40eridani_feasibility_extended.png', dpi=150)
+    n = len(feas)
+    win = max(1, n//5)
+    roll = np.convolve(feas, np.ones(win)/win, mode='same')
+    plt.figure(figsize=(6,4))
+    plt.plot(roll, color='#F58518')
+    plt.ylim(0,1)
+    plt.title('Feasible Fraction (rolling, Extended)')
+    plt.xlabel('Sample Index')
+    plt.ylabel('Feasible Fraction')
+    plt.tight_layout()
+    plt.savefig('40eridani_feasibility_extended.png', dpi=150)
+PY
+      - name: 40 Eridani A UQ with varied distance profile (100 samples)
+        run: |
+          python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary_varied.json --jsonl-out uq_records_varied.jsonl --dist-profile data/dist_profile_40eridani_varied.csv
+          python - << 'PY'
+import json
+from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+records = []
+if Path('uq_records_varied.jsonl').exists():
+    for line in Path('uq_records_varied.jsonl').read_text().splitlines():
+        if line.strip():
+            records.append(json.loads(line))
+energies = [r.get('planned_energy', 0) for r in records]
+if energies:
+    plt.figure(figsize=(6,4))
+    plt.hist(energies, bins=20, color='#54A24B', edgecolor='white')
+    plt.title('Planned Energy Distribution (Varied Profile)')
+    plt.xlabel('Energy (J)')
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.savefig('40eridani_energy_varied.png', dpi=150)
+feas = [1 if r.get('feasible') else 0 for r in records]
+if feas:
+    n = len(feas)
+    win = max(1, n//10)
+    roll = np.convolve(feas, np.ones(win)/win, mode='same')
+    plt.figure(figsize=(6,4))
+    plt.plot(roll, color='#E45756')
+    plt.ylim(0,1)
+    plt.title('Feasible Fraction (rolling, Varied Profile)')
+    plt.xlabel('Sample Index')
+    plt.ylabel('Feasible Fraction')
+    plt.tight_layout()
+    plt.savefig('40eridani_feasibility_varied.png', dpi=150)
+# Save simple metrics for verification
+energy_mean = float(np.mean(energies)) if energies else float('nan')
+energy_std = float(np.std(energies)) if energies else float('nan')
+energy_cv = float(energy_std/energy_mean) if energies and energy_mean else float('nan')
+feasible_fraction = float(np.mean(feas)) if feas else float('nan')
+with open('uq_varied_metrics.json', 'w') as f:
+  json.dump({"energy_mean": energy_mean, "energy_std": energy_std, "energy_cv": energy_cv, "feasible_fraction": feasible_fraction}, f)
 PY
       - name: Upload perf summary
         uses: actions/upload-artifact@v4
@@ -153,6 +199,11 @@ PY
             40eridani_feasibility.png
             40eridani_energy_extended.png
             40eridani_feasibility_extended.png
+            uq_summary_varied.json
+            uq_records_varied.jsonl
+            40eridani_energy_varied.png
+            40eridani_feasibility_varied.png
+            uq_varied_metrics.json
       - name: Comment summary on PR
         if: github.event_name == 'pull_request'
         env:

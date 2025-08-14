@@ -1,6 +1,6 @@
 # Warp Bubble Metric Ansatz Optimizer
 
-![Traceability Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2F<YOUR_GH_USERNAME>.github.io%2F<YOUR_REPO_NAME>%2Ftraceability_badge.json)
+![Traceability Coverage](https://img.shields.io/endpoint?url=https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json)
 
 ## ⭐ Revolutionary 1041.7× Energy Optimization Complete
 
