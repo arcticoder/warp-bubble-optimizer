@@ -54,8 +54,61 @@ jobs:
       - name: Plot perf summary
         run: |
           python bin/plot_perf_csv.py --csv ./artifacts/perf.csv --out perf_summary.png
+      - name: Aggregate perf summary JSON
+        run: |
+          python bin/aggregate_perf_csv.py ./artifacts/perf.csv --out perf_aggregate.json
+      - name: 40 Eridani A UQ + analysis
+        run: |
+          python -m src.uq_validation.impulse_uq_runner --samples 20 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
+          python bin/aggregate_perf_csv.py ./artifacts/perf.csv --out perf_aggregate.json
+          # Generate plots from notebook logic with plain Python (no execution needed beyond plotting utilities already used)
+          python - << 'PY'
+import json
+from pathlib import Path
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+records = []
+if Path('uq_records.jsonl').exists():
+    for line in Path('uq_records.jsonl').read_text().splitlines():
+        if line.strip():
+            records.append(json.loads(line))
+energies = [r.get('planned_energy', 0) for r in records]
+if energies:
+    plt.figure(figsize=(6,4))
+    plt.hist(energies, bins=15, color='#4C78A8', edgecolor='white')
+    plt.title('Planned Energy Distribution')
+    plt.xlabel('Energy (J)')
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.savefig('40eridani_energy.png', dpi=150)
+feas = [1 if r.get('feasible') else 0 for r in records]
+if feas:
+    n = len(feas)
+    win = max(1, n//10)
+    roll = np.convolve(feas, np.ones(win)/win, mode='same')
+    plt.figure(figsize=(6,4))
+    plt.plot(roll, color='#F58518')
+    plt.ylim(0,1)
+    plt.title('Feasible Fraction (rolling)')
+    plt.xlabel('Sample Index')
+    plt.ylabel('Feasible Fraction')
+    plt.tight_layout()
+    plt.savefig('40eridani_feasibility.png', dpi=150)
+PY
       - name: Upload perf summary
         uses: actions/upload-artifact@v4
         with:
           name: perf-summary
           path: perf_summary.png
+      - name: Upload 40 Eridani artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: 40eridani-artifacts
+          path: |
+            uq_summary.json
+            uq_records.jsonl
+            perf_aggregate.json
+            40eridani_energy.png
+            40eridani_feasibility.png

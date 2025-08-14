@@ -1,0 +1,29 @@
+name: Traceability Coverage
+
+on:
+  push:
+    paths:
+      - 'docs/roadmap.ndjson'
+      - 'tests/**'
+      - 'traceability_check.py'
+      - '.github/workflows/traceability.yml'
+  pull_request:
+
+jobs:
+  traceability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run traceability check and emit JSON
+        run: |
+          python -m pip install -U pip
+          python traceability_check.py --json-out traceability_coverage.json || true
+          echo "Traceability JSON:" && cat traceability_coverage.json || true
+      - name: Upload coverage JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: traceability-coverage
+          path: traceability_coverage.json

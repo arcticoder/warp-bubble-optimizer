@@ -139,12 +139,16 @@ def main():
         print(f"Found {len(uncovered_vnv)} source V&V tags on uncovered lines (from coverage.xml):")
         for t in uncovered_vnv[:20]:
             print(f"  - {t['file']}:{t['line']} -> {t['tag']}")
+    covered_list = [t for t, ok in coverage.items() if ok]
+    total = len(tasks)
+    pct = (100.0 * len(covered_list) / total) if total > 0 else 100.0
     if args.json_out:
         out = {
-            "total_tasks": len(tasks),
-            "covered": [t for t, ok in coverage.items() if ok],
+            "total_tasks": total,
+            "covered": covered_list,
             "missing": missing,
             "uncovered_vnv_tags": uncovered_vnv,
+            "coverage_percent": round(pct, 2),
         }
         try:
             Path(args.json_out).write_text(json.dumps(out, indent=2))

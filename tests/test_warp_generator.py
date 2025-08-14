@@ -9,6 +9,9 @@ from src.supraluminal_prototype.warp_generator import (
     compute_envelope_error,
     plasma_density,
 )
+from impulse import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint
+from src.simulation.simulate_vector_impulse import Vector3D
+from simulate_rotation import Quaternion
 
 
 def test_hyperbolic_wave_sync_envelope_alignment():
@@ -32,3 +35,26 @@ def test_plasma_density_shell_peak_and_falloff():
     # Density near center should be much lower than peak
     center = n[grid.nx // 2, grid.ny // 2, grid.nz // 2]
     assert center < 0.2 * np.max(n)
+
+
+def test_mission_envelope_integration():
+    # Build a minimal mission
+    cfg = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+    ctrl = IntegratedImpulseController(cfg)
+    q = Quaternion(1, 0, 0, 0)
+    wps = [
+        MissionWaypoint(position=Vector3D(0, 0, 0), orientation=q, dwell_time=2.0),
+        MissionWaypoint(position=Vector3D(10, 0, 0), orientation=q, dwell_time=2.0),
+    ]
+    plan = ctrl.plan_impulse_trajectory(wps, hybrid_mode='simulate-first')
+    # Synthesize target and field envelope
+    grid = GridSpec(nx=24, ny=24, nz=9, extent=1.0)
+    tgt = target_soliton_envelope({'grid': grid, 'r0': 0.0, 'sigma': 0.5 * grid.extent})['envelope']
+    import numpy as _np
+    env = field_synthesis(_np.array([0.6, 0.6, 0.6, 0.6], dtype=float), {'grid': grid, 'sigma': 0.25 * grid.extent})['envelope']
+    # Execute mission (no direct coupling to envelope yet; we assert envelope quality alongside mission success)
+    import asyncio
+    res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(plan))
+    assert res['mission_success'] is True
+    err = compute_envelope_error(env, tgt, norm='l2')
+    assert err < 0.45
