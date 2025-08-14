@@ -324,7 +324,8 @@ class IntegratedImpulseController:
                                       raise_on_abort: bool = False,
                                       json_export_path: Optional[str] = None,
                                       verbose_export: bool = False,
-                                      export_cache: bool = False) -> Dict[str, Any]:
+                                      export_cache: bool = False,
+                                      perf_csv_path: Optional[str] = None) -> Dict[str, Any]:
         """Execute a pre-planned mission trajectory.
 
         V&V References (see roadmap & tests):
@@ -343,6 +344,14 @@ class IntegratedImpulseController:
             'performance_metrics': {},
             'mission_success': True
         }
+        # Optional performance CSV logging
+        perf_csv_fh = None
+        if perf_csv_path:
+            try:
+                perf_csv_fh = open(perf_csv_path, 'w')
+                perf_csv_fh.write('segment_index,kind,segment_time,segment_energy,peak_velocity,total_distance,total_rotation_angle\n')
+            except Exception:
+                perf_csv_fh = None  # ignore logging if path invalid
         cumulative_time = 0.0
         cumulative_energy = 0.0
         for i, segment in enumerate(trajectory_plan['segments']):
@@ -369,6 +378,26 @@ class IntegratedImpulseController:
                 segment_time += float(rot_results['maneuver_duration'])
             cumulative_energy += segment_energy
             cumulative_time += segment_time
+            if perf_csv_fh is not None:
+                # Emit translation row if available
+                try:
+                    import numpy as _np
+                    peak_v = None
+                    if 'velocity_magnitudes' in trans_results:
+                        vm = trans_results['velocity_magnitudes']
+                        if hasattr(vm, 'max'):
+                            peak_v = float(_np.max(vm))
+                    perf_csv_fh.write(
+                        f"{i},translation,{float(trans_results.get('maneuver_duration', 0.0))},{float(trans_results.get('total_energy', 0.0))},{'' if peak_v is None else peak_v},{float(trans_results.get('total_distance', 0.0))},""\n"
+                    )
+                except Exception:
+                    pass
+                # Emit rotation row if present
+                if rot_results is not None:
+                    perf_csv_fh.write(
+                        f"{i},rotation,{float(rot_results.get('maneuver_duration', 0.0))},{float(rot_results.get('total_energy', 0.0))},, ,{float(rot_results.get('total_rotation_angle', 0.0))}\n"
+                    )
+
             if abort_on_budget and cumulative_energy > self.config.energy_budget:
                 mission_results['mission_success'] = False
                 mission_results['segment_results'].append({
@@ -391,14 +420,25 @@ class IntegratedImpulseController:
                 'segment_time': segment_time,
                 'segment_success': True
             })
+        # Close perf CSV if open
+        if perf_csv_fh is not None:
+            try:
+                perf_csv_fh.close()
+            except Exception:
+                pass
+
+        # Compute success statistics based on executed segments
+        segments_completed = len(mission_results['segment_results'])
+        segments_successful = sum(1 for s in mission_results['segment_results'] if s.get('segment_success'))
+
         mission_results['performance_metrics'] = {
             'total_energy_used': cumulative_energy,
             'total_mission_time': cumulative_time,
             'energy_efficiency': cumulative_energy / (cumulative_time + 1e-12),
             'energy_budget_utilization': cumulative_energy / self.config.energy_budget,
-            'segments_completed': len(trajectory_plan['segments']),
-            'segments_successful': len(trajectory_plan['segments']),
-            'overall_success_rate': 1.0
+            'segments_completed': segments_completed,
+            'segments_successful': segments_successful,
+            'overall_success_rate': (segments_successful / max(1, segments_completed))
         }
         if json_export_path:
             # Build a JSON-serializable export (strip complex objects & numpy types)

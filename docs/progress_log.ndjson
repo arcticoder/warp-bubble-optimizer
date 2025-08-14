@@ -1,1 +1,3 @@
 {"event":"Ring CAD parameter file initial draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/roadmap.ndjson:Warp Field Generator Core"]}
+{"event":"Impulse UQ runner integrated with schema + tests","status":"completed","refs":["tests/test_impulse_uq_runner.py","tests/test_impulse_vnv.py","schemas/impulse.mission.v1.json"]}
+{"event":"Added performance CSV logging in mission executor and CLI flag","status":"completed","refs":["src/impulse/integrated_impulse_control.py","src/impulse/mission_cli.py","tests/test_perf_csv_logging.py"]}

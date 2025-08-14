@@ -38,7 +38,7 @@ def load_waypoints(path: str, dwell: float | None = None):
   return wps
 
 
-def main():
+def main(argv: list[str] | None = None):
   ap = argparse.ArgumentParser()
   ap.add_argument('--waypoints', required=True)
   ap.add_argument('--export', required=False)
@@ -50,7 +50,8 @@ def main():
   ap.add_argument('--raise-on-abort', action='store_true')
   ap.add_argument('--verbose-export', action='store_true')
   ap.add_argument('--export-cache', action='store_true')
-  args = ap.parse_args()
+  ap.add_argument('--perf-csv', type=str, default=None, help='Optional path to write per-segment performance CSV')
+  args = ap.parse_args(argv)
 
   cfg = ImpulseEngineConfig(energy_budget=args.budget, max_velocity=args.vmax)
   ctrl = IntegratedImpulseController(cfg)
@@ -62,7 +63,8 @@ def main():
     json_export_path=args.export,
     raise_on_abort=args.raise_on_abort,
     verbose_export=args.verbose_export,
-    export_cache=args.export_cache
+    export_cache=args.export_cache,
+    perf_csv_path=args.perf_csv
   ))
   print(json.dumps({
     'planned_GJ': plan['total_energy_estimate']/1e9,
@@ -73,4 +75,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+  main()

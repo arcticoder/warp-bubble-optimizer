@@ -120,6 +120,23 @@ python -m src.uq_validation.impulse_uq_runner --samples 50 --seed 123 --out uq_s
 
 This produces a JSON summary with fields like `energy_mean`, `energy_std`, `feasible_fraction`, and detailed per-sample records.
 
+### Mission export: schema + perf CSV
+
+- Validate mission JSON against the bundled schema (optional, requires jsonschema):
+
+```bash
+python bin/validate_mission_json.py path/to/mission.json
+```
+
+- Write a per-segment performance CSV while executing a mission (via CLI):
+
+```bash
+# Prepare waypoints JSON (see examples/waypoints/simple.json)
+python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
+```
+
+The CSV includes: segment_index, kind, segment_time, segment_energy, peak_velocity (for translation), total_distance/total_rotation_angle.
+
 
 ## Integrated Space Debris Protection System
 
