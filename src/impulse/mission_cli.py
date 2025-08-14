@@ -21,6 +21,7 @@ from pathlib import Path
 
 from .integrated_impulse_control import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint, Quaternion
 from src.simulation.simulate_vector_impulse import Vector3D
+from .seed_utils import set_seed
 
 
 def load_waypoints(path: str, dwell: float | None = None):
@@ -52,7 +53,15 @@ def main(argv: list[str] | None = None):
   ap.add_argument('--export-cache', action='store_true')
   ap.add_argument('--perf-csv', type=str, default=None, help='Optional path to write per-segment performance CSV')
   ap.add_argument('--error-codes', action='store_true', help='Return non-zero exit codes on infeasible planning or budget abort')
+  ap.add_argument('--seed', type=int, default=None, help='Set deterministic seed (also sets WARP_SEED/PYTHONHASHSEED)')
   args = ap.parse_args(argv)
+
+  # Seed plumbing for reproducibility
+  if args.seed is not None:
+    set_seed(int(args.seed))
+    # Set WARP_SEED for downstream meta persistence
+    import os as _os
+    _os.environ['WARP_SEED'] = str(int(args.seed))
 
   cfg = ImpulseEngineConfig(energy_budget=args.budget, max_velocity=args.vmax)
   ctrl = IntegratedImpulseController(cfg)

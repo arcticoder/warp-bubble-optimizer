@@ -160,6 +160,18 @@ def test_mission_json_schema_version(tmp_path):
 	assert int(data['schema']['version']) == 1
 
 
+def test_schema_id_and_version_enforced(tmp_path):
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+	ctrl = IntegratedImpulseController(config)
+	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([10.0]))
+	json_path = tmp_path / "mission.json"
+	run(ctrl.execute_impulse_mission(plan, json_export_path=str(json_path)))
+	data = json.loads(json_path.read_text())
+	sch = data.get('schema', {})
+	assert sch.get('id') == 'impulse.mission.v1'
+	assert int(sch.get('version', 0)) == 1
+
+
 def test_json_schema_validation_if_available(tmp_path):
 	try:
 		import jsonschema  # type: ignore
