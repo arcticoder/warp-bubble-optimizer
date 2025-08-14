@@ -16,9 +16,12 @@ from .integrated_impulse_control import (
     ImpulseEngineConfig,
     IntegratedImpulseController,
 )
+from .mission_cli import main as mission_cli_main  # noqa: F401
+from .seed_utils import set_seed  # noqa: F401
 
 __all__ = [
     'MissionWaypoint',
     'ImpulseEngineConfig',
-    'IntegratedImpulseController'
+    'IntegratedImpulseController',
+    'set_seed',
 ]

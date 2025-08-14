@@ -25,6 +25,16 @@ import numpy as np
 from typing import Dict, List, Any, Optional, Callable, Tuple
 from dataclasses import dataclass
 import time
+class InfeasiblePlanError(Exception):
+    pass
+
+
+class BudgetAbortError(Exception):
+    pass
+
+
+class InvalidWaypointsError(Exception):
+    pass
 
 # Legacy imports retained for backward compatibility (rotation/warp parameters)
 from simulate_impulse_engine import (  # type: ignore
@@ -161,7 +171,7 @@ class IntegratedImpulseController:
         * Safety margin feasibility uses: planned_total*(1+margin) ≤ budget
         """
         if len(waypoints) < 2:
-            raise ValueError("Need at least 2 waypoints")
+            raise InvalidWaypointsError("Need at least 2 waypoints")
         segments = []
         total_energy_estimate = 0.0
         total_time_estimate = 0.0
@@ -244,7 +254,7 @@ class IntegratedImpulseController:
             current_orient = target_wp.orientation
         feasible = total_energy_estimate <= self.config.energy_budget and \
             total_energy_estimate * (1 + self.config.safety_margin) <= self.config.energy_budget
-        return {
+        plan = {
             'segments': segments,
             'waypoints': waypoints,
             'total_energy_estimate': total_energy_estimate,
@@ -253,6 +263,10 @@ class IntegratedImpulseController:
             'feasible': feasible,
             'safety_margin': self.config.safety_margin
         }
+        if not feasible:
+            # Still return plan object but mark infeasible; callers can choose to error
+            pass
+        return plan
 
     async def execute_impulse_mission(self, trajectory_plan: Dict[str, Any], enable_feedback: bool = True,
                                       abort_on_budget: bool = True,

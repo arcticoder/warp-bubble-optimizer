@@ -18,6 +18,7 @@ from impulse import (  # type: ignore
 )
 from src.simulation.simulate_vector_impulse import Vector3D
 from simulate_rotation import Quaternion
+from impulse.seed_utils import set_seed
 
 
 def run(coro):
@@ -158,6 +159,58 @@ def test_mission_json_schema_version(tmp_path):
 	data = json.loads(json_path.read_text())
 	assert 'schema' in data and data['schema']['id'] == 'impulse.mission.v1'
 	assert int(data['schema']['version']) == 1
+
+
+def test_json_schema_validation_if_available(tmp_path):
+	try:
+		import jsonschema  # type: ignore
+	except Exception:
+		return
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+	ctrl = IntegratedImpulseController(config)
+	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([10.0]))
+	json_path = tmp_path / "mission.json"
+	run(ctrl.execute_impulse_mission(plan, json_export_path=str(json_path)))
+	data = json.loads(json_path.read_text())
+	schema = {
+		"type": "object",
+		"required": ["plan", "results", "schema"],
+		"properties": {
+			"schema": {
+				"type": "object",
+				"required": ["id", "version"],
+				"properties": {"id": {"type": "string"}, "version": {"type": "number"}},
+			}
+		},
+	}
+	jsonschema.validate(instance=data, schema=schema)
+
+
+def test_performance_guard_plan_execute_5_segments():
+	set_seed(42)
+	config = ImpulseEngineConfig(energy_budget=5e13, max_velocity=5e-5)
+	ctrl = IntegratedImpulseController(config)
+	wps = _simple_waypoints([20.0, 20.0, 20.0, 20.0, 20.0])
+	import time
+	t0 = time.perf_counter()
+	plan = ctrl.plan_impulse_trajectory(wps)
+	_ = run(ctrl.execute_impulse_mission(plan))
+	dt_ms = (time.perf_counter() - t0) * 1000
+	assert dt_ms < 300.0
+
+
+def test_rotation_strategy_upper_bound():
+	from src.impulse.energy_strategies import QuadraticOmegaStrategy, DutyWeightedOmegaStrategy
+	cfg = ImpulseEngineConfig()
+	strategy = DutyWeightedOmegaStrategy(QuadraticOmegaStrategy(k_factor=1e17))
+	ctrl = IntegratedImpulseController(cfg, rotation_energy_strategy=lambda p: strategy.estimate(p))
+	from simulate_rotation import RotationProfile, WarpBubbleRotational, simulate_rotation_maneuver
+	params = WarpBubbleRotational()
+	for omega in [0.05, 0.1]:
+		prof = RotationProfile(target_orientation=Quaternion.from_euler(0, 0, 0.3), omega_max=omega, t_up=3, t_hold=5, t_down=3, n_steps=200)
+		est = strategy.estimate(prof)
+		sim = simulate_rotation_maneuver(prof, params, enable_progress=False)
+		assert est >= sim['total_energy'] * 0.9
 
 
 def test_deprecation_import_warning_root_shim():
