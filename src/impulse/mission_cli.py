@@ -51,12 +51,17 @@ def main(argv: list[str] | None = None):
   ap.add_argument('--verbose-export', action='store_true')
   ap.add_argument('--export-cache', action='store_true')
   ap.add_argument('--perf-csv', type=str, default=None, help='Optional path to write per-segment performance CSV')
+  ap.add_argument('--error-codes', action='store_true', help='Return non-zero exit codes on infeasible planning or budget abort')
   args = ap.parse_args(argv)
 
   cfg = ImpulseEngineConfig(energy_budget=args.budget, max_velocity=args.vmax)
   ctrl = IntegratedImpulseController(cfg)
   wps = load_waypoints(args.waypoints)
   plan = ctrl.plan_impulse_trajectory(wps, hybrid_mode=args.hybrid, estimate_first_threshold=args.threshold, raise_on_infeasible=args.raise_on_infeasible)
+  if args.error_codes and not plan.get('feasible', False):
+    # Exit code 2 for infeasible plan
+    print(json.dumps({ 'error': 'infeasible_plan' }))
+    return 2
   import asyncio
   res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(
     plan,
@@ -66,6 +71,10 @@ def main(argv: list[str] | None = None):
     export_cache=args.export_cache,
     perf_csv_path=args.perf_csv
   ))
+  if args.error_codes and not res.get('mission_success', True):
+    # Exit code 3 for budget abort during execution
+    print(json.dumps({ 'error': 'budget_abort' }))
+    return 3
   print(json.dumps({
     'planned_GJ': plan['total_energy_estimate']/1e9,
     'actual_GJ': res['performance_metrics']['total_energy_used']/1e9,

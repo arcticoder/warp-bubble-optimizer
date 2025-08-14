@@ -80,7 +80,7 @@ except ImportError:  # pragma: no cover
 @dataclass
 class MissionWaypoint:
     position: Vector3D
-    orientation: Quaternion
+    orientation: Optional[Quaternion] = None
     dwell_time: float = 10.0
     approach_speed: float = 1e-5
     pointing_tolerance: float = 1e-3
@@ -344,7 +344,10 @@ class IntegratedImpulseController:
             'performance_metrics': {},
             'mission_success': True
         }
-        # Optional performance CSV logging
+        # Optional performance CSV logging (also supports env var override)
+        if perf_csv_path is None:
+            import os as _os
+            perf_csv_path = _os.environ.get('WARP_PERF_CSV') or None
         perf_csv_fh = None
         if perf_csv_path:
             try:
@@ -540,15 +543,27 @@ class IntegratedImpulseController:
             }
             if verbose_export:
                 # Add a minimal verbose section for debugging
-                export['meta'] = {
+                meta = {
                     'controller_overrides': bool(self.control_config is not None),
                     'config': {
                         'max_velocity': float(self.config.max_velocity),
                         'max_angular_velocity': float(self.config.max_angular_velocity),
                         'energy_budget': float(self.config.energy_budget),
                         'safety_margin': float(self.config.safety_margin)
-                    }
+                    },
+                    'randomization': {}
                 }
+                # Persist seed/randomization meta if available
+                try:
+                    import os as _os
+                    if 'WARP_SEED' in _os.environ:
+                        meta['randomization']['env_seed'] = int(_os.environ['WARP_SEED'])
+                    if 'PYTHONHASHSEED' in _os.environ:
+                        # Not the RNG seed but useful to capture deterministic hashing context
+                        meta['randomization']['python_hash_seed'] = int(_os.environ['PYTHONHASHSEED'])
+                except Exception:
+                    pass
+                export['meta'] = meta
             try:
                 with open(json_export_path, 'w') as f:
                     json.dump(export, f, indent=2)

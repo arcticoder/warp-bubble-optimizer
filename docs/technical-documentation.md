@@ -1,3 +1,23 @@
+## Hybrid Planning Modes (simulate-first vs estimate-first)
+
+The impulse mission planner supports two hybrid modes to balance speed and fidelity:
+
+- simulate-first: Simulate each segment during planning to compute energy/time. This maximizes fidelity and typically keeps plan vs execute within ~5% but costs more CPU.
+- estimate-first: Use a fast heuristic estimator for all segments, then refine the largest segments by simulation up to a threshold fraction of the energy budget.
+
+Tuning knobs:
+- hybrid_mode: 'off' | 'simulate-first' | 'estimate-first'
+- estimate_first_threshold: [0,1] budget fraction to refine, larger → more segments simulated.
+
+Troubleshooting:
+- If plan vs execute energy deviates >5–8%, switch to simulate-first or raise threshold.
+- If planning is too slow, prefer estimate-first with a lower threshold (e.g., 0.2–0.3).
+- Ensure energy_budget and safety_margin are set realistically; feasibility is computed on the margin-adjusted total.
+
+CLI examples:
+- python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --hybrid simulate-first
+- python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --hybrid estimate-first --threshold 0.5
+
 ## JAX vs NumPy benchmark summary
 
 This project includes a small benchmark script (`test_jax_acceleration.py`) comparing NumPy and JAX implementations on representative kernels:

@@ -205,11 +205,13 @@ def test_rotation_strategy_upper_bound():
 	ctrl = IntegratedImpulseController(cfg, rotation_energy_strategy=lambda p: strategy.estimate(p))
 	from simulate_rotation import RotationProfile, WarpBubbleRotational, simulate_rotation_maneuver
 	params = WarpBubbleRotational()
-	for omega in [0.05, 0.1]:
-		prof = RotationProfile(target_orientation=Quaternion.from_euler(0, 0, 0.3), omega_max=omega, t_up=3, t_hold=5, t_down=3, n_steps=200)
-		est = strategy.estimate(prof)
-		sim = simulate_rotation_maneuver(prof, params, enable_progress=False)
-		assert est >= sim['total_energy'] * 0.9
+	for omega in [0.03, 0.05, 0.08, 0.1, 0.15]:
+		for duty in [(3,5,3), (2,6,2), (4,4,4)]:
+			t_up, t_hold, t_down = duty
+			prof = RotationProfile(target_orientation=Quaternion.from_euler(0, 0, 0.3), omega_max=omega, t_up=t_up, t_hold=t_hold, t_down=t_down, n_steps=200)
+			est = strategy.estimate(prof)
+			sim = simulate_rotation_maneuver(prof, params, enable_progress=False)
+			assert est >= sim['total_energy'] * 0.9
 
 
 def test_deprecation_import_warning_root_shim():
