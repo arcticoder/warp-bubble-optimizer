@@ -10,6 +10,7 @@ from src.supraluminal_prototype.warp_generator import (
     plasma_density,
 )
 from src.supraluminal_prototype.device_facade import DeviceFacade
+from src.supraluminal_prototype.experiment_plan import ExperimentPlan
 from impulse import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint
 from src.simulation.simulate_vector_impulse import Vector3D
 from simulate_rotation import Quaternion
@@ -66,3 +67,11 @@ def test_mission_envelope_integration():
     assert synced_freq > 1e15
     state = dev.read_field_state()
     assert state['error'] < 0.45
+
+
+def test_experiment_plan():
+    dev = DeviceFacade()
+    plan = ExperimentPlan(laser_power=1.0, coil_freq=1e15, plasma_density=1e20, r_shell=0.5, width=0.1)
+    cfg = plan.generate_plan()
+    assert isinstance(cfg, dict) and cfg.get('laser_power') == 1.0
+    assert plan.validate_plan(dev) is True

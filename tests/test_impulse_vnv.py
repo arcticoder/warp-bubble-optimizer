@@ -299,6 +299,20 @@ def test_rotational_performance_guard():
 	dt_ms = (time.perf_counter() - t0) * 1000
 	assert dt_ms < 300.0
 
+def test_packaged_schema_access():
+	import json
+	from importlib import resources
+	# Mission schema
+	with resources.files('warp_bubble_optimizer').joinpath('schemas/impulse.mission.v1.json').open('rb') as f:
+		mission_schema = json.load(f)
+	# Check top-level identity
+	assert mission_schema.get('$id', '').endswith('/impulse.mission.v1.json')
+	# Perf schema
+	with resources.files('warp_bubble_optimizer').joinpath('schemas/perf.csv.schema.json').open('rb') as f:
+		perf_schema = json.load(f)
+	required = set(perf_schema.get('required', []))
+	assert 'segment_index' in required and 'segment_energy' in required
+
 
 def test_json_schema_file_validation_if_available(tmp_path):
 	try:

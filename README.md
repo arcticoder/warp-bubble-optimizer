@@ -771,6 +771,72 @@ def optimize_integrated_system():
 
 *This enhanced optimizer represents a significant advancement in multi-field warp system optimization, enabling unprecedented control over complex overlapping field configurations while maintaining physical consistency and operational efficiency.*
 
+## Schemas
+
+This repository ships runtime-available JSON Schemas so other tools can validate exports consistently:
+
+- impulse.mission.v1.json: mission export schema used by the impulse CLI
+- perf.csv.schema.json: per-segment performance CSV row schema
+
+Access them via Python without knowing paths by using importlib.resources:
+
+- Module: `warp_bubble_optimizer`
+- Location: `schemas/`
+
+Example (prints mission schema text):
+
+```bash
+python -c "from importlib import resources; print(resources.files('warp_bubble_optimizer').joinpath('schemas/impulse.mission.v1.json').read_text())"
+```
+
+You can also load them as dicts:
+
+```python
+import json
+from importlib import resources
+with resources.files('warp_bubble_optimizer').joinpath('schemas/impulse.mission.v1.json').open('rb') as f:
+    mission_schema = json.load(f)
+with resources.files('warp_bubble_optimizer').joinpath('schemas/perf.csv.schema.json').open('rb') as f:
+    perf_schema = json.load(f)
+```
+
+## 40 Eridani A Simulation (52c feasibility)
+
+Our CI generates artifacts demonstrating a 52c-class mission scenario to 40 Eridani A (approx. 16.3 ly ≈ 1.4e15 m) with 20-segment distance profiling and 100 UQ samples (updated Aug 14, 2025):
+
+- Energy stability: energy_cv < 0.05
+- Mission robustness: feasible_fraction > 0.9
+- Duration target: 30 days at 52c equivalent cruise envelope
+
+Artifacts (via GitHub Pages):
+
+- Energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png
+- Feasibility rolling fraction: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility.png
+- Extended energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
+- Extended feasibility: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
+
+These are produced from the UQ runner and analysis steps in CI. See `.github/workflows/mission-validate.yml` and the notebook `notebooks/40eridani_analysis.ipynb` for details.
+
+Goal alignment: positive-energy solitons and Natário zero-expansion geometry, advancing toward a 2063 demonstration mission profile.
+
+## Contribute
+
+We welcome collaboration on hardware scaling and theoretical integration:
+
+- Hardware: laser–coil synchronization, plasma chamber design, envelope tracking
+- Theory: LQG corrections with sinc(πμ), Natário zero-expansion, positive-energy soliton profiles
+
+Start here:
+
+- Read CONTRIBUTING.md
+- Fork the repo, create a feature branch, add tests (pytest), and open a PR
+
+Focus areas that need help now:
+
+- Device facades and experiment plans for 2035–2050 prototypes
+- UQ extensions and CI artifact dashboards
+- Cross-repo schema consumers for mission/perf analytics
+
 ## Testing and CI
 
 - Local quick run: use the lightweight tests and filters already configured in `pytest.ini` and `conftest.py`.
