@@ -110,6 +110,17 @@ python traceability_check.py --fail-on-missing
 If any items are missing coverage the script exits non‑zero (ideal for CI). Add new tests or mark tasks as done/removed to resolve gaps.
 
 
+### UQ: Impulse Mission Perturbation Runner
+
+Use the lightweight impulse UQ runner to sample dwell time and approach speed perturbations and summarize planned energy variability and feasibility rate:
+
+```bash
+python -m src.uq_validation.impulse_uq_runner --samples 50 --seed 123 --out uq_summary.json
+```
+
+This produces a JSON summary with fields like `energy_mean`, `energy_std`, `feasible_fraction`, and detailed per-sample records.
+
+
 ## Integrated Space Debris Protection System
 
 **NEW FEATURE:** Multi-scale space debris protection framework with:
