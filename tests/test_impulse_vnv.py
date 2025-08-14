@@ -14,11 +14,10 @@ if str(src_root) not in sys.path:
 if str(repo_root) not in sys.path:
 	sys.path.insert(0, str(repo_root))
 from impulse import (  # type: ignore
-	IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig
+	IntegratedImpulseController, MissionWaypoint, ImpulseEngineConfig, set_seed
 )
 from src.simulation.simulate_vector_impulse import Vector3D
 from simulate_rotation import Quaternion
-from impulse.seed_utils import set_seed
 
 
 def run(coro):
@@ -221,3 +220,86 @@ def test_deprecation_import_warning_root_shim():
 		mod = importlib.import_module('integrated_impulse_control')
 		assert any(issubclass(rec.category, DeprecationWarning) for rec in w)
 		assert hasattr(mod, 'IntegratedImpulseController')
+
+def test_export_segments_kinds_and_verbose_cache(tmp_path):
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+	ctrl = IntegratedImpulseController(config)
+	# Include a rotation segment by providing orientation change
+	wp0 = MissionWaypoint(position=Vector3D(0, 0, 0), orientation=Quaternion(1, 0, 0, 0))
+	wp1 = MissionWaypoint(position=Vector3D(10, 0, 0), orientation=Quaternion.from_euler(0, 0, 0.2), dwell_time=2.0)
+	plan = ctrl.plan_impulse_trajectory([wp0, wp1], hybrid_mode='simulate-first')
+	out = tmp_path / 'mission_verbose.json'
+	_ = run(ctrl.execute_impulse_mission(plan, json_export_path=str(out), verbose_export=True, export_cache=True))
+	data = json.loads(out.read_text())
+	assert 'results' in data
+	assert all('kinds' in s for s in data['results']['segment_results'])
+	# At least one kind must be listed
+	assert any(len(s['kinds']) >= 1 for s in data['results']['segment_results'])
+	# Verbose meta present
+	assert 'meta' in data and 'config' in data['meta']
+	# Planning cache persisted
+	assert 'planning_cache' in data['results'] and isinstance(data['results']['planning_cache'], list)
+
+
+def test_hybrid_estimate_first_refinement_and_feasibility():
+	cfg = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5, safety_margin=0.2)
+	ctrl = IntegratedImpulseController(cfg)
+	wps = _simple_waypoints([10.0, 40.0, 20.0, 5.0])
+	# First run estimate-first with low threshold (refines fewer segments)
+	plan_low = ctrl.plan_impulse_trajectory(wps, hybrid_mode='estimate-first', estimate_first_threshold=0.1)
+	# Then with higher threshold (refines more)
+	plan_high = ctrl.plan_impulse_trajectory(wps, hybrid_mode='estimate-first', estimate_first_threshold=0.6)
+	assert plan_low['feasible'] == (plan_low['total_energy_estimate'] * (1 + cfg.safety_margin) <= cfg.energy_budget)
+	assert plan_high['feasible'] == (plan_high['total_energy_estimate'] * (1 + cfg.safety_margin) <= cfg.energy_budget)
+	# With higher threshold, total estimate should be at least as high (more refined)
+	assert plan_high['total_energy_estimate'] >= plan_low['total_energy_estimate'] - 1e-6
+
+
+def test_raise_on_infeasible_and_abort(tmp_path):
+	# Plan infeasible with raise_on_infeasible
+	cfg = ImpulseEngineConfig(energy_budget=1e9, max_velocity=5e-5, safety_margin=0.2)
+	ctrl = IntegratedImpulseController(cfg)
+	wps = _simple_waypoints([200.0])
+	import pytest
+	with pytest.raises(Exception):
+		_ = ctrl.plan_impulse_trajectory(wps, raise_on_infeasible=True)
+	# Execute abort with raise_on_abort
+	cfg2 = ImpulseEngineConfig(energy_budget=1e9, max_velocity=5e-5)
+	ctrl2 = IntegratedImpulseController(cfg2)
+	plan2 = ctrl2.plan_impulse_trajectory(_simple_waypoints([150.0]))
+	with pytest.raises(Exception):
+		_ = run(ctrl2.execute_impulse_mission(plan2, abort_on_budget=True, raise_on_abort=True))
+
+
+def test_rotational_performance_guard():
+	set_seed(123)
+	cfg = ImpulseEngineConfig(energy_budget=5e13, max_velocity=5e-5, max_angular_velocity=0.2)
+	ctrl = IntegratedImpulseController(cfg)
+	# Build waypoints that include a rotation-only segment
+	wp0 = MissionWaypoint(position=Vector3D(0, 0, 0), orientation=Quaternion(1, 0, 0, 0))
+	wp1 = MissionWaypoint(position=Vector3D(0, 0, 0), orientation=Quaternion.from_euler(0, 0.1, 0.0), dwell_time=2.0)
+	import time
+	t0 = time.perf_counter()
+	plan = ctrl.plan_impulse_trajectory([wp0, wp1])
+	_ = run(ctrl.execute_impulse_mission(plan))
+	dt_ms = (time.perf_counter() - t0) * 1000
+	assert dt_ms < 300.0
+
+
+def test_json_schema_file_validation_if_available(tmp_path):
+	try:
+		import jsonschema  # type: ignore
+	except Exception:
+		return
+	config = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+	ctrl = IntegratedImpulseController(config)
+	plan = ctrl.plan_impulse_trajectory(_simple_waypoints([10.0]))
+	json_path = tmp_path / "mission.json"
+	run(ctrl.execute_impulse_mission(plan, json_export_path=str(json_path), verbose_export=True, export_cache=True))
+	data = json.loads(json_path.read_text())
+	schema_path = Path(__file__).parent.parent / 'schemas' / 'impulse.mission.v1.json'
+	if not schema_path.exists():
+		return
+	schema = json.loads(schema_path.read_text())
+	import jsonschema  # type: ignore
+	jsonschema.validate(instance=data, schema=schema)
