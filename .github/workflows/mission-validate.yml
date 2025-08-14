@@ -56,7 +56,9 @@ jobs:
           python bin/plot_perf_csv.py --csv ./artifacts/perf.csv --out perf_summary.png
       - name: Aggregate perf summary JSON
         run: |
-          python bin/aggregate_perf_csv.py ./artifacts/perf.csv --out perf_aggregate.json
+          # Simulate multiple runs if only one CSV is present
+          cp ./artifacts/perf.csv ./artifacts/perf_run2.csv
+          python bin/aggregate_perf_csv.py ./artifacts/perf.csv ./artifacts/perf_run2.csv --out perf_aggregate.json
       - name: 40 Eridani A UQ + analysis
         run: |
           python -m src.uq_validation.impulse_uq_runner --samples 20 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
@@ -112,3 +114,14 @@ PY
             perf_aggregate.json
             40eridani_energy.png
             40eridani_feasibility.png
+      - name: Comment summary on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Posting PR summary..."
+          ENERGY=$(jq -r '.segment_energy_mean' perf_aggregate.json)
+          TIME=$(jq -r '.segment_time_mean' perf_aggregate.json)
+          FEAS=$(jq -r '.feasible_fraction // empty' uq_summary.json 2>/dev/null || echo "")
+          BODY="Perf Aggregate Summary:%0A- Mean Segment Energy: ${ENERGY} J%0A- Mean Segment Time: ${TIME} s%0A- Feasible Fraction (UQ): ${FEAS}"
+          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"

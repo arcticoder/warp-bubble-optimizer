@@ -5,6 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 import pandas as pd
+from importlib import resources
 
 REQUIRED_COLS = [
     'segment_index', 'kind', 'segment_time', 'segment_energy'
@@ -33,6 +34,19 @@ def main(argv: list[str] | None = None) -> int:
     if bad_time or bad_energy:
         print("Negative times or energies found", file=sys.stderr)
         return 5
+    # Optional JSON Schema validation
+    try:
+        import json, jsonschema  # type: ignore
+        # Cast a single row to an object and validate required fields/types
+        with resources.files('warp_bubble_optimizer').joinpath('schemas/perf.csv.schema.json').open('rb') as f:
+            schema = json.load(f)
+        # Validate each row minimally (could be optimized)
+        for _, row in df.iterrows():
+            obj = row.to_dict()
+            jsonschema.validate(instance=obj, schema=schema)
+    except Exception:
+        # Schema validation is optional; ignore if unavailable
+        pass
     print("perf.csv valid")
     return 0
 

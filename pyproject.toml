@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "warp-bubble-optimizer"
-version = "0.1.0-dev0"
+version = "0.1.0-dev3"
 description = "Impulse mission planner and simulator for warp bubble experiments"
 authors = [{ name = "arcticoder" }]
 readme = "README.md"
@@ -17,7 +17,8 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-asyncio", "coverage"]
+dev = ["pytest", "pytest-asyncio", "coverage", "build", "twine"]
+schema = ["jsonschema"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -27,9 +28,22 @@ branch = true
 source = ["src"]
 
 [tool.bumpversion]
-current_version = "0.1.0-dev0"
+current_version = "0.1.0-dev3"
 commit = false
 tag = false
 
 [tool.bumpversion.files]
 "src/version.py" = {}
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+
+[tool.setuptools.package-data]
+warp_bubble_optimizer = [
+  "schemas/*.json"
+]

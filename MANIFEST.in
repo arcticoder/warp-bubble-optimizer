@@ -1,0 +1,1 @@
+recursive-include src/warp_bubble_optimizer/schemas *.json

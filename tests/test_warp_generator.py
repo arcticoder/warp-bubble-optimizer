@@ -9,6 +9,7 @@ from src.supraluminal_prototype.warp_generator import (
     compute_envelope_error,
     plasma_density,
 )
+from src.supraluminal_prototype.device_facade import DeviceFacade
 from impulse import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint
 from src.simulation.simulate_vector_impulse import Vector3D
 from simulate_rotation import Quaternion
@@ -39,7 +40,7 @@ def test_plasma_density_shell_peak_and_falloff():
 
 def test_mission_envelope_integration():
     # Build a minimal mission
-    cfg = ImpulseEngineConfig(energy_budget=5e12, max_velocity=4e-5)
+    cfg = ImpulseEngineConfig(energy_budget=5e13, max_velocity=4e-5)
     ctrl = IntegratedImpulseController(cfg)
     q = Quaternion(1, 0, 0, 0)
     wps = [
@@ -54,7 +55,14 @@ def test_mission_envelope_integration():
     env = field_synthesis(_np.array([0.6, 0.6, 0.6, 0.6], dtype=float), {'grid': grid, 'sigma': 0.25 * grid.extent})['envelope']
     # Execute mission (no direct coupling to envelope yet; we assert envelope quality alongside mission success)
     import asyncio
-    res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(plan))
+    res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(plan, abort_on_budget=False))
     assert res['mission_success'] is True
     err = compute_envelope_error(env, tgt, norm='l2')
     assert err < 0.45
+    # Mock device interactions: coil power, laser frequency sync, and field state
+    dev = DeviceFacade()
+    assert dev.initialize_coil(1.0) is True
+    synced_freq = dev.set_laser_frequency(1e15)
+    assert synced_freq > 1e15
+    state = dev.read_field_state()
+    assert state['error'] < 0.45

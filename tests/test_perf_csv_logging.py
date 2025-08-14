@@ -41,7 +41,8 @@ def test_perf_summary_plot_generation(tmp_path):
     _ = run(ctrl.execute_impulse_mission(plan, perf_csv_path=str(out_csv)))
     # Plot
     from subprocess import run as srun
+    import sys
     out_png = tmp_path / 'perf_summary.png'
-    r = srun(['python', 'bin/plot_perf_csv.py', '--csv', str(out_csv), '--out', str(out_png)])
+    r = srun([sys.executable, 'bin/plot_perf_csv.py', '--csv', str(out_csv), '--out', str(out_png)])
     assert r.returncode == 0
     assert out_png.exists() and out_png.stat().st_size > 0
