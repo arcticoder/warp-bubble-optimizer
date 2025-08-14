@@ -819,6 +819,18 @@ These are produced from the UQ runner and analysis steps in CI. See `.github/wor
 
 Goal alignment: positive-energy solitons and Natário zero-expansion geometry, advancing toward a 2063 demonstration mission profile.
 
+## Results on GitHub Pages
+
+View simulation results at:
+
+- Standard energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png
+- Standard feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility.png
+- Extended energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
+- Extended feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
+- Varied profile energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_varied.png
+- Varied profile feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_varied.png
+- Traceability badge JSON: https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json
+
 ## Contribute
 
 We welcome collaboration on hardware scaling and theoretical integration:

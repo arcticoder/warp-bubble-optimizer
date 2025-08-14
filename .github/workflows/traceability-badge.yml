@@ -98,6 +98,63 @@ jobs:
             echo "No 40 Eridani plots found; skipping copy."
           fi
 
+      - name: Fetch latest 40eridani artifacts via GitHub API (fallback)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Publishing 40 Eridani plots to Pages: 2025-08-14 15:53 PDT"
+          mkdir -p public api_fetch
+          echo "Querying artifacts list..."
+          curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/artifacts > api_fetch/artifacts.json || true
+          python - << 'PY'
+import json, os, sys
+p = 'api_fetch/artifacts.json'
+if not os.path.exists(p):
+    sys.exit(0)
+try:
+    data = json.load(open(p))
+    arts = data.get('artifacts', [])
+    # Filter by name and not expired
+    cands = [a for a in arts if a.get('name')=='40eridani-artifacts' and not a.get('expired', False)]
+    # Sort by updated_at desc
+    cands.sort(key=lambda a: a.get('updated_at',''), reverse=True)
+    if not cands:
+        print('No 40eridani-artifacts found via API')
+        sys.exit(0)
+    chosen = cands[0]
+    url = chosen.get('archive_download_url')
+    with open('api_fetch/url.txt','w') as f:
+        f.write(url or '')
+    print('Selected artifact id', chosen.get('id'), 'updated_at', chosen.get('updated_at'))
+except Exception as e:
+    print('Artifact parse error:', e)
+    sys.exit(0)
+PY
+          if [ -s api_fetch/url.txt ]; then
+            ART_URL=$(cat api_fetch/url.txt)
+            echo "Downloading artifact zip..."
+            curl -sSL -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+              "$ART_URL" -o api_fetch/40eridani-artifacts.zip || true
+            python - << 'PY'
+import zipfile, os
+zip_path = 'api_fetch/40eridani-artifacts.zip'
+if os.path.exists(zip_path) and os.path.getsize(zip_path) > 0:
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        z.extractall('api_fetch/extracted')
+    # Copy any matching plots to public
+    os.makedirs('public', exist_ok=True)
+    for root, _, files in os.walk('api_fetch/extracted'):
+        for fn in files:
+            if fn.startswith('40eridani_') and fn.endswith('.png'):
+                src = os.path.join(root, fn)
+                dst = os.path.join('public', fn)
+                with open(src, 'rb') as s, open(dst, 'wb') as d:
+                    d.write(s.read())
+                print('Copied', fn, 'to public/')
+PY
+          fi
+
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:

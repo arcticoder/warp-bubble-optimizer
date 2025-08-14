@@ -182,6 +182,19 @@ feasible_fraction = float(np.mean(feas)) if feas else float('nan')
 with open('uq_varied_metrics.json', 'w') as f:
   json.dump({"energy_mean": energy_mean, "energy_std": energy_std, "energy_cv": energy_cv, "feasible_fraction": feasible_fraction}, f)
 PY
+      - name: Validate varied profile metrics against thresholds
+        run: |
+          echo "Validating varied profile metrics: 2025-08-14 15:53 PDT"
+          python - << 'PY'
+import json
+with open('uq_varied_metrics.json','r') as f:
+    d = json.load(f)
+cv = float(d.get('energy_cv', 1.0))
+ff = float(d.get('feasible_fraction', 0.0))
+assert cv < 0.05, f"Energy CV too high: {cv}"
+assert ff > 0.9, f"Feasible fraction too low: {ff}"
+print('Varied profile gates passed:', {'energy_cv': cv, 'feasible_fraction': ff})
+PY
       - name: Upload perf summary
         uses: actions/upload-artifact@v4
         with:
