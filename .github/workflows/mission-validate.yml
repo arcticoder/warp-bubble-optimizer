@@ -24,7 +24,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install -U pip
-          python -m pip install -r requirements.txt jsonschema pandas numpy matplotlib
+           python -m pip install -r requirements.txt -r requirements-test.txt jsonschema pandas numpy matplotlib
       - name: Lint YAML files
         # Non-blocking lint: we relax strict rules and do not fail the job on style-only issues
         run: |
@@ -163,15 +163,7 @@ jobs:
       - name: Validate CSVs
         run: |
           echo "Validating CSVs: 2025-08-14 21:41 PDT"
-          python - <<'PY'
-          import pandas as pd
-          # Validate varied distance profile CSV (repo root copy)
-          df = pd.read_csv('dist_profile_40eridani_varied.csv', comment='#')
-          assert not df.empty, 'Varied CSV empty'
-          assert 'distance' in df.columns, 'Missing distance column in varied CSV'
-          assert len(df) >= 3, 'CSV too small'
-          print('Varied CSV valid, rows:', len(df), 'columns:', df.columns.tolist())
-          PY
+           python tools/validate_dist_profile.py dist_profile_40eridani_varied.csv
       - name: Log UQ input
         run: |
           echo "UQ input: 2025-08-14 21:41 PDT"
@@ -186,22 +178,8 @@ jobs:
       - name: Validate CSV columns
         run: |
           echo "Validating CSV columns: 2025-08-14 21:41 PDT"
-          python - <<'PY'
-          import pandas as pd
-          df = pd.read_csv('data/dist_profile_40eridani.csv', comment='#')
-          assert len(df.columns) > 0, 'Standard CSV has no columns'
-          # Try varied CSV in repo root first, then data/
-          import os
-          varied_root = 'dist_profile_40eridani_varied.csv'
-          varied_data = 'data/dist_profile_40eridani_varied.csv'
-          path = varied_root if os.path.exists(varied_root) else varied_data
-          dfv = pd.read_csv(path, comment='#')
-          assert len(dfv.columns) > 0, 'Varied CSV has no columns'
-          # Accept either a distance-only profile or legacy energy/feasibility schema
-          ok = ('distance' in dfv.columns) or (set(['energy','feasibility']).issubset(dfv.columns))
-          assert ok, f'Unexpected varied CSV columns: {dfv.columns.tolist()}'
-          print('CSV columns OK:', list(df.columns), list(dfv.columns))
-          PY
+           python tools/validate_dist_profile.py data/dist_profile_40eridani.csv
+           python tools/validate_dist_profile.py ${GITHUB_WORKSPACE}/data/dist_profile_40eridani_varied.csv || python tools/validate_dist_profile.py dist_profile_40eridani_varied.csv
       - name: Log CI environment
         run: |
           echo "CI environment: 2025-08-14 21:41 PDT"
@@ -240,7 +218,14 @@ jobs:
       - name: Validate PNG presence
         run: |
           echo "Checking PNGs: 2025-08-14 21:41 PDT"
-          ls artifacts/40eridani_*.png || { echo "No PNGs in artifacts"; exit 1; }
+           ls artifacts/40eridani_*.png || { echo "No PNGs in artifacts"; exit 1; }
+           python - <<'PY'
+           import glob, sys
+           from tools.png_check import is_png
+           bad = [p for p in glob.glob('artifacts/40eridani_*.png') if not is_png(p)]
+           assert not bad, f"Invalid PNG signatures: {bad}"
+           print('PNG signatures OK:', len(glob.glob('artifacts/40eridani_*.png')))
+           PY
       - name: Generate fallback PNGs
         if: failure()
         run: |
@@ -261,7 +246,17 @@ jobs:
       - name: Validate varied profile metrics against thresholds
         run: |
           echo "Validating varied profile metrics: 2025-08-14 21:41 PDT"
-          python -c "import json;d=json.load(open('uq_varied_metrics.json'));cv=float(d.get('energy_cv',1.0));ff=float(d.get('feasible_fraction',0.0));print('Varied profile metrics',{\"cv\":cv,\"ff\":ff});assert cv<0.15,cv;assert ff>=0.0,ff;print('Varied profile gates passed',{'cv':cv,'ff':ff})"
+           python - <<'PY'
+           import json, sys
+           gates = json.load(open('.github/feasibility_gates.json'))['varied_profile']
+           d = json.load(open('uq_varied_metrics.json'))
+           cv = float(d.get('energy_cv', 1.0))
+           ff = float(d.get('feasible_fraction', 0.0))
+           print('Varied metrics:', {'cv': cv, 'ff': ff})
+           assert cv < gates['energy_cv_max'], f"cv {cv} >= {gates['energy_cv_max']}"
+           assert ff >= gates['feasible_fraction_min'], f"ff {ff} < {gates['feasible_fraction_min']}"
+           print('Gates passed with', {'cv': cv, 'ff': ff})
+           PY
       - name: Prepare artifacts directory
         run: |
           echo "Preparing artifacts dir: 2025-08-14 21:41 PDT"
@@ -305,7 +300,7 @@ jobs:
       - name: Validate artifact zip
         run: |
           echo "Validating artifact zip: 2025-08-14 21:41 PDT"
-          zip -T 40eridani-artifacts.zip || { echo "Zip corrupt"; exit 1; }
+           python tools/zip_check.py 40eridani-artifacts.zip
       - name: Compress artifacts
         run: |
           echo "Compressing artifacts: 2025-08-14 21:41 PDT"

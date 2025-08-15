@@ -19,10 +19,22 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install -U pip
-          python -m pip install -r requirements.txt jsonschema
+          python -m pip install -r requirements.txt -r requirements-test.txt jsonschema
+      - name: Seed example waypoints
+        run: |
+          mkdir -p examples/waypoints
+          cat > examples/waypoints/simple.json <<'JSON'
+          {
+            "waypoints": [
+              {"x": 0, "y": 0, "z": 0},
+              {"x": 50, "y": 0, "z": 0}
+            ],
+            "dwell": 2.0
+          }
+          JSON
       - name: Run tiny mission and export JSON
         run: |
-          PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --hybrid simulate-first
+          PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --hybrid simulate-first --rehearsal --timeline-log mission_timeline.csv
       - name: Validate mission.json against schema
         run: |
           python bin/validate_mission_json.py mission.json

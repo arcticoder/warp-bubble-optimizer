@@ -56,6 +56,7 @@ def main(argv: list[str] | None = None):
   ap.add_argument('--seed', type=int, default=None, help='Set deterministic seed (also sets WARP_SEED/PYTHONHASHSEED)')
   ap.add_argument('--rehearsal', action='store_true', help='Rehearsal mode: plan only, timeline gating, no execution')
   ap.add_argument('--dry-run-abort', action='store_true', help='Simulate abort on threshold crossing without execution')
+  ap.add_argument('--timeline-log', type=str, default=None, help='Optional CSV/JSONL path to log timeline events (planned vs executed)')
   args = ap.parse_args(argv)
 
   # Seed plumbing for reproducibility
@@ -69,6 +70,33 @@ def main(argv: list[str] | None = None):
   ctrl = IntegratedImpulseController(cfg)
   wps = load_waypoints(args.waypoints)
   plan = ctrl.plan_impulse_trajectory(wps, hybrid_mode=args.hybrid, estimate_first_threshold=args.threshold, raise_on_infeasible=args.raise_on_infeasible)
+
+  # Optional timeline: write planning event
+  def _write_timeline(path: str, rec: dict):
+    from datetime import datetime, timezone
+    import csv, os, json as _json
+    now_iso = datetime.now(timezone.utc).isoformat()
+    rec = {**rec, 'iso_time': now_iso}
+    # Decide CSV vs JSONL by extension
+    if path.lower().endswith('.jsonl'):
+      with open(path, 'a') as fh:
+        fh.write(_json.dumps(rec) + "\n")
+    else:
+      exists = os.path.exists(path)
+      with open(path, 'a', newline='') as fh:
+        writer = csv.DictWriter(fh, fieldnames=['iso_time','t_rel_s','event','segment_id','planned_value','actual_value'])
+        if not exists:
+          writer.writeheader()
+        writer.writerow({k: rec.get(k) for k in ['iso_time','t_rel_s','event','segment_id','planned_value','actual_value']})
+
+  if args.timeline_log:
+    _write_timeline(args.timeline_log, {
+      't_rel_s': 0.0,
+      'event': 'plan_created',
+      'segment_id': None,
+      'planned_value': float(plan.get('total_energy_estimate', 0.0)),
+      'actual_value': None,
+    })
   if args.error_codes and not plan.get('feasible', False):
     # Exit code 2 for infeasible plan
     print(json.dumps({ 'error': 'infeasible_plan' }))
@@ -82,6 +110,34 @@ def main(argv: list[str] | None = None):
       'segments': len(plan.get('segments', [])),
       'mode': 'rehearsal' if args.rehearsal else 'dry-run-abort'
     }
+    # If export requested, emit a minimal mission JSON that conforms to the schema
+    if args.export:
+      export = {
+        'schema': 'impulse.mission.v1',
+        'version': 1,
+        'meta': {
+          'hybrid_mode': args.hybrid,
+          'estimate_first_threshold': args.threshold,
+          'rehearsal': bool(args.rehearsal),
+        },
+        'waypoints': [
+          {
+            'position': {'x': float(w.position.x), 'y': float(w.position.y), 'z': float(w.position.z)},
+            'orientation': None,
+            'dwell_time': float(w.dwell_time),
+          } for w in wps
+        ]
+      }
+      Path(args.export).write_text(json.dumps(export, indent=2))
+    # Timeline finalize event
+    if args.timeline_log:
+      _write_timeline(args.timeline_log, {
+        't_rel_s': 0.0,
+        'event': 'rehearsal_complete' if args.rehearsal else 'dry_run_abort_complete',
+        'segment_id': None,
+        'planned_value': float(plan.get('total_energy_estimate', 0.0)),
+        'actual_value': None,
+      })
     print(json.dumps(result, indent=2))
     return 0 if (not args.error_codes or result['success']) else 2
 
@@ -94,6 +150,19 @@ def main(argv: list[str] | None = None):
     export_cache=args.export_cache,
     perf_csv_path=args.perf_csv
   ))
+  if args.timeline_log:
+    # Record mission completion with actual energy
+    try:
+      actual = float(res['performance_metrics']['total_energy_used'])
+    except Exception:
+      actual = None
+    _write_timeline(args.timeline_log, {
+      't_rel_s': None,
+      'event': 'mission_complete',
+      'segment_id': None,
+      'planned_value': float(plan.get('total_energy_estimate', 0.0)),
+      'actual_value': actual,
+    })
   if args.error_codes and not res.get('mission_success', True):
     # Exit code 3 for budget abort during execution
     print(json.dumps({ 'error': 'budget_abort' }))
