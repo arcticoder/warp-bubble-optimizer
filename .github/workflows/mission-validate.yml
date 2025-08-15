@@ -1,6 +1,7 @@
 name: Mission JSON Validate
 
 on:
+  workflow_call:
   push:
     paths:
       - 'src/**'
@@ -32,16 +33,16 @@ jobs:
         run: df -h
       - name: FTL analysis timestamp
         run: |
-          echo "FTL analysis timestamp: 2025-08-14 15:14 PDT"
+          echo "FTL analysis timestamp: 2025-08-14 19:53 PDT"
       - name: Run tiny mission and export JSON + perf CSV
         run: |
           PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
       - name: Validate mission.json against schema
         run: |
           python bin/validate_mission_json.py mission.json
-      - name: Check artifact size
+      - name: Check artifact size (workspace)
         run: |
-          echo "Checking artifact size: 2025-08-14 19:13 PDT"
+          echo "Checking artifact size (workspace): 2025-08-14 19:53 PDT"
           du -sh .
           SIZE=$(du -sb . | cut -f1)
           if [ "$SIZE" -gt 2147483648 ]; then
@@ -68,8 +69,12 @@ jobs:
           python-version: '3.12'
       - name: Install deps
         run: |
+          sudo apt-get update -y
+          sudo apt-get install -y jq
           python -m pip install -U pip
           python -m pip install -r requirements.txt pandas numpy matplotlib
+      - name: Log Python version (pre-UQ)
+        run: python --version
       - name: Download perf.csv artifact
         uses: actions/download-artifact@v4
         with:
@@ -83,19 +88,19 @@ jobs:
           # Simulate multiple runs if only one CSV is present
           cp ./artifacts/perf.csv ./artifacts/perf_run2.csv
           python bin/aggregate_perf_csv.py ./artifacts/perf.csv ./artifacts/perf_run2.csv --out perf_aggregate.json
-      - name: Validate dist_profile_40eridani_varied.csv
+      - name: Validate CSVs
         run: |
-          echo "Validating CSV: 2025-08-14 19:13 PDT"
-          if [ -f data/dist_profile_40eridani_varied.csv ]; then
-            python - <<'PY'
-            import pandas as pd
-            df = pd.read_csv('data/dist_profile_40eridani_varied.csv')
-            assert not df.empty, 'CSV is empty'
-            print('CSV rows:', len(df))
-            PY
-          else
-            echo "CSV not found; skipping validation (optional asset)"
-          fi
+          echo "Validating CSVs: 2025-08-14 19:53 PDT"
+          python - <<'PY'
+          import pandas as pd
+          df1 = pd.read_csv('data/dist_profile_40eridani.csv', comment='#')
+          assert not df1.empty, 'Standard CSV empty'
+          df2 = pd.read_csv('data/dist_profile_40eridani_varied.csv', comment='#')
+          assert not df2.empty, 'Varied CSV empty'
+          print('CSV rows:', len(df1), len(df2))
+          PY
+      - name: Check disk space (pre-UQ)
+        run: df -h
       - name: 40 Eridani A UQ + analysis (100 samples)
         timeout-minutes: 10
         run: |
@@ -104,14 +109,47 @@ jobs:
       - name: Generate extended 40 Eridani plots
         run: |
           python bin/plot_uq_records.py --records uq_records.jsonl --energy-out 40eridani_energy_extended.png --feas-out 40eridani_feasibility_extended.png --bins 30
+      - name: Log plot generation
+        run: |
+          echo "Generating plots: 2025-08-14 19:53 PDT"
+          ls -1 *.png || true
+          ls -1 artifacts/*.png || true
       - name: 40 Eridani A UQ with varied distance profile (100 samples)
         run: |
           PYTHONPATH=src python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary_varied.json --jsonl-out uq_records_varied.jsonl --dist-profile data/dist_profile_40eridani_varied.csv
           python bin/plot_uq_records.py --records uq_records_varied.jsonl --energy-out 40eridani_energy_varied.png --feas-out 40eridani_feasibility_varied.png --bins 20 --metrics-out uq_varied_metrics.json
       - name: Validate varied profile metrics against thresholds
         run: |
-          echo "Validating varied profile metrics: 2025-08-14 15:53 PDT"
+          echo "Validating varied profile metrics: 2025-08-14 19:53 PDT"
           python -c "import json;d=json.load(open('uq_varied_metrics.json'));cv=float(d.get('energy_cv',1.0));ff=float(d.get('feasible_fraction',0.0));assert cv<0.1,cv;assert ff>0.8,ff;print('Varied profile gates passed',{'cv':cv,'ff':ff})"
+      - name: Prepare artifacts directory
+        run: |
+          echo "Preparing artifacts dir: 2025-08-14 19:53 PDT"
+          mkdir -p artifacts
+          cp -v perf_summary.png artifacts/
+          cp -v perf_aggregate.json artifacts/
+          cp -v uq_summary.json uq_records.jsonl artifacts/
+          cp -v 40eridani_energy.png 40eridani_feasibility.png artifacts/
+          cp -v 40eridani_energy_extended.png 40eridani_feasibility_extended.png artifacts/
+          cp -v uq_summary_varied.json uq_records_varied.jsonl artifacts/
+          cp -v 40eridani_energy_varied.png 40eridani_feasibility_varied.png artifacts/
+          cp -v uq_varied_metrics.json artifacts/
+      - name: Validate artifact contents
+        run: |
+          echo "Validating artifacts: 2025-08-14 19:53 PDT"
+          for file in 40eridani_energy.png 40eridani_feasibility.png 40eridani_energy_extended.png 40eridani_feasibility_extended.png 40eridani_energy_varied.png 40eridani_feasibility_varied.png uq_varied_metrics.json; do
+            [ -f "artifacts/$file" ] || { echo "Missing $file"; exit 1; }
+          done
+          echo "All expected artifacts present"
+      - name: Check artifact size (artifacts dir)
+        run: |
+          echo "Checking artifact size: 2025-08-14 19:53 PDT"
+          du -sh artifacts
+          SIZE=$(du -sb artifacts | cut -f1)
+          if [ "$SIZE" -gt 2147483648 ]; then
+            echo "Artifacts exceed 2GB limit: $SIZE bytes"
+            exit 1
+          fi
       - name: Upload perf summary
         uses: actions/upload-artifact@v4
         with:
@@ -119,28 +157,19 @@ jobs:
           path: perf_summary.png
       - name: Log artifact contents
         run: |
-          echo "Listing artifacts before upload: 2025-08-14 19:13 PDT"
-          ls -R . || true
+          echo "Listing artifacts before upload: 2025-08-14 19:53 PDT"
           ls -R artifacts/ || echo "Artifacts directory empty"
-          ls -1 *.png || true
+          ls -1 artifacts/*.png || true
+      - name: Log artifacts to upload
+        run: |
+          echo "Uploading artifacts: 2025-08-14 19:53 PDT"
+          ls -R artifacts
       - name: Upload 40 Eridani artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: 40eridani-artifacts
-          path: |
-            uq_summary.json
-            uq_records.jsonl
-            perf_aggregate.json
-            40eridani_energy.png
-            40eridani_feasibility.png
-            40eridani_energy_extended.png
-            40eridani_feasibility_extended.png
-            uq_summary_varied.json
-            uq_records_varied.jsonl
-            40eridani_energy_varied.png
-            40eridani_feasibility_varied.png
-            uq_varied_metrics.json
+          path: artifacts/
           retention-days: 30
       - name: Comment summary on PR
         if: github.event_name == 'pull_request'
@@ -157,3 +186,10 @@ jobs:
           else
             echo "GitHub CLI not installed; skipping PR comment"
           fi
+      - name: Comment on PR failure
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Commenting on PR: 2025-08-14 19:53 PDT"
+          gh pr comment ${{ github.event.pull_request.number }} --body "Mission validation failed. Check logs: gh run view ${{ github.run_id }} --repo ${{ github.repository }} --log"

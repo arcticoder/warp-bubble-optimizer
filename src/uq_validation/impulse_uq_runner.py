@@ -83,6 +83,17 @@ def _load_distance_profile(path: Optional[str]) -> Optional[List[float]]:
         return None
 
 
+def parse_csv(path: str) -> List[float]:
+    """Public helper to parse a CSV/JSON distance profile.
+
+    Returns a list of floats or raises ValueError if parsing fails.
+    """
+    vals = _load_distance_profile(path)
+    if vals is None:
+        raise ValueError(f"Malformed or unreadable distance profile: {path}")
+    return vals
+
+
 def run_impulse_uq(cfg: ImpulseUQConfig) -> Dict[str, Any]:
     # Localize heavy imports to avoid paying cost during module import when only helpers are needed
     from impulse import IntegratedImpulseController, ImpulseEngineConfig  # type: ignore
