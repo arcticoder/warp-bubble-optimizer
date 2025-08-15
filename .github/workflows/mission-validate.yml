@@ -34,7 +34,7 @@ jobs:
         run: df -h
       - name: FTL analysis timestamp
         run: |
-          echo "FTL analysis timestamp: 2025-08-14 20:38 PDT"
+          echo "FTL analysis timestamp: 2025-08-14 21:11 PDT"
       - name: Run tiny mission and export JSON + perf CSV
         run: |
           PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
@@ -91,7 +91,7 @@ jobs:
           python bin/aggregate_perf_csv.py ./artifacts/perf.csv ./artifacts/perf_run2.csv --out perf_aggregate.json
       - name: Validate CSVs
         run: |
-          echo "Validating CSVs: 2025-08-14 20:38 PDT"
+          echo "Validating CSVs: 2025-08-14 21:11 PDT"
           python - <<'PY'
           import pandas as pd
           df1 = pd.read_csv('data/dist_profile_40eridani.csv', comment='#')
@@ -102,26 +102,36 @@ jobs:
           PY
       - name: Log UQ input
         run: |
-          echo "UQ input: 2025-08-14 20:38 PDT"
+          echo "UQ input: 2025-08-14 21:11 PDT"
           head -n 5 data/dist_profile_40eridani_varied.csv || true
       - name: Validate CSV columns
         run: |
-          echo "Validating CSV columns: 2025-08-14 20:10 PDT"
+          echo "Validating CSV columns: 2025-08-14 21:11 PDT"
           python - <<'PY'
           import pandas as pd
           df = pd.read_csv('data/dist_profile_40eridani.csv', comment='#')
           assert len(df.columns) > 0, 'Standard CSV has no columns'
-          dfv = pd.read_csv('data/dist_profile_40eridani_varied.csv', comment='#')
+          # Try varied CSV in repo root first, then data/
+          import os
+          varied_root = 'dist_profile_40eridani_varied.csv'
+          varied_data = 'data/dist_profile_40eridani_varied.csv'
+          path = varied_root if os.path.exists(varied_root) else varied_data
+          dfv = pd.read_csv(path, comment='#')
           assert len(dfv.columns) > 0, 'Varied CSV has no columns'
           assert 'energy' in dfv.columns, 'Missing energy column in varied CSV'
           print('CSV columns OK:', list(df.columns), list(dfv.columns))
           PY
+      - name: Log CI environment
+        run: |
+          echo "CI environment: 2025-08-14 21:11 PDT"
+          python -V
+          pip list
       - name: Check disk space (pre-UQ)
         run: df -h
       - name: 40 Eridani A UQ + analysis (100 samples)
         timeout-minutes: 15
         run: |
-          PYTHONPATH=src python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
+          PYTHONPATH=src python -m uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary.json --jsonl-out uq_records.jsonl --dist-profile data/dist_profile_40eridani.csv
           python bin/plot_uq_records.py --records uq_records.jsonl --energy-out 40eridani_energy.png --feas-out 40eridani_feasibility.png --bins 15
       - name: Generate extended 40 Eridani plots
         run: |
@@ -130,21 +140,21 @@ jobs:
         run: python -m pip show matplotlib
       - name: Generate plots (retry helper)
         run: |
-          echo "Generating plots: 2025-08-14 20:38 PDT"
+          echo "Generating plots: 2025-08-14 21:11 PDT"
           for attempt in 1 2 3; do
-            PYTHONPATH=src python -m src.uq_validation.plot_uq_records && break
+            PYTHONPATH=src python -m uq_validation.plot_uq_records && break
             echo "Plot retry $attempt failed; waiting 5s"
             sleep 5
           done
           ls artifacts/40eridani_*.png || { echo "No PNGs generated"; exit 1; }
       - name: Log plot generation
         run: |
-          echo "Generating plots (listing): 2025-08-14 20:38 PDT"
+          echo "Generating plots (listing): 2025-08-14 21:11 PDT"
           ls -1 *.png || true
           ls -1 artifacts/*.png || true
       - name: Validate PNG presence
         run: |
-          echo "Checking PNGs: 2025-08-14 20:38 PDT"
+          echo "Checking PNGs: 2025-08-14 21:11 PDT"
           ls artifacts/40eridani_*.png || { echo "No PNGs in artifacts"; exit 1; }
       - name: Generate fallback PNGs
         if: failure()
@@ -161,15 +171,15 @@ jobs:
           PY
       - name: 40 Eridani A UQ with varied distance profile (100 samples)
         run: |
-          PYTHONPATH=src python -m src.uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary_varied.json --jsonl-out uq_records_varied.jsonl --dist-profile data/dist_profile_40eridani_varied.csv
+          PYTHONPATH=src python -m uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary_varied.json --jsonl-out uq_records_varied.jsonl --dist-profile data/dist_profile_40eridani_varied.csv
           python bin/plot_uq_records.py --records uq_records_varied.jsonl --energy-out 40eridani_energy_varied.png --feas-out 40eridani_feasibility_varied.png --bins 20 --metrics-out uq_varied_metrics.json
       - name: Validate varied profile metrics against thresholds
         run: |
-          echo "Validating varied profile metrics: 2025-08-14 20:38 PDT"
+          echo "Validating varied profile metrics: 2025-08-14 21:11 PDT"
           python -c "import json;d=json.load(open('uq_varied_metrics.json'));cv=float(d.get('energy_cv',1.0));ff=float(d.get('feasible_fraction',0.0));assert cv<0.1,cv;assert ff>0.8,ff;print('Varied profile gates passed',{'cv':cv,'ff':ff})"
       - name: Prepare artifacts directory
         run: |
-          echo "Preparing artifacts dir: 2025-08-14 20:38 PDT"
+          echo "Preparing artifacts dir: 2025-08-14 21:11 PDT"
           mkdir -p artifacts
           cp -v perf_summary.png artifacts/
           cp -v perf_aggregate.json artifacts/
@@ -179,9 +189,13 @@ jobs:
           cp -v uq_summary_varied.json uq_records_varied.jsonl artifacts/
           cp -v 40eridani_energy_varied.png 40eridani_feasibility_varied.png artifacts/
           cp -v uq_varied_metrics.json artifacts/
+      - name: Log artifact contents
+        run: |
+          echo "Artifact contents: 2025-08-14 21:11 PDT"
+          ls -l artifacts/
       - name: Validate artifact contents
         run: |
-          echo "Validating artifacts: 2025-08-14 20:38 PDT"
+          echo "Validating artifacts: 2025-08-14 21:11 PDT"
           for file in 40eridani_energy.png 40eridani_feasibility.png 40eridani_energy_extended.png 40eridani_feasibility_extended.png 40eridani_energy_varied.png 40eridani_feasibility_varied.png uq_varied_metrics.json; do
             [ -f "artifacts/$file" ] || { echo "Missing $file"; exit 1; }
           done
@@ -194,9 +208,17 @@ jobs:
               file "$file" | grep -q "PNG image data" || { echo "$file not a valid PNG"; exit 1; }
             fi
           done
+      - name: Create artifact zip
+        run: |
+          echo "Zipping artifacts: 2025-08-14 21:11 PDT"
+          zip -q -r 40eridani-artifacts.zip artifacts
+      - name: Validate artifact zip
+        run: |
+          echo "Validating artifact zip: 2025-08-14 21:11 PDT"
+          zip -T 40eridani-artifacts.zip || { echo "Zip corrupt"; exit 1; }
       - name: Check artifact size (artifacts dir)
         run: |
-          echo "Checking artifact size: 2025-08-14 20:38 PDT"
+          echo "Checking artifact size: 2025-08-14 21:11 PDT"
           du -sh artifacts
           SIZE=$(du -sb artifacts | cut -f1)
           if [ "$SIZE" -gt 2147483648 ]; then
@@ -236,7 +258,7 @@ jobs:
       - name: Notify on failure
         if: failure()
         run: |
-          echo "Workflow failed: 2025-08-14 20:38 PDT. Check logs: gh run view ${{ github.run_id }} --repo ${{ github.repository }} --log"
+          echo "Workflow failed: 2025-08-14 21:11 PDT. Check logs: gh run view ${{ github.run_id }} --repo ${{ github.repository }} --log"
       - name: Comment summary on PR
         if: github.event_name == 'pull_request'
         env:

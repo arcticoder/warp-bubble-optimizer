@@ -177,15 +177,15 @@ jobs:
             file $file | grep -q "PNG image data" || { echo "$file not valid"; exit 1; }
           done
 
-    - name: Validate index.html links
+      - name: Validate index.html links
         run: |
-      echo "Validating index.html: 2025-08-14 20:38 PDT"
+          echo "Validating index.html: 2025-08-14 20:38 PDT"
           grep -q "40eridani_energy.png" public/index.html || { echo "Missing energy.png link"; exit 1; }
           grep -q "traceability_badge.json" public/index.html || { echo "Missing badge JSON link"; exit 1; }
 
-    - name: Wait for Pages refresh
+      - name: Wait for Pages refresh
         run: |
-      echo "Waiting for Pages refresh: 2025-08-14 20:38 PDT"
+          echo "Waiting for Pages refresh: 2025-08-14 20:38 PDT"
           sleep 300
 
       - name: Upload artifact for GitHub Pages
