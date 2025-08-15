@@ -1,0 +1,8 @@
+# Ring CAD parameter YAML skeleton
+outer_diameter_m: 1.0
+inner_diameter_m: 0.8
+cross_section: torus
+num_rings: 4
+spacing_m: 1.5
+coil_turns: 120
+max_current_A: 5000

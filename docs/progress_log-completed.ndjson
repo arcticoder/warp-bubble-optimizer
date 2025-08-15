@@ -40,3 +40,23 @@
 {"event":"Laser coherence injection-locking plan draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/technical-documentation.md:Coherence Control Plan (draft)"]}
 {"event":"CI hygiene: tests-only discovery and optional JAX demo skip","status":"completed","refs":["pytest.ini:testpaths","tests/test_jax_acceleration.py"]}
 {"event":"Ring CAD parameter file initial draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/technical-documentation.md:Ring CAD parameters (draft)"]}
+{"event":"Refresh roadmap files and add roadmap_next_20.ndjson","status":"completed","refs":["docs/roadmap_next_20.ndjson","docs/roadmap.ndjson:Next 20 Tasks (2025-08-15)"]}
+{"event":"Mission timeline v0.1 (events, durations, gates)","status":"completed","refs":["docs/mission_timeline.md","docs/roadmap_next_20.ndjson:task=2"]}
+{"event":"Power electronics block diagram outline","status":"completed","refs":["docs/power_electronics.md","docs/roadmap_next_20.ndjson:task=3"]}
+{"event":"Safety checklist v0.9 (abort/quench/thermal)","status":"completed","refs":["docs/safety_checklist.md","docs/roadmap_next_20.ndjson:task=4"]}
+{"event":"Ring CAD parameter YAML skeleton","status":"completed","refs":["docs/ring_params.yaml","docs/roadmap_next_20.ndjson:task=5"]}
+{"event":"Laser coherence injection-locking plan v0.1","status":"completed","refs":["docs/laser_coherence_plan.md","docs/roadmap_next_20.ndjson:task=6"]}
+{"event":"Battery sizing table draft","status":"completed","refs":["docs/battery_sizing.md","docs/roadmap_next_20.ndjson:task=7"]}
+{"event":"Control state estimator outline","status":"completed","refs":["docs/control_state_estimator.md","docs/roadmap_next_20.ndjson:task=8"]}
+{"event":"Autopilot abort criteria v0.1","status":"completed","refs":["docs/autopilot_abort_criteria.md","docs/roadmap_next_20.ndjson:task=9"]}
+{"event":"HIL dry-run plan v0.1","status":"completed","refs":["docs/hil_dry_run_plan.md","docs/roadmap_next_20.ndjson:task=10"]}
+{"event":"Mission rehearsal timeline v0.1","status":"completed","refs":["docs/mission_rehearsal_timeline.md","docs/roadmap_next_20.ndjson:task=11"]}
+{"event":"UQ & V&V coverage matrix skeleton","status":"completed","refs":["docs/coverage_matrix.md","docs/roadmap_next_20.ndjson:task=12"]}
+{"event":"Traceability matrix skeleton","status":"completed","refs":["docs/traceability_matrix.md","docs/roadmap_next_20.ndjson:task=13"]}
+{"event":"GitHub Pages broken-link check checklist","status":"completed","refs":["docs/pages_link_checklist.md","docs/roadmap_next_20.ndjson:task=14"]}
+{"event":"Zenodo publishing guide","status":"completed","refs":["docs/zenodo_publishing_guide.md","docs/roadmap_next_20.ndjson:task=15"]}
+{"event":"Standard distance profile sample CSV","status":"completed","refs":["data/dist_profile_standard.csv","docs/roadmap_next_20.ndjson:task=16"]}
+{"event":"Impulse validation checklist","status":"completed","refs":["docs/impulse_validation_checklist.md","docs/roadmap_next_20.ndjson:task=17"]}
+{"event":"Control phase sync jitter budget","status":"completed","refs":["docs/phase_sync_jitter_budget.md","docs/roadmap_next_20.ndjson:task=18"]}
+{"event":"Thermal budget outline","status":"completed","refs":["docs/thermal_budget.md","docs/roadmap_next_20.ndjson:task=19"]}
+{"event":"Requirements traceability overview","status":"completed","refs":["docs/requirements_traceability_overview.md","docs/roadmap_next_20.ndjson:task=20"]}

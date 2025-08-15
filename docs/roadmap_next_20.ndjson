@@ -1,0 +1,20 @@
+{"task":1,"title":"Refresh roadmap files and add roadmap_next_20.ndjson","deliverables":["docs/roadmap_next_20.ndjson","docs/roadmap.ndjson updated section"],"status":"completed"}
+{"task":2,"title":"Mission timeline v0.1 (events, durations, gates)","deliverables":["docs/mission_timeline.md"],"status":"completed"}
+{"task":3,"title":"Power electronics block diagram outline","deliverables":["docs/power_electronics.md"],"status":"completed"}
+{"task":4,"title":"Safety checklist v0.9 (abort/quench/thermal)","deliverables":["docs/safety_checklist.md"],"status":"completed"}
+{"task":5,"title":"Ring CAD parameter YAML skeleton","deliverables":["docs/ring_params.yaml"],"status":"completed"}
+{"task":6,"title":"Laser coherence injection-locking plan v0.1","deliverables":["docs/laser_coherence_plan.md"],"status":"completed"}
+{"task":7,"title":"Battery sizing table draft","deliverables":["docs/battery_sizing.md"],"status":"completed"}
+{"task":8,"title":"Control state estimator outline","deliverables":["docs/control_state_estimator.md"],"status":"completed"}
+{"task":9,"title":"Autopilot abort criteria v0.1","deliverables":["docs/autopilot_abort_criteria.md"],"status":"completed"}
+{"task":10,"title":"HIL dry-run plan v0.1","deliverables":["docs/hil_dry_run_plan.md"],"status":"completed"}
+{"task":11,"title":"Mission rehearsal timeline v0.1","deliverables":["docs/mission_rehearsal_timeline.md"],"status":"completed"}
+{"task":12,"title":"UQ & V&V coverage matrix skeleton","deliverables":["docs/coverage_matrix.md"],"status":"completed"}
+{"task":13,"title":"Traceability matrix skeleton","deliverables":["docs/traceability_matrix.md"],"status":"completed"}
+{"task":14,"title":"GitHub Pages broken-link check checklist","deliverables":["docs/pages_link_checklist.md"],"status":"completed"}
+{"task":15,"title":"Zenodo publishing guide","deliverables":["docs/zenodo_publishing_guide.md"],"status":"completed"}
+{"task":16,"title":"Standard distance profile sample CSV","deliverables":["data/dist_profile_standard.csv"],"status":"completed"}
+{"task":17,"title":"Impulse validation checklist","deliverables":["docs/impulse_validation_checklist.md"],"status":"completed"}
+{"task":18,"title":"Control phase sync jitter budget","deliverables":["docs/phase_sync_jitter_budget.md"],"status":"completed"}
+{"task":19,"title":"Thermal budget outline","deliverables":["docs/thermal_budget.md"],"status":"completed"}
+{"task":20,"title":"Requirements traceability overview","deliverables":["docs/requirements_traceability_overview.md"],"status":"completed"}
