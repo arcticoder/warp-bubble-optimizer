@@ -15,7 +15,8 @@ on:
     types: [ completed ]
 
 permissions:
-  contents: read
+  actions: read
+  contents: write
   pages: write
   id-token: write
 
@@ -42,6 +43,13 @@ jobs:
           python traceability_check.py --json-out traceability_coverage.json || true
           echo "Traceability JSON (if any):"
           test -f traceability_coverage.json && cat traceability_coverage.json || echo '{}' > traceability_coverage.json
+
+      - name: Log environment and disk
+        run: |
+          echo "Traceability build timestamp: 2025-08-14 19:13 PDT"
+          uname -a
+          python --version
+          df -h
 
       - name: Generate Shields.io badge JSON
         run: |
@@ -81,28 +89,37 @@ jobs:
           print(json.dumps(badge, indent=2))
           PY
 
-      - name: Fetch latest 40 Eridani artifacts
+      - name: Fetch latest 40 Eridani artifacts (robust)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Fetching 40 Eridani artifacts: 2025-08-14 16:15 PDT"
-          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/arcticoder/warp-bubble-optimizer/actions/artifacts > artifacts.json
+          set -euo pipefail
+          echo "Fetching 40 Eridani artifacts: 2025-08-14 19:13 PDT"
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt to list artifacts..."
+            curl -sSf -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" > artifacts.json && break || sleep 5
+          done
+          echo "Selecting freshest non-expired artifact named 40eridani-artifacts..."
           ARTIFACT_ID=$(jq -r '.artifacts | map(select(.name == "40eridani-artifacts" and .expired == false)) | max_by(.created_at).id' artifacts.json)
-          if [ -n "$ARTIFACT_ID" ] && [ "$ARTIFACT_ID" != "null" ]; then
-            curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/arcticoder/warp-bubble-optimizer/actions/artifacts/$ARTIFACT_ID/zip -o 40eridani-artifacts.zip
-            unzip -o 40eridani-artifacts.zip -d artifacts
-            mkdir -p public
-            cp artifacts/40eridani_*.png public/
-          else
-            echo "No valid 40eridani-artifacts found"
-            exit 1
-          fi
+          echo "Artifact ID: ${ARTIFACT_ID}"
+          test -n "${ARTIFACT_ID}" && [ "${ARTIFACT_ID}" != "null" ] || { echo "No valid 40eridani-artifacts found"; exit 1; }
+          for attempt in 1 2 3; do
+            echo "Attempt $attempt to download artifact ${ARTIFACT_ID}..."
+            curl -L -sSf -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip" -o 40eridani-artifacts.zip && break || sleep 5
+          done
+          mkdir -p artifacts
+          unzip -o 40eridani-artifacts.zip -d artifacts
+          mkdir -p public
+          cp artifacts/40eridani_*.png public/ || { echo "No plot PNGs found in artifact"; ls -R artifacts || true; exit 1; }
 
       - name: Verify Pages artifacts
         run: |
           echo "Verifying Pages artifacts: 2025-08-14 16:15 PDT"
           ls public/40eridani_*.png || { echo "Missing 40eridani plots in public/"; exit 1; }
           echo "Found plots: $(ls public/40eridani_*.png)"
+          du -sh public || true
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3

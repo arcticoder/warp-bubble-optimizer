@@ -22,7 +22,7 @@ jobs:
           python -m pip install -r requirements.txt jsonschema
       - name: Run tiny mission and export JSON
         run: |
-          python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --hybrid simulate-first
+          PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --hybrid simulate-first
       - name: Validate mission.json against schema
         run: |
           python bin/validate_mission_json.py mission.json

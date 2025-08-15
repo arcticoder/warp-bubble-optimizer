@@ -7,9 +7,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from impulse import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint
-from src.simulation.simulate_vector_impulse import Vector3D
-from simulate_rotation import Quaternion
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # Avoid heavy imports at module import time
+    from impulse import IntegratedImpulseController, ImpulseEngineConfig, MissionWaypoint  # type: ignore
+    from src.simulation.simulate_vector_impulse import Vector3D  # type: ignore
+    from simulate_rotation import Quaternion  # type: ignore
 
 
 @dataclass
@@ -31,7 +34,12 @@ class ImpulseUQConfig:
             self.distance_profile = [10.0, 20.0, 15.0]
 
 
-def _waypoints_from_profile(dists: List[float], dwell: float, v_approach: float) -> List[MissionWaypoint]:
+def _waypoints_from_profile(dists: List[float], dwell: float, v_approach: float) -> List["MissionWaypoint"]:
+    # Local imports to keep module import light for tests that only need CSV parsing
+    from impulse import MissionWaypoint  # type: ignore
+    from src.simulation.simulate_vector_impulse import Vector3D  # type: ignore
+    from simulate_rotation import Quaternion  # type: ignore
+
     wps = [MissionWaypoint(position=Vector3D(0, 0, 0), orientation=Quaternion(1, 0, 0, 0), dwell_time=dwell, approach_speed=v_approach)]
     acc = 0.0
     for d in dists:
@@ -55,16 +63,30 @@ def _load_distance_profile(path: Optional[str]) -> Optional[List[float]]:
             return [float(x) for x in data['distances']]
     except Exception:
         pass
-    # Fallback CSV: one value per line or comma-separated
+    # Fallback CSV: one value per line or comma-separated; allow inline comments starting with '#'
     try:
         text = p.read_text().strip()
-        parts = [s.strip() for line in text.splitlines() for s in line.split(',') if s.strip()]
+        raw = [s.strip() for line in text.splitlines() for s in line.split(',')]
+        parts = []
+        for tok in raw:
+            if not tok:
+                continue
+            if tok.startswith('#'):
+                continue
+            if '#' in tok:
+                tok = tok.split('#', 1)[0].strip()
+                if not tok:
+                    continue
+            parts.append(tok)
         return [float(x) for x in parts]
     except Exception:
         return None
 
 
 def run_impulse_uq(cfg: ImpulseUQConfig) -> Dict[str, Any]:
+    # Localize heavy imports to avoid paying cost during module import when only helpers are needed
+    from impulse import IntegratedImpulseController, ImpulseEngineConfig  # type: ignore
+
     if cfg.seed is not None:
         random.seed(cfg.seed)
     config = ImpulseEngineConfig(
