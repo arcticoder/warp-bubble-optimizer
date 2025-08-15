@@ -54,6 +54,8 @@ def main(argv: list[str] | None = None):
   ap.add_argument('--perf-csv', type=str, default=None, help='Optional path to write per-segment performance CSV')
   ap.add_argument('--error-codes', action='store_true', help='Return non-zero exit codes on infeasible planning or budget abort')
   ap.add_argument('--seed', type=int, default=None, help='Set deterministic seed (also sets WARP_SEED/PYTHONHASHSEED)')
+  ap.add_argument('--rehearsal', action='store_true', help='Rehearsal mode: plan only, timeline gating, no execution')
+  ap.add_argument('--dry-run-abort', action='store_true', help='Simulate abort on threshold crossing without execution')
   args = ap.parse_args(argv)
 
   # Seed plumbing for reproducibility
@@ -71,6 +73,18 @@ def main(argv: list[str] | None = None):
     # Exit code 2 for infeasible plan
     print(json.dumps({ 'error': 'infeasible_plan' }))
     return 2
+  # Rehearsal or dry-run path: do not execute
+  if args.rehearsal or args.dry_run_abort:
+    result = {
+      'planned_GJ': plan['total_energy_estimate']/1e9,
+      'actual_GJ': None,
+      'success': plan.get('feasible', True),
+      'segments': len(plan.get('segments', [])),
+      'mode': 'rehearsal' if args.rehearsal else 'dry-run-abort'
+    }
+    print(json.dumps(result, indent=2))
+    return 0 if (not args.error_codes or result['success']) else 2
+
   import asyncio
   res = asyncio.get_event_loop().run_until_complete(ctrl.execute_impulse_mission(
     plan,

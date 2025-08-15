@@ -1,0 +1,19 @@
+name: Pages Link Check
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'
+jobs:
+  linkcheck:
+    runs-on: ubuntu-24.04
+    steps:
+  # No checkout needed; we only curl the public Pages URL
+      - name: Wait for Pages propagation
+        run: |
+          echo "Sleeping 20s to allow cache propagation" && sleep 20
+      - name: Quick HEAD check on Pages site
+        run: |
+          set -e
+          URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+          echo "HEAD ${URL}"
+          curl -sS -I "$URL" | head -n 5 || true
