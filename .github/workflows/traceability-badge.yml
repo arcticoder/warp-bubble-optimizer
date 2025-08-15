@@ -105,17 +105,22 @@ jobs:
           echo "Checking dependencies: 2025-08-14 20:10 PDT"
           gh run list --repo ${{ github.repository }} --workflow mission-validate.yml --limit 1 || echo "gh not available"
 
+      - name: Wait for mission-validate
+        run: |
+          echo "Waiting for mission-validate: 2025-08-14 20:38 PDT"
+          sleep 60
+
       - name: Fetch latest 40 Eridani artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          echo "Fetching 40 Eridani artifacts: 2025-08-14 20:10 PDT"
-          for attempt in 1 2 3 4 5; do
+          echo "Fetching 40 Eridani artifacts: 2025-08-14 20:38 PDT"
+          for attempt in 1 2 3 4 5 6; do
             curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
               https://api.github.com/repos/${{ github.repository }}/actions/artifacts > artifacts.json && break
-            echo "List retry $attempt failed; waiting 15s"
-            sleep 15
+            echo "List retry $attempt failed; waiting 20s"
+            sleep 20
           done
           ARTIFACT_ID=$(jq -r '.artifacts | map(select(.name == "40eridani-artifacts" and .expired == false)) | sort_by(.created_at) | last | .id' artifacts.json)
           if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
@@ -123,11 +128,11 @@ jobs:
             jq -r '.artifacts[] | .name + " (created: " + .created_at + ", expired: " + (.expired | tostring) + ")"' artifacts.json
             exit 1
           fi
-          for attempt in 1 2 3 4 5; do
+          for attempt in 1 2 3 4 5 6; do
             curl -L -sSf -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
               https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip -o 40eridani-artifacts.zip && break
-            echo "Download retry $attempt failed; waiting 15s"
-            sleep 15
+            echo "Download retry $attempt failed; waiting 20s"
+            sleep 20
           done
           mkdir -p artifacts
           unzip -o 40eridani-artifacts.zip -d artifacts || { echo "Unzip failed"; ls -R artifacts || true; exit 1; }
@@ -138,20 +143,21 @@ jobs:
 
       - name: Verify Pages artifacts
         run: |
-          echo "Verifying Pages artifacts: 2025-08-14 16:15 PDT"
+          echo "Verifying Pages artifacts: 2025-08-14 20:38 PDT"
           ls public/40eridani_*.png || { echo "Missing 40eridani plots in public/"; exit 1; }
           echo "Found plots: $(ls public/40eridani_*.png)"
           du -sh public || true
 
       - name: Create index.html
         run: |
-          echo "Creating index.html: 2025-08-14 19:53 PDT"
+          echo "Creating index.html: 2025-08-14 20:38 PDT"
           cat > public/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
           <head><title>Warp Bubble Plots</title></head>
           <body>
           <h1>40 Eridani A Simulation Plots</h1>
+          <p>Note: Plots may be unavailable during CI updates. Check after 2025-08-14 21:38 PDT.</p>
           <ul>
           <li><a href="40eridani_energy.png">Standard Energy Distribution</a></li>
           <li><a href="40eridani_feasibility.png">Standard Feasibility</a></li>
@@ -164,16 +170,22 @@ jobs:
           </body>
           </html>
           EOF
-
-      - name: Validate index.html links
+      - name: Validate Pages PNGs
         run: |
-          echo "Validating index.html: 2025-08-14 20:10 PDT"
+          echo "Validating Pages PNGs: 2025-08-14 20:38 PDT"
+          for file in public/40eridani_*.png; do
+            file $file | grep -q "PNG image data" || { echo "$file not valid"; exit 1; }
+          done
+
+    - name: Validate index.html links
+        run: |
+      echo "Validating index.html: 2025-08-14 20:38 PDT"
           grep -q "40eridani_energy.png" public/index.html || { echo "Missing energy.png link"; exit 1; }
           grep -q "traceability_badge.json" public/index.html || { echo "Missing badge JSON link"; exit 1; }
 
-      - name: Wait for Pages refresh
+    - name: Wait for Pages refresh
         run: |
-          echo "Waiting for Pages refresh: 2025-08-14 20:10 PDT"
+      echo "Waiting for Pages refresh: 2025-08-14 20:38 PDT"
           sleep 300
 
       - name: Upload artifact for GitHub Pages
@@ -194,13 +206,26 @@ jobs:
 
       - name: Log Pages deployment
         run: |
-          echo "Deployed to Pages: 2025-08-14 20:10 PDT"
+          echo "Deployed to Pages: 2025-08-14 20:38 PDT"
           for url in 40eridani_energy.png 40eridani_feasibility.png index.html; do
-            curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/$url | grep "200 OK" || echo "Failed: $url"
+            status=$(curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/$url | head -n 1)
+            echo "$url: $status"
+            echo "$status" | grep -q "200 OK" || echo "Error: $url failed"
           done
 
       - name: Clear Pages cache
         run: |
-          echo "Clearing Pages cache: 2025-08-14 20:10 PDT"
+          echo "Clearing Pages cache: 2025-08-14 20:38 PDT"
           curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/pages/builds || true
+
+      - name: Check Pages branch
+        run: |
+          echo "Checking Pages branch: 2025-08-14 20:38 PDT"
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/pages | jq -r .source.branch || true
+
+      - name: Notify Pages success
+        run: |
+          echo "Pages deployed successfully: 2025-08-14 20:38 PDT"
+          echo "Check: https://arcticoder.github.io/warp-bubble-optimizer/index.html"

@@ -1,0 +1,25 @@
+name: Upload to Zenodo
+on:
+  workflow_dispatch:
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq unzip
+      - name: Fetch artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching artifacts: 2025-08-14 20:38 PDT"
+          curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/artifacts > artifacts.json
+          ARTIFACT_ID=$(jq -r '.artifacts | map(select(.name == "40eridani-artifacts" and .expired == false)) | sort_by(.created_at) | last | .id' artifacts.json)
+          curl -L -sSf -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip -o 40eridani-artifacts.zip
+          unzip -o 40eridani-artifacts.zip -d artifacts
+      - name: Prepare Zenodo upload
+        run: |
+          echo "Preparing Zenodo upload: 2025-08-14 20:38 PDT"
+          echo "TODO: Add Zenodo API token and upload logic"
