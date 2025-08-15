@@ -821,6 +821,8 @@ Goal alignment: positive-energy solitons and Natário zero-expansion geometry, a
 
 ## Results on GitHub Pages
 
+**Note**: Plot URLs may return 404s during CI updates. Check after August 14, 2025, 21:30 PDT, or download artifacts via `gh run download <run-id> --name 40eridani-artifacts --repo arcticoder/warp-bubble-optimizer`.
+
 View simulation results at:
 
 - Standard energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png
@@ -830,6 +832,13 @@ View simulation results at:
 - Varied profile energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_varied.png
 - Varied profile feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_varied.png
 - Traceability badge JSON: https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json
+
+### Debugging CI Issues
+Use the GitHub CLI to inspect workflows:
+- List runs: `gh run list --repo arcticoder/warp-bubble-optimizer --workflow mission-validate.yml --limit 10`
+- View logs: `gh run view <run-id> --repo arcticoder/warp-bubble-optimizer --log`
+- Download artifacts: `gh run download <run-id> --repo arcticoder/warp-bubble-optimizer --name 40eridani-artifacts`
+- Trigger workflow: `gh workflow run mission-validate.yml --ref main --repo arcticoder/warp-bubble-optimizer`
 
 ## Contribute
 
