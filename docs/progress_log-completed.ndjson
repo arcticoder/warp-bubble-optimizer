@@ -17,6 +17,10 @@
 {"event":" Fix accelerated Gaussian test import by providing shim module gaussian_optimize.py","status":"completed","refs":["gaussian_optimize.py","test_accelerated_gaussian.py"]}
 {"event":" Integrate discharge efficiency vs C-rate into optimize_energy and add tests","status":"completed","refs":["src/supraluminal_prototype/warp_generator.py","tests/test_field_and_control.py"]}
 {"event":"Add power model test for shape='triangle' equivalence","status":"completed","refs":["tests/test_power_profile.py"]}
+{"event":"Wired tiny UQ PNG into mission-validate with signature check","status":"completed","refs":[".github/workflows/mission-validate.yml","bin/plot_uq_tiny.py","tools/png_check.py"]}
+{"event":"Added step-response quick smoke test and phase sync schedule stub","status":"completed","refs":["src/supraluminal_prototype/control_phase.py","tests/test_step_response_quick.py"]}
+{"event":"Tightened varied profile UQ gates to energy_cv<0.05 and feasible_fraction>=0.90","status":"completed","refs":[".github/feasibility_gates.json",".github/workflows/mission-validate.yml"]}
+{"event":"Documented --timeline-log and timeline CSV/JSONL fields","status":"completed","refs":["README.md","docs/mission_timeline_log.md"]}
 {"event":"Add requirements.txt to pin test dependencies (numpy, scipy, matplotlib, pytest)","status":"completed","refs":["requirements-test.txt","docs/roadmap.ndjson:4. Test and Environment Hygiene - updates"]}
 {"event":"Add UQ test for zero-expansion tolerance vs grid resolution (8/16/32)","status":"completed","refs":["tests/test_field_and_control.py::test_zero_expansion_tolerance_vs_resolution"]}
 {"event":"Implemented gaussian_optimize shim; accelerated Gaussian tests run and pass","status":"completed","refs":["gaussian_optimize.py","test_accelerated_gaussian.py"]}

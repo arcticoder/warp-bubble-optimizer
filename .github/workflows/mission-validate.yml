@@ -243,6 +243,14 @@ jobs:
         run: |
           PYTHONPATH=src python -m uq_validation.impulse_uq_runner --samples 100 --seed 123 --out uq_summary_varied.json --jsonl-out uq_records_varied.jsonl --dist-profile data/dist_profile_40eridani_varied.csv
           python bin/plot_uq_records.py --records uq_records_varied.jsonl --energy-out 40eridani_energy_varied.png --feas-out 40eridani_feasibility_varied.png --bins 20 --metrics-out uq_varied_metrics.json
+      - name: Generate tiny UQ PNG (deterministic)
+        run: |
+          python bin/plot_uq_tiny.py --records uq_records_varied.jsonl --out 40eridani_uq_tiny.png
+          python - <<'PY'
+          from tools.png_check import is_png
+          assert is_png('40eridani_uq_tiny.png')
+          print('Tiny UQ PNG signature OK')
+          PY
       - name: Validate varied profile metrics against thresholds
         run: |
           echo "Validating varied profile metrics: 2025-08-14 21:41 PDT"
@@ -268,6 +276,7 @@ jobs:
           cp -v 40eridani_energy_extended.png 40eridani_feasibility_extended.png artifacts/
           cp -v uq_summary_varied.json uq_records_varied.jsonl artifacts/
           cp -v 40eridani_energy_varied.png 40eridani_feasibility_varied.png artifacts/
+          cp -v 40eridani_uq_tiny.png artifacts/
           cp -v uq_varied_metrics.json artifacts/
       - name: Log artifact contents
         run: |

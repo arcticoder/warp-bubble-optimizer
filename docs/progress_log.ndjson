@@ -1,4 +1,8 @@
 {"event":"Ring CAD parameter file initial draft","status":"completed","refs":["docs/roadmap.ndjson:Rings, Coils, Lasers, Plasma Integration","docs/roadmap.ndjson:Warp Field Generator Core"]}
 {"event":"Impulse UQ runner integrated with schema + tests","status":"completed","refs":["tests/test_impulse_uq_runner.py","tests/test_impulse_vnv.py","schemas/impulse.mission.v1.json"]}
 {"event":"Added performance CSV logging in mission executor and CLI flag","status":"completed","refs":["src/impulse/integrated_impulse_control.py","src/impulse/mission_cli.py","tests/test_perf_csv_logging.py"]}
+{"event":"Wired tiny UQ PNG into mission-validate with signature check","status":"completed","refs":[".github/workflows/mission-validate.yml","bin/plot_uq_tiny.py","tools/png_check.py"]}
+{"event":"Added step-response quick smoke test and phase sync schedule stub","status":"completed","refs":["src/supraluminal_prototype/control_phase.py","tests/test_step_response_quick.py"]}
+{"event":"Tightened varied profile UQ gates to energy_cv<0.05 and feasible_fraction>=0.90","status":"completed","refs":[".github/feasibility_gates.json",".github/workflows/mission-validate.yml"]}
+{"event":"Documented --timeline-log and timeline CSV/JSONL fields","status":"completed","refs":["README.md","docs/mission_timeline_log.md"]}
 {"event":"Refreshed roadmap and added next 20 tasks file","status":"completed","refs":["docs/roadmap_next_20.ndjson","docs/roadmap.ndjson:Next 20 Tasks (2025-08-15)"]}

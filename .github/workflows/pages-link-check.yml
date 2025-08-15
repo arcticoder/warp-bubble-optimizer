@@ -17,3 +17,11 @@ jobs:
           URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
           echo "HEAD ${URL}"
           curl -sS -I "$URL" | head -n 5 || true
+      - name: Verify key plot URLs
+        run: |
+          base="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+          for path in 40eridani_energy.png 40eridani_feasibility.png 40eridani_uq_tiny.png; do
+            url="$base/$path"
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            echo "$code $url"
+          done
