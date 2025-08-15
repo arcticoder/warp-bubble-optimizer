@@ -120,6 +120,19 @@ jobs:
         run: |
           echo "Ensuring varied CSV presence: 2025-08-14 21:41 PDT"
           if [ -f data/dist_profile_40eridani_varied.csv ]; then cp -v data/dist_profile_40eridani_varied.csv ./dist_profile_40eridani_varied.csv; fi
+      # Seed the standard CSV early so downstream steps can read it
+      - name: Seed standard CSV if missing
+        run: |
+          echo "Seeding standard CSV if missing: 2025-08-14 21:41 PDT"
+          mkdir -p data
+          if [ ! -f data/dist_profile_40eridani.csv ]; then
+            echo "# Distance profile (m)" > data/dist_profile_40eridani.csv
+            echo "distance" >> data/dist_profile_40eridani.csv
+            echo "10" >> data/dist_profile_40eridani.csv
+            echo "20" >> data/dist_profile_40eridani.csv
+            echo "15" >> data/dist_profile_40eridani.csv
+            echo "Seeded data/dist_profile_40eridani.csv"
+          fi
       - name: Download perf.csv artifact
         uses: actions/download-artifact@v4
         with:
@@ -149,7 +162,14 @@ jobs:
       - name: Log UQ input
         run: |
           echo "UQ input: 2025-08-14 21:41 PDT"
-          head -n 5 data/dist_profile_40eridani_varied.csv || true
+          # Show whichever varied CSV exists
+          if [ -f dist_profile_40eridani_varied.csv ]; then
+            head -n 5 dist_profile_40eridani_varied.csv || true
+          elif [ -f data/dist_profile_40eridani_varied.csv ]; then
+            head -n 5 data/dist_profile_40eridani_varied.csv || true
+          else
+            echo "No varied CSV found to log"
+          fi
       - name: Validate CSV columns
         run: |
           echo "Validating CSV columns: 2025-08-14 21:41 PDT"
