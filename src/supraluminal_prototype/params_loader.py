@@ -24,7 +24,7 @@ def load_ring_params(path: str) -> RingParams:
     for k in required:
         if k not in data:
             raise ValueError(f"Missing required ring param: {k}")
-    return RingParams(
+    rp = RingParams(
         outer_diameter_m=float(data['outer_diameter_m']),
         inner_diameter_m=float(data['inner_diameter_m']),
         cross_section=str(data['cross_section']),
@@ -33,3 +33,15 @@ def load_ring_params(path: str) -> RingParams:
         coil_turns=int(data['coil_turns']),
         max_current_A=float(data['max_current_A']),
     )
+    # Bounds checks
+    if not (rp.outer_diameter_m > rp.inner_diameter_m > 0.0):
+        raise ValueError("inner_diameter_m must be > 0 and < outer_diameter_m")
+    if rp.num_rings < 1:
+        raise ValueError("num_rings must be >= 1")
+    if rp.coil_turns < 1:
+        raise ValueError("coil_turns must be >= 1")
+    if rp.max_current_A <= 0:
+        raise ValueError("max_current_A must be > 0")
+    if rp.spacing_m < 0:
+        raise ValueError("spacing_m must be >= 0")
+    return rp

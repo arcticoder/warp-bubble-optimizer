@@ -20,8 +20,11 @@ jobs:
       - name: Verify key plot URLs
         run: |
           base="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
-          for path in 40eridani_energy.png 40eridani_feasibility.png 40eridani_uq_tiny.png; do
+          fail=0
+          for path in 40eridani_energy.png 40eridani_feasibility.png 40eridani_uq_tiny.png perf_summary.png perf_smoke.png; do
             url="$base/$path"
             code=$(curl -s -o /dev/null -w "%{http_code}" "$url")
             echo "$code $url"
+            if [ "$code" != "200" ]; then fail=1; fi
           done
+          exit $fail

@@ -38,3 +38,6 @@ jobs:
       - name: Validate mission.json against schema
         run: |
           python bin/validate_mission_json.py mission.json
+      - name: Validate timeline log
+        run: |
+          python bin/validate_timeline_log.py mission_timeline.csv

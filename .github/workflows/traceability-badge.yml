@@ -139,6 +139,8 @@ jobs:
           echo "Artifact contents: $(ls -R artifacts)"
           mkdir -p public
           cp artifacts/40eridani_*.png public/ || { echo "No PNGs found"; ls -R artifacts; exit 1; }
+          # Also copy tiny UQ PNG explicitly
+          if [ -f artifacts/40eridani_uq_tiny.png ]; then cp -v artifacts/40eridani_uq_tiny.png public/; fi
           echo "Copied PNGs: $(ls public/40eridani_*.png)"
 
       - name: Verify Pages artifacts
@@ -147,6 +149,10 @@ jobs:
           ls public/40eridani_*.png || { echo "Missing 40eridani plots in public/"; exit 1; }
           echo "Found plots: $(ls public/40eridani_*.png)"
           du -sh public || true
+      - name: Publish UQ dashboard assets
+        run: |
+          python -m pip install -U pip
+          python bin/publish_uq_dashboard.py --artifacts artifacts --public public
 
       - name: Create index.html
         run: |
@@ -165,7 +171,15 @@ jobs:
           <li><a href="40eridani_feasibility_extended.png">Extended Feasibility</a></li>
           <li><a href="40eridani_energy_varied.png">Varied Profile Energy</a></li>
           <li><a href="40eridani_feasibility_varied.png">Varied Profile Feasibility</a></li>
+          <li><a href="40eridani_uq_tiny.png">Tiny UQ PNG (deterministic)</a></li>
           <li><a href="traceability_badge.json">Traceability Badge JSON</a></li>
+          </ul>
+          <h2>Compact UQ Dashboard</h2>
+          <p>Key artifacts from the latest CI run:</p>
+          <ul>
+            <li><a href="feasibility_gates_report.json">Feasibility Gates Report</a></li>
+            <li><a href="perf_summary.png">Perf Summary</a></li>
+            <li><a href="perf_smoke.png">Perf Smoke (notebook)</a></li>
           </ul>
           </body>
           </html>
@@ -184,6 +198,7 @@ jobs:
           echo "Validating index.html: 2025-08-14 20:38 PDT"
           grep -q "40eridani_energy.png" public/index.html || { echo "Missing energy.png link"; exit 1; }
           grep -q "traceability_badge.json" public/index.html || { echo "Missing badge JSON link"; exit 1; }
+          grep -q "40eridani_uq_tiny.png" public/index.html || { echo "Missing tiny UQ PNG link"; exit 1; }
 
       - name: Wait for Pages refresh
         run: |
@@ -209,10 +224,10 @@ jobs:
       - name: Log Pages deployment
         run: |
           echo "Deployed to Pages: 2025-08-14 21:41 PDT"
-          for url in 40eridani_energy.png 40eridani_feasibility.png index.html; do
+          for url in 40eridani_energy.png 40eridani_feasibility.png 40eridani_uq_tiny.png index.html; do
             status=$(curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/$url | head -n 1)
             echo "$url: $status"
-            echo "$status" | grep -q "200 OK" || echo "Error: $url failed; check Zenodo: https://zenodo.org/record/<your-doi>"
+            echo "$status" | grep -q "200 OK" || { echo "Error: $url failed"; exit 1; }
           done
 
       - name: Clear Pages cache

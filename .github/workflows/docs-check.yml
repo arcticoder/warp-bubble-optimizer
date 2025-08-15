@@ -1,0 +1,25 @@
+name: Docs Check
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  anchors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check README anchors
+        run: |
+          python bin/check_readme_anchors.py
+      - name: Check docs anchors
+        run: |
+          # Verify key anchors exist in distance profile schema doc
+          grep -q "# Distance Profile Schema" docs/distance_profile_schema.md
+          grep -q "## CSV format" docs/distance_profile_schema.md
+          grep -q "## JSON format" docs/distance_profile_schema.md

@@ -77,10 +77,20 @@ jobs:
             "dwell": 2.0
           }
           JSON
-          PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first
+          PYTHONPATH=src python -m impulse.mission_cli --waypoints examples/waypoints/simple.json --export mission.json --perf-csv perf.csv --hybrid simulate-first --timeline-log mission_timeline.csv --rehearsal
       - name: Validate mission.json against schema
         run: |
           python bin/validate_mission_json.py mission.json
+      - name: Mission JSON diff (self-check)
+        run: |
+          # For visibility in CI logs; compares file with itself (placeholder for future exec vs plan)
+          python bin/mission_json_diff.py mission.json mission.json || true
+      - name: Validate timeline log
+        run: |
+          python bin/validate_timeline_log.py mission_timeline.csv
+      - name: Validate perf.csv schema
+        run: |
+          python bin/validate_perf_csv.py perf.csv
       - name: Check artifact size (workspace)
         run: |
           echo "Checking artifact size (workspace): 2025-08-14 21:41 PDT"
@@ -265,6 +275,23 @@ jobs:
            assert ff >= gates['feasible_fraction_min'], f"ff {ff} < {gates['feasible_fraction_min']}"
            print('Gates passed with', {'cv': cv, 'ff': ff})
            PY
+      - name: Save feasibility gates decision report
+        run: |
+          python - <<'PY'
+          import json
+          gates = json.load(open('.github/feasibility_gates.json'))['varied_profile']
+          metrics = json.load(open('uq_varied_metrics.json'))
+          report = {
+            'energy_cv': float(metrics.get('energy_cv', 1.0)),
+            'feasible_fraction': float(metrics.get('feasible_fraction', 0.0)),
+            'thresholds': gates,
+            'passed': float(metrics.get('energy_cv', 1.0)) < gates['energy_cv_max'] and float(metrics.get('feasible_fraction', 0.0)) >= gates['feasible_fraction_min']
+          }
+          import pathlib, json as _j
+          pathlib.Path('artifacts').mkdir(exist_ok=True)
+          pathlib.Path('feasibility_gates_report.json').write_text(_j.dumps(report, indent=2))
+          PY
+          cp -v feasibility_gates_report.json artifacts/
       - name: Prepare artifacts directory
         run: |
           echo "Preparing artifacts dir: 2025-08-14 21:41 PDT"
@@ -278,6 +305,10 @@ jobs:
           cp -v 40eridani_energy_varied.png 40eridani_feasibility_varied.png artifacts/
           cp -v 40eridani_uq_tiny.png artifacts/
           cp -v uq_varied_metrics.json artifacts/
+          cp -v feasibility_gates_report.json artifacts/
+      - name: Generate notebook smoke plot
+        run: |
+          python bin/perf_notebook_smoke.py --csv ./artifacts/perf.csv --out artifacts/perf_smoke.png
       - name: Log artifact contents
         run: |
           echo "Artifact contents: 2025-08-14 21:41 PDT"

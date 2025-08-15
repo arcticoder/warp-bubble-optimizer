@@ -802,6 +802,11 @@ with resources.files('warp_bubble_optimizer').joinpath('schemas/perf.csv.schema.
     perf_schema = json.load(f)
 ```
 
+See also:
+- Distance profiles doc (CSV/JSON): `docs/distance_profile_schema.md`
+- Mission timeline log details: `docs/mission_timeline_log.md`
+- Seed reproducibility: `docs/seed_reproducibility.md`
+
 ## 40 Eridani A Simulation (52c feasibility)
 
 Our CI generates artifacts demonstrating a 52c-class mission scenario to 40 Eridani A (approx. 16.3 ly ≈ 1.4e15 m) with 20-segment distance profiling and 100 UQ samples (updated Aug 14, 2025):
@@ -833,6 +838,7 @@ View simulation results at:
 - Extended feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
 - Varied profile energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_varied.png
 - Varied profile feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_varied.png
+- Tiny UQ PNG (deterministic): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_uq_tiny.png
 - Traceability badge JSON: https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json
 
 ### Debugging CI Issues

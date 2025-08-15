@@ -22,14 +22,19 @@
 {"task":2,"title":"Add step-response quick test + phase_sync_schedule stub","deliverables":["tests/test_step_response_quick.py","src/supraluminal_prototype/control_phase.py"],"status":"completed"}
 {"task":3,"title":"Tighten varied-profile UQ gates","deliverables":[".github/feasibility_gates.json"],"status":"completed"}
 {"task":4,"title":"Document --timeline-log fields and usage","deliverables":["README.md section","docs/mission_timeline_log.md"],"status":"completed"}
-{"task":5,"title":"Add CSV schema doc for distance profiles","deliverables":["docs/distance_profile_schema.md"],"status":"pending"}
-{"task":6,"title":"Add CI job to validate distance profile schema doc links","deliverables":["pages-link-check.yml updated"],"status":"pending"}
-{"task":7,"title":"Add tiny UQ PNG to GitHub Pages publish step","deliverables":["traceability-badge.yml updated"],"status":"pending"}
-{"task":8,"title":"Add timeline-log schema JSON and validator","deliverables":["schemas/timeline.log.schema.json","bin/validate_timeline_log.py"],"status":"pending"}
-{"task":9,"title":"Add rehearsal vs execution JSON diff tool for CI logs","deliverables":["bin/mission_json_diff.py"],"status":"pending"}
-{"task":10,"title":"Add perf CSV schema enforcement in CI","deliverables":["bin/validate_perf_csv.py","mission-validate.yml updated"],"status":"pending"}
+{"task":5,"title":"Add CSV schema doc for distance profiles","deliverables":["docs/distance_profile_schema.md"],"status":"completed"}
+{"task":6,"title":"Add CI job to validate distance profile schema doc links","deliverables":["docs-check.yml updated"],"status":"completed"}
+{"task":7,"title":"Add tiny UQ PNG to GitHub Pages publish step","deliverables":["traceability-badge.yml updated"],"status":"completed"}
+{"task":8,"title":"Add timeline-log schema JSON and validator","deliverables":["schemas/timeline.log.schema.json","bin/validate_timeline_log.py"],"status":"completed"}
+{"task":9,"title":"Add rehearsal vs execution JSON diff tool for CI logs","deliverables":["bin/mission_json_diff.py"],"status":"completed"}
+{"task":10,"title":"Add perf CSV schema enforcement in CI","deliverables":["bin/validate_perf_csv.py","mission-validate.yml updated"],"status":"completed"}
 {"task":11,"title":"Add notebook smoke run to generate a single chart","deliverables":["notebooks/perf_analysis.ipynb updated","CI: Open perf analysis notebook task"] ,"status":"pending"}
 {"task":12,"title":"Add linkcheck step after Pages deploy","deliverables":["pages-link-check.yml"],"status":"pending"}
 {"task":13,"title":"Add bounds checks for params_loader and tests","deliverables":["src/params_loader.py","tests/test_params_loader.py"],"status":"pending"}
 {"task":14,"title":"Add feasibility gates report JSON and publish","deliverables":["artifacts/feasibility_gates_report.json","mission-validate.yml updated"],"status":"pending"}
 {"task":15,"title":"Add end-to-end smoke demo (drivers→scheduler→estimation→fault detection)","deliverables":["src/smoke_e2e_demo.py","tests/test_smoke_e2e.py"],"status":"pending"}
+{"task":16,"title":"UQ aggregation plot on Pages (compact dashboard section)","deliverables":["bin/publish_uq_dashboard.py","Pages index updated"],"status":"completed"}
+{"task":17,"title":"Schema regression test for perf CSV exporter","deliverables":["tests/test_perf_csv_schema_regression.py"],"status":"completed"}
+{"task":18,"title":"EKF residual test for estimator stub","deliverables":["tests/test_ekf_residual.py"],"status":"completed"}
+{"task":19,"title":"Thermal regression harness for power model","deliverables":["tests/test_thermal_regression.py"],"status":"completed"}
+{"task":20,"title":"HIL loopback README and checklists","deliverables":["docs/HIL_loopback.md"],"status":"completed"}
