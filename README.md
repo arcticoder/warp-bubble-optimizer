@@ -2,6 +2,12 @@
 
 ![Traceability Coverage](https://img.shields.io/endpoint?url=https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json)
 
+## Zenodo Artifacts
+
+[![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
+
+Simulation artifacts are uploaded to Zenodo after CI runs. Check after 2025-08-14 22:32 PDT.
+
 ## ⭐ Revolutionary 1041.7× Energy Optimization Complete
 
 **HISTORIC BREAKTHROUGH**: Cross-Repository Energy Efficiency Integration framework deployed achieving **1041.7× energy optimization** factor (120.6% of 863.9× target), delivering **99.9% energy savings** (2.10 GJ → 2.0 MJ) through **unified breakthrough optimization**. This revolutionary achievement eliminates method conflicts between disparate optimization approaches and creates enhanced synergy across all warp bubble calculations.
