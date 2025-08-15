@@ -8,18 +8,60 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y jq unzip
+      - name: Check Zenodo token
+        run: |
+          echo "Checking Zenodo token: 2025-08-14 21:41 PDT"
+          [ -n "${{ secrets.ZENODO_TOKEN }}" ] || { echo "ZENODO_TOKEN missing"; exit 1; }
       - name: Fetch artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Fetching artifacts: 2025-08-14 20:38 PDT"
+          echo "Fetching artifacts: 2025-08-14 21:41 PDT"
           curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/artifacts > artifacts.json
           ARTIFACT_ID=$(jq -r '.artifacts | map(select(.name == "40eridani-artifacts" and .expired == false)) | sort_by(.created_at) | last | .id' artifacts.json)
           curl -L -sSf -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip -o 40eridani-artifacts.zip
           unzip -o 40eridani-artifacts.zip -d artifacts
-      - name: Prepare Zenodo upload
+      - name: Upload to Zenodo
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
         run: |
-          echo "Preparing Zenodo upload: 2025-08-14 20:38 PDT"
-          echo "TODO: Add Zenodo API token and upload logic"
+          echo "Uploading to Zenodo: 2025-08-14 21:41 PDT"
+          for attempt in 1 2 3; do
+            curl -s -H "Authorization: Bearer $ZENODO_TOKEN" -H "Content-Type: application/json" \
+              https://zenodo.org/api/deposit/depositions > deposit.json && break
+            echo "Deposit retry $attempt failed; waiting 10s"
+            sleep 10
+          done
+          DEPOSIT_ID=$(jq -r '.[] | select(.title == "Warp Bubble Optimizer Artifacts") | .id' deposit.json)
+          if [ -z "$DEPOSIT_ID" ] || [ "$DEPOSIT_ID" = "null" ]; then
+            curl -s -H "Authorization: Bearer $ZENODO_TOKEN" -H "Content-Type: application/json" \
+              -d '{"metadata": {"title": "Warp Bubble Optimizer Artifacts", "upload_type": "dataset", "description": "Simulation artifacts for 40 Eridani A", "creators": [{"name": "arcticoder"}]}}' \
+              https://zenodo.org/api/deposit/depositions > deposit.json
+            DEPOSIT_ID=$(jq -r '.id' deposit.json)
+          fi
+          BUCKET_URL=$(jq -r '.links.bucket' deposit.json)
+          for attempt in 1 2 3; do
+            curl --upload-file 40eridani-artifacts.zip "$BUCKET_URL/40eridani-artifacts.zip?access_token=$ZENODO_TOKEN" && break
+            echo "Upload retry $attempt failed; waiting 10s"
+            sleep 10
+          done
+          for attempt in 1 2 3; do
+            curl -s -H "Authorization: Bearer $ZENODO_TOKEN" -X POST \
+              https://zenodo.org/api/deposit/depositions/$DEPOSIT_ID/actions/publish && break
+            echo "Publish retry $attempt failed; waiting 10s"
+            sleep 10
+          done
+          echo "Published to Zenodo deposit $DEPOSIT_ID"
+          echo "DEPOSIT_ID=$DEPOSIT_ID" >> $GITHUB_ENV
+      - name: Validate Zenodo deposit
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        run: |
+          echo "Validating Zenodo deposit: 2025-08-14 21:41 PDT"
+          curl -s -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/$DEPOSIT_ID | jq -r '.doi'
+      - name: Notify Zenodo success
+        run: |
+          echo "Zenodo upload successful: 2025-08-14 21:41 PDT"
+          echo "Check: https://zenodo.org/record/$DEPOSIT_ID"

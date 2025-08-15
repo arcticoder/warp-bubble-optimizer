@@ -23,3 +23,6 @@ Notes:
 - Download artifacts: `gh run download <run-id> --repo arcticoder/warp-bubble-optimizer --name 40eridani-artifacts`
 - Trigger workflow: `gh workflow run mission-validate.yml --ref main --repo arcticoder/warp-bubble-optimizer`
 - Check Pages: `curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png`
+
+- Trigger Zenodo upload: `gh workflow run zenodo-upload.yml --ref main --repo arcticoder/warp-bubble-optimizer`
+- Check Pages energy plot: `curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png`

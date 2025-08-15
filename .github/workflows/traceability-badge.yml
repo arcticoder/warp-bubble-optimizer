@@ -150,14 +150,14 @@ jobs:
 
       - name: Create index.html
         run: |
-          echo "Creating index.html: 2025-08-14 20:38 PDT"
+          echo "Creating index.html: 2025-08-14 21:41 PDT"
           cat > public/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
           <head><title>Warp Bubble Plots</title></head>
           <body>
           <h1>40 Eridani A Simulation Plots</h1>
-          <p>Note: Plots may be unavailable during CI updates. Check after 2025-08-14 21:38 PDT.</p>
+          <p>Note: Plots may be unavailable during CI updates. Check after 2025-08-14 22:32 PDT or download from <a href="https://zenodo.org/record/<your-doi>">Zenodo</a>.</p>
           <ul>
           <li><a href="40eridani_energy.png">Standard Energy Distribution</a></li>
           <li><a href="40eridani_feasibility.png">Standard Feasibility</a></li>
@@ -172,9 +172,11 @@ jobs:
           EOF
       - name: Validate Pages PNGs
         run: |
-          echo "Validating Pages PNGs: 2025-08-14 20:38 PDT"
+          echo "Validating Pages PNGs: 2025-08-14 21:41 PDT"
+          sudo apt-get update && sudo apt-get install -y imagemagick
           for file in public/40eridani_*.png; do
-            file $file | grep -q "PNG image data" || { echo "$file not valid"; exit 1; }
+            file "$file" | grep -q "PNG image data" || { echo "$file not valid"; exit 1; }
+            identify "$file" || { echo "$file corrupt"; exit 1; }
           done
 
       - name: Validate index.html links
@@ -185,8 +187,8 @@ jobs:
 
       - name: Wait for Pages refresh
         run: |
-          echo "Waiting for Pages refresh: 2025-08-14 20:38 PDT"
-          sleep 300
+          echo "Waiting for Pages refresh: 2025-08-14 21:41 PDT"
+          sleep 900
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
@@ -206,11 +208,11 @@ jobs:
 
       - name: Log Pages deployment
         run: |
-          echo "Deployed to Pages: 2025-08-14 20:38 PDT"
+          echo "Deployed to Pages: 2025-08-14 21:41 PDT"
           for url in 40eridani_energy.png 40eridani_feasibility.png index.html; do
             status=$(curl -s -I https://arcticoder.github.io/warp-bubble-optimizer/$url | head -n 1)
             echo "$url: $status"
-            echo "$status" | grep -q "200 OK" || echo "Error: $url failed"
+            echo "$status" | grep -q "200 OK" || echo "Error: $url failed; check Zenodo: https://zenodo.org/record/<your-doi>"
           done
 
       - name: Clear Pages cache

@@ -392,13 +392,9 @@ This repository provides the foundation for:
 
 The goal is to achieve warp drive feasibility through **fundamentally optimized metric design** rather than relying solely on quantum enhancements.
 
----
-
-*This repository isolates the core LQG-QI pipeline and geometric optimization capabilities for focused metric ansatz research without cluttering the main warp-bubble-qft repository.*
-
 ## ULTIMATE B-SPLINE BREAKTHROUGH
-
-### Revolutionary Performance Achievement
+[![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
+Simulation artifacts are uploaded to Zenodo after CI runs. Check after 2025-08-14 22:32 PDT.
 
 The **Ultimate B-Spline Optimizer** represents the most significant breakthrough in warp bubble optimization, achieving unprecedented energy minimization through flexible control-point ansätze:
 
