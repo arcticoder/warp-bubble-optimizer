@@ -6,3 +6,4 @@
 {"event":"Tightened varied profile UQ gates to energy_cv<0.05 and feasible_fraction>=0.90","status":"completed","refs":[".github/feasibility_gates.json",".github/workflows/mission-validate.yml"]}
 {"event":"Documented --timeline-log and timeline CSV/JSONL fields","status":"completed","refs":["README.md","docs/mission_timeline_log.md"]}
 {"event":"Refreshed roadmap and added next 20 tasks file","status":"completed","refs":["docs/roadmap_next_20.ndjson","docs/roadmap.ndjson:Next 20 Tasks (2025-08-15)"]}
+{"event":"Added minimal control scaffolding (drivers/scheduler/ekf/thermal/faults)","status":"completed","refs":["src/supraluminal_prototype/*.py","tests/test_supraluminal_prototype_new.py"],"snippets":{"python":"from src.supraluminal_prototype.drivers import generate_current_profile\nI=generate_current_profile(0,100,1.0,0.01,200.0)\nfrom src.supraluminal_prototype.estimation import EKF\nekf=EKF([0,0],[[1,0],[0,1]],1e-3*np.eye(2),1e-2*np.eye(1))"}}

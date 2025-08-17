@@ -64,3 +64,5 @@
 {"event":"Control phase sync jitter budget","status":"completed","refs":["docs/phase_sync_jitter_budget.md","docs/roadmap_next_20.ndjson:task=18"]}
 {"event":"Thermal budget outline","status":"completed","refs":["docs/thermal_budget.md","docs/roadmap_next_20.ndjson:task=19"]}
 {"event":"Requirements traceability overview","status":"completed","refs":["docs/requirements_traceability_overview.md","docs/roadmap_next_20.ndjson:task=20"]}
+{"event":"Mission CLI rehearsal mode added","status":"completed","refs":["src/impulse/mission_cli.py"],"snippets":{"python":"import subprocess,sys,os; wp='{"+"\"waypoints\": [{\"x\":0,\"y\":0,\"z\":0},{\"x\":1,\"y\":0,\"z\":0}],\"dwell\":0.1}"+"}'\n# see tests/test_supraluminal_prototype_new.py for call pattern"}}
+{"event":"UQ helpers for metamaterial & laser coherence","status":"completed","refs":["src/uq_validation/metamaterial_uq.py","src/uq_validation/laser_coherence_uq.py"],"snippets":{"python":"from src.uq_validation.metamaterial_uq import run_metamaterial_uq\nprint(run_metamaterial_uq(n=64))"}}

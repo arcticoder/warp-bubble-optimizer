@@ -22,3 +22,6 @@ notebook
 
 # Logging and utilities
 tqdm>=4.60.0
+
+# Config parsing
+PyYAML>=6.0
