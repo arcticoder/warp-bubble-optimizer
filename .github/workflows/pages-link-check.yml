@@ -1,8 +1,6 @@
 name: Pages Link Check
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *'
 jobs:
   linkcheck:
     runs-on: ubuntu-24.04
