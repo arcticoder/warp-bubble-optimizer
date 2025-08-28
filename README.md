@@ -8,28 +8,28 @@
 
 Simulation artifacts are uploaded to Zenodo after CI runs. Check after 2025-08-14 22:32 PDT.
 
-## ⭐ Revolutionary 1041.7× Energy Optimization Complete
+## ⭐ proposed 1041.7× Energy Optimization Complete
 
-**HISTORIC BREAKTHROUGH**: Cross-Repository Energy Efficiency Integration framework deployed achieving **1041.7× energy optimization** factor (120.6% of 863.9× target), delivering **99.9% energy savings** (2.10 GJ → 2.0 MJ) through **unified breakthrough optimization**. This revolutionary achievement eliminates method conflicts between disparate optimization approaches and creates enhanced synergy across all warp bubble calculations.
+**HISTORIC reported improvement (see methods and evidence)**: Cross-Repository Energy Efficiency Integration framework deployed achieving **1041.7× energy optimization** factor (120.6% of 863.9× target), delivering **99.9% energy savings** (2.10 GJ → 2.0 MJ) through **unified reported improvement (see methods and evidence) optimization**. This proposed achievement eliminates method conflicts between disparate optimization approaches and creates enhanced synergy across all warp bubble calculations.
 
 ### 🚀 Cross-Repository Energy Integration Results
 - **Optimization Factor**: **1041.7×** (exceeds 863.9× target by 20.6%)
 - **Energy Savings**: **99.9%** (2.10 GJ baseline → 2.0 MJ optimized) 
-- **Method Unification**: Multiple optimization methods → unified breakthrough framework
+- **Method Unification**: Multiple optimization methods → unified reported improvement (see methods and evidence) framework
 - **Physics Validation**: **97.0%** T_μν ≥ 0 constraint preservation
-- **Revolutionary Impact**: Elimination of method conflicts and enhanced synergy
+- **proposed Impact**: Elimination of method conflicts and enhanced synergy
 - **Production Status**: ✅ **OPTIMIZATION TARGET ACHIEVED**
 
 ## Overview
 
-A simulation framework for studying and optimizing warp bubble metric ansatzes to analyze negative energy requirements through **enhanced cosmological constant leveraging for precision warp-drive engineering and revolutionary G-leveraging framework integration**:
+A simulation framework for studying and optimizing warp bubble metric ansatzes to analyze negative energy requirements through **enhanced cosmological constant leveraging for precision warp-drive engineering and proposed G-leveraging framework integration**:
 
 1. **Variational Metric Optimization** - Finding optimal shape functions f(r) that extremize negative energy integrals
 2. **Soliton-Like (Lentz) Metrics** - Implementing no-negative-energy warp solutions  
 3. **LQG-QI Constrained Design** - Building quantum inequality bounds into metric ansatz selection
-4. **Van den Broeck-Natário Geometric Enhancement** - Revolutionary 2.1×10¹¹× theoretical enhancement with temporal scaling
-5. **Enhanced Cosmological Constant Leveraging** - **Revolutionary scale-dependent Λ formulation achieving 6.3× enhancement**
-6. **Revolutionary G-Leveraging Framework** - **G = φ(vac)⁻¹ with 1.45×10²² enhancement factors and perfect conservation**
+4. **Van den Broeck-Natário Geometric Enhancement** - proposed 2.1×10¹¹× theoretical enhancement with temporal scaling
+5. **Enhanced Cosmological Constant Leveraging** - **proposed scale-dependent Λ formulation achieving 6.3× enhancement**
+6. **proposed G-Leveraging Framework** - **G = φ(vac)⁻¹ with 1.45×10²² enhancement factors and perfect conservation**
 7. **JAX-Accelerated Simulation** - GPU/CPU acceleration with automatic fallback for high-performance computing
 8. **Virtual Control Systems** - Simulation of warp bubble control without hardware dependencies
 9. **Integrated Impulse-Mode Control** - 6-DOF mission planning and execution system
@@ -39,29 +39,29 @@ A simulation framework for studying and optimizing warp bubble metric ansatzes t
 
 ## Core Objective
 
-Starting from warp bubble design fundamentals enables selection of "shape functions" or metric ansätze that extremize (minimize) the negative‐energy integral rather than using Alcubierre's original form. **Enhanced through revolutionary cosmological constant leveraging achieving 5.94×10¹⁰× total enhancement and G-leveraging framework providing 1.45×10²² factors for precision warp-drive engineering.**
+Starting from warp bubble design fundamentals enables selection of "shape functions" or metric ansätze that extremize (minimize) the negative‐energy integral rather than using Alcubierre's original form. **Enhanced through proposed cosmological constant leveraging achieving 5.94×10¹⁰× total enhancement and G-leveraging framework providing 1.45×10²² factors for precision warp-drive engineering.**
 
 ### 🚀 LQG FTL Metric Engineering Integration 🚀
 
-**Revolutionary Achievement**: Critical metric optimization support for the **LQG FTL Metric Engineering** framework achieving:
+**proposed Achievement**: Critical metric optimization support for the **LQG FTL Metric Engineering** framework achieving:
 - **Zero Exotic Energy Warp Metrics**: Complete elimination of exotic matter through polymer-corrected geometries
 - **24.2 Billion× Energy Enhancement**: Sub-classical energy optimization supporting practical FTL applications
-- **Bobrick-Martire Positive-Energy Configurations**: All stress-energy components T_μν ≥ 0 for production-ready FTL
-- **LQG Quantum Geometry Integration**: Polymer corrections with exact backreaction β = 1.9443254780147017
+- **Bobrick-Martire Positive-Energy Configurations**: All stress-energy components T_μν ≥ 0 for not production-ready / research-stage FTL
+- **LQG Quantum Geometry Integration**: Polymer corrections with approximate backreaction β = 1.9443254780147017
 
 ### G-Enhanced Energy Budget Analysis
 
 ```
 E_traditional = -6.30×10⁵⁰ J (baseline exotic matter requirement)
 E_g_leveraged = E_traditional / (1.45×10²²) = -4.34×10²⁸ J (G-leveraged)
-Enhancement_ratio = 1.45×10²² (revolutionary improvement)
+Enhancement_ratio = 1.45×10²² (proposed improvement)
 ```
 
-This represents **unprecedented improvement in warp drive feasibility** through fundamental physics breakthroughs.
+This represents **noted in these example runs improvement in warp drive feasibility** through fundamental physics breakthroughs.
 
 ### ⭐ Enhanced Cosmological Constant Leveraging Integration ⭐
 
-**Revolutionary Van den Broeck-Natário Enhancement**: Advanced geometric optimization with **enhanced cosmological constant leveraging** achieving:
+**proposed Van den Broeck-Natário Enhancement**: Advanced geometric optimization with **enhanced cosmological constant leveraging** achieving:
 - **2.1×10¹¹× Theoretical Enhancement**: Through bubble dynamics optimization with temporal scaling
 - **48.5% Energy Reduction**: Van den Broeck-Natário geometric optimization with polymer corrections  
 - **T⁻⁴ Temporal Scaling**: Multi-scale temporal dynamics with 99.9% coherence preservation
@@ -70,14 +70,14 @@ This represents **unprecedented improvement in warp drive feasibility** through 
 
 ### Geometric Baseline: Van den Broeck-Natário Enhancement
 
-**Enhanced** geometric optimization studies achieve **revolutionary improvement over 100,000 to 1,000,000-fold reduction** through cosmological constant leveraging:
+**Enhanced** geometric optimization studies achieve **proposed improvement over 100,000 to 1,000,000-fold reduction** through cosmological constant leveraging:
 
 ```
 ℛ_enhanced = 6.3× (scale-dependent Λ) × 2.1×10¹¹× (geometric) = 1.3×10¹²× theoretical
 ℛ_practical = 5.94×10¹⁰× (total validated enhancement)
 ```
 
-This represents **revolutionary improvement in precision warp drive feasibility** through enhanced mathematical frameworks.
+This represents **proposed improvement in precision warp drive feasibility** through enhanced mathematical frameworks.
 
 ## Integrated Impulse-Mode Warp Engine System
 
@@ -237,7 +237,7 @@ python demo_full_warp_simulated_hardware.py
 - **`docs/qi_bound_modification.tex`** - Polymer-modified Ford-Roman bound derivation with corrected sinc(πμ)
 - **`docs/qi_numerical_results.tex`** - Numerical validation and backreaction analysis
 - **`docs/polymer_field_algebra.tex`** - Complete polymer field algebra with sinc-factor analysis
-- **`docs/latest_integration_discoveries.tex`** - Van den Broeck-Natário + exact backreaction + corrected sinc integration
+- **`docs/latest_integration_discoveries.tex`** - Van den Broeck-Natário + approximate backreaction + corrected sinc integration
 
 ## Quick Start: New Metric Ansatz Development
 
@@ -260,7 +260,7 @@ Expected results:
 python metric_backreaction_analysis.py
 ```
 
-This demonstrates the exact backreaction factor β = 1.9443254780147017 and systematic parameter optimization.
+This demonstrates the approximate backreaction factor β = 1.9443254780147017 and systematic parameter optimization.
 
 ### 3. Symbolic Analysis of Enhancement Factors
 
@@ -347,7 +347,7 @@ From the copied framework, we have:
 - **Optimal neck ratio**: R_ext/R_int ~ 10^-3.5
 - **Pure geometric effect**: No exotic quantum requirements
 
-### Exact Metric Backreaction
+### approximate Metric Backreaction
 - **Precise factor**: β_backreaction = 1.9443254780147017
 - **Energy reduction**: 48.55% additional reduction
 - **Self-consistency**: G_μν = 8π T_μν^polymer
@@ -382,7 +382,7 @@ pytest
 The `docs/` directory contains the complete mathematical framework:
 - Polymer field quantization theory
 - Van den Broeck-Natário geometric optimization
-- Exact metric backreaction calculations
+- approximate metric backreaction calculations
 - Corrected sinc definition for LQG
 - Latest integration discoveries
 
@@ -398,15 +398,15 @@ This repository provides the foundation for:
 
 The goal is to achieve warp drive feasibility through **fundamentally optimized metric design** rather than relying solely on quantum enhancements.
 
-## ULTIMATE B-SPLINE BREAKTHROUGH
+## ULTIMATE B-SPLINE reported improvement (see methods and evidence)
 [![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
 Simulation artifacts are uploaded to Zenodo after CI runs. Check after 2025-08-14 22:32 PDT.
 
-The **Ultimate B-Spline Optimizer** represents the most significant breakthrough in warp bubble optimization, achieving unprecedented energy minimization through flexible control-point ansätze:
+The **Ultimate B-Spline Optimizer** represents the most significant reported improvement (see methods and evidence) in warp bubble optimization, achieving noted in these example runs energy minimization through flexible control-point ansätze:
 
 ```
 Baseline (4-Gaussian):        E₋ = -6.30×10⁵⁰ J
-8-Gaussian Breakthrough:      E₋ = -1.48×10⁵³ J  (235× improvement)
+8-Gaussian reported improvement (see methods and evidence):      E₋ = -1.48×10⁵³ J  (235× improvement)
 Ultimate B-Spline Target:   E₋ < -2.0×10⁵⁴ J   (13.5× additional)
 TOTAL IMPROVEMENT FACTOR:   >3,175×
 ```
@@ -771,7 +771,7 @@ def optimize_integrated_system():
 
 ---
 
-*This enhanced optimizer represents a significant advancement in multi-field warp system optimization, enabling unprecedented control over complex overlapping field configurations while maintaining physical consistency and operational efficiency.*
+*This enhanced optimizer represents a significant advancement in multi-field warp system optimization, enabling noted in these example runs control over complex overlapping field configurations while maintaining physical consistency and operational efficiency.*
 
 ## Schemas
 
@@ -896,3 +896,10 @@ PYTHONPATH=src python -m impulse.mission_cli \
     --timeline-log mission_timeline.csv \
     --rehearsal --hybrid simulate-first --seed 123
 ```
+
+
+## Scope, Validation & Limitations
+
+- Scope: The materials and numeric outputs in this repository are research-stage examples and depend on implementation choices, parameter settings, and numerical tolerances.
+- Validation: Reproducibility artifacts (scripts, raw outputs, seeds, and environment details) are provided in `docs/` or `examples/` where available; reproduce analyses with parameter sweeps and independent environments to assess robustness.
+- Limitations: Results are sensitive to modeling choices and discretization. Independent verification, sensitivity analyses, and peer review are recommended before using these results for engineering or policy decisions.
