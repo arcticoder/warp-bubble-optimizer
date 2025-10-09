@@ -23,8 +23,8 @@ The algorithms are integrated with HTS coil simulations through the `src/warp/` 
 - Validation framework for REBCO paper reproduction
 
 **Related Publications:**
-- "Computational Analysis of High-Temperature Superconducting Coils for High-Beta Plasma Confinement" (hts-coils/papers/warp/hts_plasma_confinement.tex)
-- "Validation Framework for Lentz Soliton Formation in High-Beta Plasma" (hts-coils/papers/warp/soliton_validation.tex)
+- "Computational Analysis of High-Temperature Superconducting Coils for High-Beta Plasma Confinement" (https://github.com/DawsonInstitute/hts-coils/blob/main/papers/warp/hts_plasma_confinement.tex)
+- "Validation Framework for Lentz Soliton Formation in High-Beta Plasma" (https://github.com/DawsonInstitute/hts-coils/blob/main/papers/warp/soliton_validation.tex)
 
 ---
 
