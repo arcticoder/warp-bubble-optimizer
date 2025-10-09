@@ -1,14 +1,39 @@
 # Warp Bubble Metric Ansatz Optimizer
 
-![Traceability Coverage](https://img.shields.io/endpoint?url=https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json)
-
-## Zenodo Artifacts
-
+[![Traceability Coverage](https://img.shields.io/endpoint?url=https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json)](https://arcticoder.github.io/warp-bubble-optimizer/)
 [![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
 
-Simulation artifacts are uploaded to Zenodo after CI runs. Check after 2025-08-14 22:32 PDT.
+## Overview
 
-## ⭐ proposed 1041.7× Energy Optimization Complete
+**Optimization algorithms supporting HTS coil design and plasma confinement research at Dawson Institute.**
+
+This repository provides warp field optimization algorithms used by the [hts-coils](https://github.com/DawsonInstitute/hts-coils) framework for:
+- High-beta plasma confinement parameter optimization
+- REBCO superconducting magnet design
+- Multi-objective electromagnetic field optimization
+- Computational validation and uncertainty quantification
+
+The algorithms are integrated with HTS coil simulations through the `src/warp/` directory in the hts-coils repository, supporting peer-reviewed preprints on plasma physics and superconducting magnet applications.
+
+### Primary Integration: HTS Coil Optimization
+
+**Key Applications in HTS Framework:**
+- Multi-objective optimization for magnetic field uniformity and thermal stability
+- JAX-accelerated electromagnetic field calculations
+- Monte Carlo uncertainty quantification for manufacturing tolerances
+- Validation framework for REBCO paper reproduction
+
+**Related Publications:**
+- "Computational Analysis of High-Temperature Superconducting Coils for High-Beta Plasma Confinement" (hts-coils/papers/warp/)
+- "Validation Framework for Lentz Soliton Formation in High-Beta Plasma" (hts-coils/papers/warp/)
+
+---
+
+## Additional Research Components
+
+This repository also contains experimental warp field research code not currently integrated with Dawson Institute preprints:
+
+### ⭐ proposed 1041.7× Energy Optimization Complete
 
 **HISTORIC reported improvement (see methods and evidence)**: Cross-Repository Energy Efficiency Integration framework deployed achieving **1041.7× energy optimization** factor (120.6% of 863.9× target), delivering **99.9% energy savings** (2.10 GJ → 2.0 MJ) through **unified reported improvement (see methods and evidence) optimization**. This proposed achievement eliminates method conflicts between disparate optimization approaches and creates enhanced synergy across all warp bubble calculations.
 
