@@ -1,6 +1,6 @@
 # Warp Bubble Metric Ansatz Optimizer
 
-[![Traceability Coverage](https://img.shields.io/endpoint?url=https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json)](https://arcticoder.github.io/warp-bubble-optimizer/)
+[![Traceability Coverage](https://img.shields.io/endpoint?url=https://dawsoninstitute.github.io/warp-bubble-optimizer/traceability_badge.json)](https://dawsoninstitute.github.io/warp-bubble-optimizer/)
 [![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
 
 ## Overview
@@ -842,10 +842,10 @@ Our CI generates artifacts demonstrating a 52c-class mission scenario to 40 Erid
 
 Artifacts (via GitHub Pages):
 
-- Energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png
-- Feasibility rolling fraction: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility.png
-- Extended energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
-- Extended feasibility: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
+- Energy distribution: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_energy.png
+- Feasibility rolling fraction: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_feasibility.png
+- Extended energy distribution: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
+- Extended feasibility: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
 
 These are produced from the UQ runner and analysis steps in CI. See `.github/workflows/mission-validate.yml` and the notebook `notebooks/40eridani_analysis.ipynb` for details.
 
@@ -853,25 +853,25 @@ Goal alignment: positive-energy solitons and Natário zero-expansion geometry, a
 
 ## Results on GitHub Pages
 
-**Note**: Plot URLs may return 404s during CI updates. Check after August 14, 2025, 21:30 PDT, or download artifacts via `gh run download <run-id> --name 40eridani-artifacts --repo arcticoder/warp-bubble-optimizer`.
+**Note**: Plot URLs may return 404s during CI updates. Check after August 14, 2025, 21:30 PDT, or download artifacts via `gh run download <run-id> --name 40eridani-artifacts --repo dawsoninstitute/warp-bubble-optimizer`.
 
 View simulation results at:
 
-- Standard energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy.png
-- Standard feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility.png
-- Extended energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
-- Extended feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
-- Varied profile energy distribution: https://arcticoder.github.io/warp-bubble-optimizer/40eridani_energy_varied.png
-- Varied profile feasibility (rolling): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_feasibility_varied.png
-- Tiny UQ PNG (deterministic): https://arcticoder.github.io/warp-bubble-optimizer/40eridani_uq_tiny.png
-- Traceability badge JSON: https://arcticoder.github.io/warp-bubble-optimizer/traceability_badge.json
+- Standard energy distribution: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_energy.png
+- Standard feasibility (rolling): https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_feasibility.png
+- Extended energy distribution: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_energy_extended.png
+- Extended feasibility (rolling): https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_feasibility_extended.png
+- Varied profile energy distribution: https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_energy_varied.png
+- Varied profile feasibility (rolling): https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_feasibility_varied.png
+- Tiny UQ PNG (deterministic): https://dawsoninstitute.github.io/warp-bubble-optimizer/40eridani_uq_tiny.png
+- Traceability badge JSON: https://dawsoninstitute.github.io/warp-bubble-optimizer/traceability_badge.json
 
 ### Debugging CI Issues
 Use the GitHub CLI to inspect workflows:
-- List runs: `gh run list --repo arcticoder/warp-bubble-optimizer --workflow mission-validate.yml --limit 10`
-- View logs: `gh run view <run-id> --repo arcticoder/warp-bubble-optimizer --log`
-- Download artifacts: `gh run download <run-id> --repo arcticoder/warp-bubble-optimizer --name 40eridani-artifacts`
-- Trigger workflow: `gh workflow run mission-validate.yml --ref main --repo arcticoder/warp-bubble-optimizer`
+- List runs: `gh run list --repo dawsoninstitute/warp-bubble-optimizer --workflow mission-validate.yml --limit 10`
+- View logs: `gh run view <run-id> --repo dawsoninstitute/warp-bubble-optimizer --log`
+- Download artifacts: `gh run download <run-id> --repo dawsoninstitute/warp-bubble-optimizer --name 40eridani-artifacts`
+- Trigger workflow: `gh workflow run mission-validate.yml --ref main --repo dawsoninstitute/warp-bubble-optimizer`
 
 ## Contribute
 
