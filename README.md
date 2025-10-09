@@ -1,7 +1,6 @@
 # Warp Bubble Metric Ansatz Optimizer
 
 [![Traceability Coverage](https://img.shields.io/endpoint?url=https://dawsoninstitute.github.io/warp-bubble-optimizer/traceability_badge.json)](https://dawsoninstitute.github.io/warp-bubble-optimizer/)
-[![DOI](https://zenodo.org/badge/DOI/<your-doi>.svg)](https://zenodo.org/record/<your-doi>)
 
 ## Overview
 
